@@ -39,7 +39,7 @@ steps:
   - name: 'gcr.io/cloud-builders/kubectl'
     id: 'Deploy to GKE'
     env:
-      - 'CLOUDSDK_COMPUTE_ZONE=asia-south1-a'
+      - 'CLOUDSDK_COMPUTE_ZONE=asia-south2-a'
       - 'CLOUDSDK_CONTAINER_CLUSTER=comparely-cluster'
     args:
       - 'apply'
