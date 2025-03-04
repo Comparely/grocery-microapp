@@ -2,7 +2,7 @@ options:
   defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
 steps:
   # Backend: Install, test, and build Docker image
-  - name: 'node:14'
+  - name: 'node:18'
     id: 'Backend - Install & Test'
     entrypoint: 'bash'
     args:

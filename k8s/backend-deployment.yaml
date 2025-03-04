@@ -19,3 +19,4 @@ spec:
         image: gcr.io/cosmic-bonus/backend:latest
         ports:
         - containerPort: 3000
+        command: ["node", "index.js"]
