@@ -19,7 +19,7 @@ steps:
     args: [ 'push', 'gcr.io/$PROJECT_ID/backend:latest' ]
 
   # Frontend: Install, build assets, and build Docker image
-  - name: 'node:14'
+  - name: 'node:18'
     id: 'Frontend - Install & Build'
     entrypoint: 'bash'
     args:
