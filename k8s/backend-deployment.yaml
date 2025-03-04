@@ -2,8 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend-deployment
+  labels:
+    app: backend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: backend
@@ -14,6 +16,6 @@ spec:
     spec:
       containers:
       - name: backend
-        image: gcr.io/$PROJECT_ID/backend:latest
+        image: gcr.io/cosmic-bonus/backend:latest
         ports:
         - containerPort: 3000

@@ -2,8 +2,10 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend-deployment
+  labels:
+    app: frontend
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -14,6 +16,6 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: gcr.io/$PROJECT_ID/frontend:latest
+        image: gcr.io/cosmic-bonus/frontend:latest
         ports:
         - containerPort: 80
