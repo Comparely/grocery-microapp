@@ -1,5 +1,5 @@
 options:
-  defaultLogsBucketBehavior: REGIONAL_USER_OWNED_BUCKET
+  defaultLogsBucketBehavior: CLOUD_LOGGING_ONLY
 steps:
   # Backend: Install, test, and build Docker image
   - name: 'node:14'
