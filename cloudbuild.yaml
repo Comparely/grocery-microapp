@@ -1,0 +1,49 @@
+steps:
+  # Backend: Install, test, and build Docker image
+  - name: 'node:14'
+    id: 'Backend - Install & Test'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd backend && npm install
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Backend - Build Docker Image'
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/backend:latest', './backend' ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Backend - Push Docker Image'
+    args: [ 'push', 'gcr.io/$PROJECT_ID/backend:latest' ]
+
+  # Frontend: Install, build assets, and build Docker image
+  - name: 'node:14'
+    id: 'Frontend - Install & Build'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        cd frontend && npm install && npm run build
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Frontend - Build Docker Image'
+    args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/frontend:latest', './frontend' ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Frontend - Push Docker Image'
+    args: [ 'push', 'gcr.io/$PROJECT_ID/frontend:latest' ]
+
+  # Deploy to GKE using kubectl
+  - name: 'gcr.io/cloud-builders/kubectl'
+    id: 'Deploy to GKE'
+    env:
+      - 'CLOUDSDK_COMPUTE_ZONE=asia-south1-a'
+      - 'CLOUDSDK_CONTAINER_CLUSTER=comparely-cluster'
+    args:
+      - 'apply'
+      - '-f'
+      - 'k8s'
+      
+images:
+  - 'gcr.io/$PROJECT_ID/backend:latest'
+  - 'gcr.io/$PROJECT_ID/frontend:latest'
