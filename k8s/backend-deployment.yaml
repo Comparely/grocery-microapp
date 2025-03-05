@@ -17,6 +17,7 @@ spec:
       containers:
       - name: backend
         image: gcr.io/cosmic-bonus/backend:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
-        command: ["node", "-v"]
+        command: ["node", "index.js"]

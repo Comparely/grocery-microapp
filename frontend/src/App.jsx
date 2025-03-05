@@ -77,7 +77,7 @@ function App() {
           ? `&lat=${location.lat}&lng=${location.lng}`
           : "";
       const response = await fetch(
-        `http://localhost:3000/search?q=${encodeURIComponent(query)}${locParams}`
+        `https://grocery-api.comparely.co.in/search?q=${encodeURIComponent(query)}${locParams}`
       );
       const data = await response.json();
       // Sort products by:
