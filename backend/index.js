@@ -1,223 +1,3 @@
-// import { createRequire } from "module";
-// const require = createRequire(import.meta.url);
-
-// const express = require('express');
-// const axios = require('axios');
-// const { v4: uuidv4 } = require('uuid');
-
-// const app = express();
-// const PORT = process.env.PORT || 3000;
-// import curlirize from 'axios-curlirize';
-// curlirize(axios);
-
-
-// // Helper: Merge products by name across sources
-// function mergeProducts(productArrays) {
-//   const merged = {};
-//   productArrays.flat().forEach(prod => {
-//     if (merged[prod.name]) {
-//       // If same product name exists, add the new pricing info
-//       merged[prod.name].prices.push(...prod.prices);
-//     } else {
-//       merged[prod.name] = {
-//         id: uuidv4(),
-//         name: prod.name,
-//         prices: prod.prices
-//       };
-//     }
-//   });
-//   return Object.values(merged);
-// }
-
-// // Mapping for Blinkit response
-// function mapBlinkit(blinkitData) {
-//   // Expecting blinkitData.products as an array
-//   if (!blinkitData || !Array.isArray(blinkitData.products)) return [];
-//   return blinkitData.products.map(product => {
-//     const variants = (product.variant_info || []).map(variant => ({
-//       original_price: variant.mrp,
-//       discounted_price: variant.price,
-//       deeplink: `https://blinkit.com/product/${variant.product_id}`,
-//       image_url: variant.image_url // directly from the variant
-//     }));
-//     return {
-//       id: uuidv4(),
-//       name: product.name,
-//       prices: [{
-//         source: 'blinkit',
-//         variants: variants
-//       }]
-//     };
-//   });
-// }
-
-// // Mapping for Instamart response
-// function mapInstamart(instaData) {
-//   // The Instamart response is expected to have data.widgets (an array)
-//   console.log("Instamart items", instaData);
-//   if (!instaData || !instaData.data || !Array.isArray(instaData.data.widgets)) return [];
-//   // Gather all items from all widgets
-//   const items = [];
-//   instaData.data.widgets[0].data.forEach(widget => {
-//     if (widget.data && Array.isArray(widget.data)) {
-//       items.push(...widget.data);
-//     }
-//   });
-//   console.log("Instamart items", items.length);
-//   return items.map(item => {
-//     // Each item has a "variations" array.
-//     const variations = item.variations || [];
-//     if (variations.length === 0) return null;
-//     const productName = variations[0].display_name || 'Unknown Product';
-//     const variants = variations.map(variation => ({
-//       original_price: variation.price.mrp,
-//       discounted_price: variation.price.offer_price || variation.price.store_price,
-//       deeplink: `https://www.swiggy.com/instamart/product/${variation.id}`,
-//       // If images is an array of objects, use the first image's path; else, use the value directly.
-//       image_url: (variation.images && variation.images.length > 0)
-//                   ? (typeof variation.images[0] === 'object' ? variation.images[0].path : variation.images[0])
-//                   : ""
-//     }));
-//     return {
-//       id: uuidv4(),
-//       name: productName,
-//       prices: [{
-//         source: 'instamart',
-//         variants: variants
-//       }]
-//     };
-//   }).filter(item => item !== null);
-// }
-
-// // Mapping for Zepto response
-// function mapZepto(zeptoData) {
-//   // The Zepto response is inside a layout array.
-//   if (!zeptoData || !Array.isArray(zeptoData.layout)) return [];
-//   const gridWidget = zeptoData.layout.find(widget => widget.widgetId === 'PRODUCT_GRID');
-//   if (!gridWidget || !gridWidget.data || !gridWidget.data.resolver || 
-//       !gridWidget.data.resolver.data || !Array.isArray(gridWidget.data.resolver.data.items)) {
-//     return [];
-//   }
-//   return gridWidget.data.resolver.data.items.map(item => {
-//     const product = item.productResponse && item.productResponse.product;
-//     const variant = item.productResponse && item.productResponse.productVariant;
-//     if (!product || !variant) return null;
-//     return {
-//       id: uuidv4(),
-//       name: product.name,
-//       prices: [{
-//         source: 'zepto',
-//         variants: [{
-//           original_price: variant.mrp,
-//           discounted_price: item.discountedSellingPrice || variant.offer_price || variant.store_price,
-//           deeplink: `https://www.zepto.com/product/${product.id}`,
-//           image_url: (variant.images && variant.images.length > 0 && variant.images[0].path) || ""
-//         }]
-//       }]
-//     };
-//   }).filter(item => item !== null);
-// }
-
-// // Main search function that calls all three APIs concurrently and merges their results.
-// async function searchProducts(query) {
-//   // Make concurrent API calls based on the Postman collections.
-// //   const blinkitPromise = axios.get(`https://blinkit.com/v6/search/products?q=${query}`, {
-// //     headers: {
-// //       'accept': '*/*',
-// //       'content-type': 'application/json',
-// //       'lat': '12.9394384',
-// //       'lon': '77.6247365',
-// //       'User-Agent': "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0"
-// //     }
-// //   });
-  
-//   const instamartPromise = axios.post(
-//     `https://www.swiggy.com/api/instamart/search?query=${query}&ageConsent=false`,
-//     {
-//       facets: {},
-//       sortAttribute: "",
-//       "storeId": "1396284",
-//       "primaryStoreId": "1396284"
-//     },
-//     {
-//       headers: {
-//         "Content-Type": "application/json",
-//         "Cache-Control": "no-cache",
-//         "accept": "*/*",
-//         "cache-control": "no-cache",
-//         "content-type": "application/json",
-//         "priority": "u=1, i",
-//         'Connection': 'keep-alive',
-//         'User-Agent': "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
-//         "user-agent": "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0"
-//       },
-//       responseType: 'json'
-//     }
-//   );
-  
-//   const zeptoPromise = axios.post(
-//     `https://api.zeptonow.com/api/v3/search`,
-//     {
-//       query: query,
-//       pageNumber: 0
-//     },
-//     {
-//       headers: {
-//         "accept": "application/json, text/plain, */*",
-//         "appversion": "12.55.1",
-//         "content-type": "application/json",
-//         "marketplace_type": "ZEPTO_NOW",
-//         "storeid": "fa5e892d-65d7-4da6-9bde-e1f22deb7b6f",
-//         'User-Agent': "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0"
-//       }
-//     }
-//   );
-  
-//   // Wait for all responses
-//   const [
-//     //blinkitRes,
-//     instamartRes,
-//     zeptoRes
-//   ] = await Promise.all([
-//     //blinkitPromise,
-//     instamartPromise,
-//     zeptoPromise
-//   ]);
-
-//   // Map each response using our functions.
-//   //const blinkitProducts = mapBlinkit(blinkitRes.data);
-//   const instamartProducts = mapInstamart(instamartRes);
-//   const zeptoProducts = mapZepto(zeptoRes.data);
-
-//   // Merge products with the same name
-//   const mergedProducts = mergeProducts([
-//     //blinkitProducts,
-//     instamartProducts,
-//     zeptoProducts
-//   ]);
-//   return mergedProducts;
-// }
-
-// // Define the search endpoint
-// app.get('/search', async (req, res) => {
-//   const query = req.query.q;
-//   if (!query) {
-//     return res.status(400).json({ error: 'Query parameter "q" is required' });
-//   }
-//   try {
-//     const products = await searchProducts(query);
-//     res.json(products);
-//   } catch (err) {
-//     console.error('Error during search:', err);
-//     res.status(500).json({ error: 'Internal server error' });
-//   }
-// });
-
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
-// index.js (ESM module)
-
 import express from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import fetch from 'node-fetch';
@@ -245,7 +25,43 @@ function mergeProducts(productArrays) {
       };
     }
   });
-  return Object.values(merged);
+  
+  let finalArray = mergeAndRemoveDuplicates(Object.values(merged));
+  finalArray.sort((a, b) => {
+    const uniqueCountA = new Set(a.prices.map(item => item.source)).size;
+    const uniqueCountB = new Set(b.prices.map(item => item.source)).size;
+    return uniqueCountB - uniqueCountA; // Descending order
+  });
+  return finalArray
+}
+
+function mergeAndRemoveDuplicates(products) {
+  return products.map(product => {
+    const mergedPricesBySource = {};
+
+    product.prices.forEach(price => {
+      const { source, variants } = price;
+      if (!mergedPricesBySource[source]) {
+        mergedPricesBySource[source] = [];
+      }
+      variants.forEach(variant => {
+        // Create a unique key for the variant (this assumes key order is consistent)
+        const key = JSON.stringify(variant);
+        // Only add if not already present
+        if (!mergedPricesBySource[source].some(existing => JSON.stringify(existing) === key)) {
+          mergedPricesBySource[source].push(variant);
+        }
+      });
+    });
+
+    // Reconstruct the prices array with each unique source and its merged variants
+    const mergedPrices = Object.keys(mergedPricesBySource).map(source => ({
+      source,
+      variants: mergedPricesBySource[source]
+    }));
+
+    return { ...product, prices: mergedPrices };
+  });
 }
 
 // Mapping for Blinkit response
