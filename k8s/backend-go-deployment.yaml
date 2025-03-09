@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-go-deployment
+  labels:
+    app: backend-go
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-go
+  template:
+    metadata:
+      labels:
+        app: backend-go
+    spec:
+      containers:
+      - name: backend-go
+        image: gcr.io/$PROJECT_ID/backend-go:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 4500

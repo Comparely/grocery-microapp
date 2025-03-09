@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mobile-deployment
+  labels:
+    app: mobile
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mobile
+  template:
+    metadata:
+      labels:
+        app: mobile
+    spec:
+      containers:
+      - name: mobile
+        image: gcr.io/cosmic-bonus/mobile:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
