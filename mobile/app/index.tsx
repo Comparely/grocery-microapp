@@ -1,5 +1,5 @@
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native"
-import { GroceryComparisonScreen } from "./screens/GroceryComparisonScreen"
+import { GroceryComparisonScreen } from "../screens/GroceryComparisonScreen"
 
 const App = () => {
   return (
