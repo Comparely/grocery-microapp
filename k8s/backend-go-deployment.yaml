@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: backend-go
-        image: gcr.io/$PROJECT_ID/backend-go:latest
+        image: gcr.io/cosmic-bonus/backend-go:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4500
