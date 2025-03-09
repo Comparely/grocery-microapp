@@ -19,6 +19,16 @@ export default function Root({ children }: PropsWithChildren) {
             })(window, document, "clarity", "script", "qlb3gcv83i");`
           }}
         />
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q7Y4T21Y1H"></script>
+        <script
+          type="text/javascript"
+          dangerouslySetInnerHTML={{
+            __html: `window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-Q7Y4T21Y1H');`
+          }}
+        />
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
