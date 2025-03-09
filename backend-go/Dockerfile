@@ -1,5 +1,5 @@
 # Use a lightweight Go image (adjust version as needed)
-FROM golang:1.19-alpine
+FROM golang:1.24-alpine
 
 WORKDIR /app
 

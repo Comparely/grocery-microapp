@@ -55,7 +55,7 @@ options:
 steps:
   # Backend: Install, test, and build Docker image
   # Step 1: Build the Go backend binary (optional if using Docker build directly)
-  - name: 'golang:1.19-alpine'
+  - name: 'golang:1.24-alpine'
     id: 'Build backend-go binary'
     dir: 'backend-go'
     entrypoint: 'sh'
