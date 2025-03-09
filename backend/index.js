@@ -17,12 +17,14 @@ function mergeProducts(productArrays) {
   productArrays.flat().forEach(prod => {
     if (merged[prod.name]) {
       merged[prod.name].prices.push(...prod.prices);
+      if(prod.brand != "") merged[prod.name].brand = prod.brand
     } else {
       merged[prod.name] = {
         id: uuidv4(),
         name: prod.name,
         prices: prod.prices
       };
+      if(prod.brand != "") merged[prod.name].brand = prod.brand
     }
   });
   
@@ -72,11 +74,13 @@ function mapBlinkit(blinkitData) {
       original_price: variant.mrp,
       discounted_price: variant.price,
       deeplink: `https://blinkit.com/prn/x/prid/${variant.product_id}`,
-      image_url: variant.image_url
+      image_url: variant.image_url,
+      weight: variant.unit || ""
     }));
     return {
       id: uuidv4(),
       name: product.name,
+      brand: product.brand,
       prices: [{
         source: 'blinkit',
         variants
@@ -119,11 +123,14 @@ function mapInstamart(instaData) {
       deeplink: `https://www.swiggy.com/stores/instamart/item/${item.product_id}`,
       image_url: formatSwiggyImages((variation.images && variation.images.length > 0)
                   ? (typeof variation.images[0] === 'object' ? variation.images[0].path : variation.images[0])
-                  : "")
+                  : ""),
+      weight: variation.sku_quantity_with_combo || "",
+      brand: variation.brand || ""
     }));
     return {
       id: uuidv4(),
       name: productName,
+      brand: variants[0].brand,
       prices: [{
         source: 'instamart',
         variants
@@ -156,13 +163,15 @@ function mapZepto(zeptoData) {
       return {
         id: uuidv4(),
         name: product.name,
+        brand: product.brand,
         prices: [{
           source: 'zepto',
           variants: [{
             original_price: variant.mrp,
             discounted_price: (item.discountedSellingPrice || variant.offer_price || variant.store_price || variant.mrp)/100,
             deeplink: `https://www.zepto.com/pn/x/pvid/${variant.id}`,
-            image_url: formatZeptoImages((variant.images && variant.images.length > 0 && variant.images[0].path) || "")
+            image_url: formatZeptoImages((variant.images && variant.images.length > 0 && variant.images[0].path) || ""),
+            weight: variant.formattedPacksize || ""
           }]
         }]
       };

@@ -39,9 +39,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Weight and Brand */}
         <View style={styles.tagsContainer}>
           <View style={styles.tag}>
-            <Text style={styles.tagText}>{product.weight}</Text>
-          </View>
-          <View style={styles.tag}>
             <Text style={styles.tagText}>{product.brand}</Text>
           </View>
         </View>
@@ -88,7 +85,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ priceOption, labe
   };
 
   return (
-    <TouchableOpacity onPress={() => handleDeepLink(priceOption.deeplink)}>
+    <TouchableOpacity onPress={() => handleDeepLink(priceOption.deeplink)} style={styles.priceOptionContainer}>
       <View>
         <Text style={styles.optionLabel}>{label}</Text>
         <View style={styles.priceContainer}>
@@ -103,6 +100,10 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ priceOption, labe
             {
               priceOption.platform == "instamart" && <Image source={require('@/assets/images/instamart.png')} />
             }
+
+            <View style={styles.tagSmall}>
+              <Text style={styles.tagTextSmall}>{priceOption.weight}</Text>
+            </View>
           </View>
         </View>
         <View style={styles.deliveryContainer}>
@@ -237,9 +238,21 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     marginRight: 8,
   },
+  tagSmall: {
+    backgroundColor: "#fde5b6",
+    borderRadius: 50,
+    paddingHorizontal: 8,
+    paddingVertical: 1,
+    marginRight: 8,
+  },
   tagText: {
     color: "#181b19",
     fontSize: 12,
+    fontWeight: "500",
+  },
+  tagTextSmall: {
+    color: "#181b19",
+    fontSize: 10,
     fontWeight: "500",
   },
   mrpText: {
@@ -284,6 +297,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 2,
     borderRadius: 4,
+    display: "flex",
+    flexDirection: "row",
+    columnGap: 8
   },
   platformText: {
     fontSize: 10,
@@ -312,5 +328,10 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#181b19",
   },
+  priceOptionContainer: {
+    display: "flex",
+    flexDirection: "row",
+    rowGap: 8
+  }
 })
 

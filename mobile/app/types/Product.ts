@@ -15,5 +15,6 @@ export interface PriceOption {
   price: number
   deliveryTime: number
   deeplink: string
+  weight: string
 }
 

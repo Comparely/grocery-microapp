@@ -6,13 +6,13 @@ export async function fetchAndConvertProducts(
     lng?: number
 ): Promise<Product[]> {
     const locParams = lat && lng ? `&lat=${lat}&lng=${lng}` : "";
-    const url = `http://localhost:3000/search?q=${encodeURIComponent(query)}${locParams}`;
+    const url = `http://localhost:4500/search?q=${encodeURIComponent(query)}${locParams}`;
     const response = await fetch(url);
     const data = await response.json();
   
     const products: Product[] = data.map((item: any, index: number) => {
       // Group variants by platform (source) and choose the lowest discounted_price for each.
-      const priceMap: Record<string, { price: number; image_url: string; deeplink: string }> = {};
+      const priceMap: Record<string, { price: number; image_url: string; deeplink: string; weight: string }> = {};
   
       item.prices.forEach((priceEntry: any) => {
         const platform = priceEntry.source;
@@ -28,6 +28,7 @@ export async function fetchAndConvertProducts(
               price: lowestVariant.discounted_price,
               image_url: lowestVariant.image_url,
               deeplink: lowestVariant.deeplink,
+              weight: lowestVariant.weight
             };
           }
         }
@@ -41,6 +42,7 @@ export async function fetchAndConvertProducts(
         price: value.price,
         deliveryTime: 0, // Not provided by API; defaulting to 0.
         deeplink: value.deeplink,
+        weight: value.weight
       }));
   
       // Determine the product's mrp and imageUrl from the lowest original_price among all variants.
@@ -61,7 +63,7 @@ export async function fetchAndConvertProducts(
       return {
         id: index + 1,              // Converting string id to a sequential numeric id.
         name: item.name,
-        brand: '',                  // Default value (adjust as needed)
+        brand: item.brand,                  // Default value (adjust as needed)
         weight: '',                 // Default value (adjust as needed)
         mrp,
         imageUrl,
