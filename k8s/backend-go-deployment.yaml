@@ -14,9 +14,31 @@ spec:
       labels:
         app: backend-go
     spec:
+      #serviceAccountName: backend-go-sa   # Use the KSA bound to GSA for secret access
       containers:
       - name: backend-go
         image: gcr.io/cosmic-bonus/backend-go:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 4500
+      #   env:
+      #   - name: MONGO_DB_URL
+      #     # valueFrom:
+      #     #   # Optional: you can use an init container to read the secret file and set an env var,
+      #     #   # or your application can read from a mounted file.
+      #     #   # Here, we'll assume your app reads the secret from the mounted volume.
+      #     #   # Alternatively, you could mount the file and then use an entrypoint script.
+      #     #   # For illustration, we're mounting the secret as a volume.
+      #     #   # If you need an env var directly, consider using an init container to load it.
+      #     #   value: "PLACEHOLDER"  # Remove if reading from file.
+      #   volumeMounts:
+      #   - name: secrets-store-inline
+      #     mountPath: "/secrets"
+      #     readOnly: true
+      # volumes:
+      # - name: secrets-store-inline
+      #   csi:
+      #     driver: secrets-store.csi.k8s.io
+      #     readOnly: true
+      #     volumeAttributes:
+      #       secretProviderClass: "gcp-secrets"
