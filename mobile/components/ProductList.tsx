@@ -3,13 +3,15 @@ import { StyleSheet, View, Text, FlatList } from "react-native"
 import { ProductCard } from "./ProductCard"
 import { ProductCardShimmer } from "./ProductCardShimmer"
 import type { Product } from "../types/Product"
+import { Session } from "@/types/Session"
 
 interface ProductListProps {
+  session: Session
   products: Product[]
   isLoading: boolean
 }
 
-export const ProductList: React.FC<ProductListProps> = ({ products, isLoading }) => {
+export const ProductList: React.FC<ProductListProps> = ({ session, products, isLoading }) => {
   // Render shimmer loading state
   if (isLoading) {
     return (
@@ -41,7 +43,7 @@ export const ProductList: React.FC<ProductListProps> = ({ products, isLoading })
       <FlatList
         data={products}
         numColumns={2}
-        renderItem={({ item }) => <ProductCard product={item} key={item.id} />}
+        renderItem={({ item }) => <ProductCard session={session} product={item} key={item.id} />}
         keyExtractor={(item) => item.id.toString()}
         columnWrapperStyle={styles.columnWrapper}
         showsVerticalScrollIndicator={false}

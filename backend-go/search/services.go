@@ -247,12 +247,16 @@ func mapZepto(data map[string]interface{}) []Product {
 			}
 		}
 		deeplink := fmt.Sprintf("https://www.zepto.com/pn/x/pvid/%s", variantData["id"].(string))
+		var varWeight string
+		if variWt, ok := variantData["formattedPacksize"].(string); ok {
+			varWeight = variWt
+		}
 		variant := Variant{
 			OriginalPrice:   mrp,
 			DiscountedPrice: discounted,
 			Deeplink:        deeplink,
 			ImageURL:        imageURL,
-			Weight:          variantData["formattedPacksize"].(string),
+			Weight:          varWeight,
 		}
 		prod := Product{
 			ID:       uuid.NewString(),

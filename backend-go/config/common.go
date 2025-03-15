@@ -20,28 +20,25 @@ func GetCorsConfig() cors.Config {
 	}
 }
 
-func InitRedis(redisClient *redis.Client) error {
-	url := "redis://localhost:6379/"
+func InitRedis() (*redis.Client, error) {
+	url := "redis://34.118.230.24:6379/"
 	opts, err := redis.ParseURL(url)
-	if err != nil {
-		return err
-	}
-
-	redisClient = redis.NewClient(opts)
-
-	return nil
-}
-
-func InitMongo(mongoClient *mongo.Client) (func(), error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-
-	var err error
-	mongoClient, err = mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://comparably-sbx:comparely-sbx-001@cluster-sandbox0.xnku9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster-Sandbox0"))
 	if err != nil {
 		return nil, err
 	}
 
-	return func() {
+	return redis.NewClient(opts), nil
+}
+
+func InitMongo() (*mongo.Client, func(), error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+
+	mongoClient, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb+srv://comparably-sbx:comparely-sbx-001@cluster-sandbox0.xnku9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster-Sandbox0"))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return mongoClient, func() {
 		if err = mongoClient.Disconnect(ctx); err != nil {
 			panic(err)
 		}

@@ -17,22 +17,24 @@ import (
 
 const PORT = 4500
 
-var appState config.AppState
+var appState config.AppState = config.AppState{}
 
 func main() {
 	var err error
-	if err = config.InitRedis(appState.RedisClient); err != nil {
+	if appState.RedisClient, err = config.InitRedis(); err != nil {
 		log.Println("could not connect to redis", err)
 		os.Exit(1)
 	}
 	log.Println("✅ Redis connected")
+	log.Println("Redis AppState", appState)
 
 	var cancelMongo func()
-	if cancelMongo, err = config.InitMongo(appState.MongoClient); err != nil {
+	if appState.MongoClient, cancelMongo, err = config.InitMongo(); err != nil {
 		log.Println("could not connect to mongodb", err)
 		os.Exit(1)
 	}
 	log.Println("✅ Mongo connected")
+	log.Println("Mongo AppState", appState)
 
 	defer cancelMongo()
 
@@ -51,8 +53,9 @@ func main() {
 			Lng:       input.Lng,
 			UpdatedAt: time.Now().Unix(),
 		}
+		log.Println("AppState", appState)
 		ctx := context.Background()
-		if err := sessions.SaveSession(ctx, appState, sess); err != nil {
+		if err := sessions.SaveSession(ctx, appState, &sess); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
 			return
 		}

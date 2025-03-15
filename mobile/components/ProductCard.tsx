@@ -1,13 +1,18 @@
 import type React from "react"
 import { StyleSheet, View, Text, Image, Linking, TouchableOpacity } from "react-native"
 import type { Product, PriceOption } from "../types/Product"
+import { getItem } from "@/api/localStorage"
+import { useEffect, useState } from "react"
+import { Session } from "@/types/Session"
 
 interface ProductCardProps {
+  session: Session
   product: Product
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ session, product }) => {
 
+  console.log("sess", session)
   // Find the cheapest and fastest options
   const cheapestOption = product.priceOptions.reduce(
     (prev, current) => (prev.price < current.price ? prev : current),
@@ -54,7 +59,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         {/* Price Options */}
         {
           product.priceOptions.map(priceOption => 
-            <PriceOptionSingle key={priceOption.id} priceOption={priceOption} label="" />
+            <PriceOptionSingle session={session} key={priceOption.id} priceOption={priceOption} label="" />
           )
         }
         {/* {isCheapestAlsoFastest ? (
@@ -68,12 +73,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 }
 
 interface PriceOptionSingleProps {
+  session: any
   priceOption: PriceOption
   label: string
 }
 
-const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ priceOption, label }) => {
+const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOption, label }) => {
 
+  
 
   const handleDeepLink = async (url: string) => {
     const supported = await Linking.canOpenURL(url);
@@ -110,7 +117,17 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ priceOption, labe
           <View style={styles.deliveryDot}>
             <View style={styles.deliveryDotInner} />
           </View>
-          <Text style={styles.deliveryText}>{priceOption.deliveryTime} mins</Text>
+          <Text style={styles.deliveryText}>
+            {
+              priceOption.platform == "zepto" && session.marketplaceAttributes.zeptoStoreAttributes.eta
+            }
+            {
+              priceOption.platform == "blinkit" && session.marketplaceAttributes.blinkitStoreAttributes.eta
+            }
+            {
+              priceOption.platform == "instamart" && session.marketplaceAttributes.instamartStoreAttributes.eta
+            }
+          </Text>
         </View>
       </View>
     </TouchableOpacity>

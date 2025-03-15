@@ -17,9 +17,16 @@ type Session struct {
 type MarketPlaceAttributes struct {
 	ZeptoStoreAttributes     ZeptoStoreAttributes     `json:"zeptoStoreAttributes" bson:"zeptoStoreAttributes"`
 	InstamartStoreAttributes InstamartStoreAttributes `json:"instamartStoreAttributes" bson:"instamartStoreAttributes"`
+	BlinkitStoreAttributes   BlinkitStoreAttributes   `json:"blinkitStoreAttributes" bson:"blinkitStoreAttributes"`
 }
 
 type InstamartStoreAttributes struct {
+	StoreID     string `json:"storeId" bson:"storeId"`
+	Serviceable bool   `json:"serviceable" bson:"serviceable"`
+	ETA         string `json:"eta" bson:"eta"`
+}
+
+type BlinkitStoreAttributes struct {
 	StoreID     string `json:"storeId" bson:"storeId"`
 	Serviceable bool   `json:"serviceable" bson:"serviceable"`
 	ETA         string `json:"eta" bson:"eta"`

@@ -6,15 +6,23 @@ import { StyleSheet, View, ScrollView } from "react-native"
 import { SearchBar } from "../components/SearchBar"
 import { ProductList } from "../components/ProductList"
 import type { Product } from "../types/Product"
-import { fetchAndConvertProducts } from "../api/searchProducts"
+import { fetchAndConvertProducts, initiateSessionForUser } from "../api/searchProducts"
+import { getItem } from "@/api/localStorage"
+import { Session } from "@/types/Session"
 
 export const GroceryComparisonScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>("")
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [products, setProducts] = useState<Product[]>([])
   const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
-
+  const [session, setSession] = useState<Session>()
+  
   useEffect(() => {
+    getItem("session").then((val) => {
+      console.log("localSt", session)
+      if(val != null) setSession(val)
+    }).catch(err => console.log("Could not find session", err))
+    
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -22,6 +30,14 @@ export const GroceryComparisonScreen: React.FC = () => {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           });
+
+          initiateSessionForUser(position.coords.latitude, position.coords.longitude).then((val: any) => {
+            setSession(val)
+            console.log("remote", val)
+            //console.log("session", session)
+          }).catch(err => {
+            console.log("sess err", err)
+          })
         },
         (error) => {
           console.error('Error obtaining location:', error);
@@ -31,6 +47,10 @@ export const GroceryComparisonScreen: React.FC = () => {
       console.error('Geolocation is not supported by this device.');
     }
   }, []);
+
+  useEffect(() => {
+    console.log("Updated session:", session);
+  }, [session]);
 
   useEffect(() => {
     if (searchQuery.trim()) {
@@ -43,7 +63,6 @@ export const GroceryComparisonScreen: React.FC = () => {
             location.lat || undefined,
             location.lng || undefined
           );
-  
           setProducts(result);
           console.log("Products", result)
         } catch (error) {
@@ -70,7 +89,7 @@ export const GroceryComparisonScreen: React.FC = () => {
     <View style={styles.container}>
       <SearchBar value={searchQuery} onChangeText={handleSearch} placeholder="Search for groceries..." />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
-        <ProductList products={products} isLoading={isLoading} />
+        <ProductList products={products} isLoading={isLoading} session={session!} />
       </ScrollView>
     </View>
   )
