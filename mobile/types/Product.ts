@@ -10,11 +10,11 @@ export interface Product {
 }
 
 export interface PriceOption {
-  id: number
-  platform: string
-  price: number
-  deliveryTime: number
-  deeplink: string
-  weight: string
+  id?: number
+  platform?: string
+  price?: number
+  deliveryTime?: number
+  deeplink?: string
+  weight?: string
 }
 

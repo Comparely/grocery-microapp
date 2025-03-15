@@ -225,8 +225,8 @@ func SaveSession(ctx context.Context, appState config.AppState, sess *Session) e
 	filter := bson.M{"deviceID": sess.DeviceID}
 	update := bson.M{"$set": sess}
 	opts := options.Update().SetUpsert(true)
-	updateRes, err := sessionCollection.UpdateOne(ctx, filter, update, opts)
-	log.Println("Session Collection", *updateRes)
+	_, err := sessionCollection.UpdateOne(ctx, filter, update, opts)
+	//log.Println("Session Collection", *updateRes)
 	if err != nil {
 		return err
 	}
