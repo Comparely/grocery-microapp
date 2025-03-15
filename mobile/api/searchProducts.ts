@@ -92,7 +92,7 @@ export async function initiateSessionForUser(
     deviceID = v4()
     localStorage.setItem("deviceID", deviceID)
   }
-  const url = `http://localhost:4500/start-session`;
+  const url = `https://grocery-api.comparely.co.in/start-session`;
   const body = {
     deviceID: deviceID,
     lat: String(lat),
