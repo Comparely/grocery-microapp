@@ -14,7 +14,7 @@ export async function fetchAndConvertProducts(
     localStorage.setItem("deviceID", deviceID)
   }
   const locParams = lat && lng ? `&lat=${lat}&lng=${lng}` : "";
-  const url = `http://localhost:4500/search?q=${encodeURIComponent(query)}${locParams}&deviceID=${deviceID}`;
+  const url = `https://grocery-api.comparely.co.in/search?q=${encodeURIComponent(query)}${locParams}&deviceID=${deviceID}`;
   const response = await fetch(url);
   const data = await response.json();
 
