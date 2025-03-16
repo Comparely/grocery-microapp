@@ -1,0 +1,6 @@
+module Pods_Comparely {
+  umbrella header "Pods-Comparely-umbrella.h"
+
+  export *
+  module * { export * }
+}
