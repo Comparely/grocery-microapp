@@ -1,0 +1,96 @@
+{
+    "featuredProducts": [
+        {
+          "id": 1,
+          "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/image%205.png",
+          "weight": "1 kg",
+          "brand": "Daawat",
+          "name": "Daawat Basmati Rice - Rozana Super",
+          "mrp": 100,
+          "priceOptions": [
+              {
+                  "platform": "zepto",
+                  "price": 82
+              },
+              {
+                  "platform": "blinkit",
+                  "price": 89
+              }
+          ]
+        },
+        {
+          "id": 2,
+          "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/image.png",
+          "weight": "1 kg",
+          "brand": "Whole Farm",
+          "name": "Whole Farm Premium Parmal Rice",
+          "mrp": 120,
+          "priceOptions": [
+              {
+                  "platform": "zepto",
+                  "price": 62
+              },
+              {
+                  "platform": "blinkit",
+                  "price": 89
+              }
+          ]
+        },
+        {
+          "id": 3,
+          "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/a821b7c3800da72ef25240841c39b5b5.webp",
+          "weight": "10 kg",
+          "brand": "Chakki",
+          "name": "Chakki Atta",
+          "mrp": 485,
+          "priceOptions": [
+              {
+                  "platform": "zepto",
+                  "price": 480
+              },
+              {
+                  "platform": "blinkit",
+                  "price": 480
+              }
+          ]
+        }
+    ],
+    "categories": [
+        {
+          "id": "1",
+          "name": "Fresh Fruits & Vegetable",
+          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/vegetable_fruit.webp",
+          "backgroundColor": "#e8f5e9"
+        },
+        {
+          "id": "2",
+          "name": "Cooking Oil & Ghee",
+          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/cooking_oil.webp",
+          "backgroundColor": "#fff3e0"
+        },
+        {
+          "id": "3",
+          "name": "Bakery & Snacks",
+          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/bakery.webp",
+          "backgroundColor": "#f3e5f5"
+        },
+        {
+          "id": "4",
+          "name": "Meat & Fish",
+          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/meat.webp",
+          "backgroundColor": "#ffebee"
+        },
+        {
+          "id": "5",
+          "name": "Dairy & Eggs",
+          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/milk.webp",
+          "backgroundColor": "#fffde7"
+        },
+        {
+          "id": "6",
+          "name": "Beverages",
+          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/my_pussy_tastes_like_pepsi_cola.webp",
+          "backgroundColor": "#e3f2fd"
+        }
+    ]
+}

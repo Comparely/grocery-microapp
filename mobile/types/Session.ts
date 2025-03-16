@@ -12,6 +12,7 @@ export type Session = {
   deviceID: string
   lat: string
   lng: string
+  address: string
   updatedAt: string
   marketplaceAttributes: marketplaceAttributes
 }

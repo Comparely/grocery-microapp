@@ -6,29 +6,31 @@ import { useEffect, useState } from "react"
 import { Session } from "@/types/Session"
 
 interface ProductCardProps {
+  fullWidth: boolean
   session: Session
   product: Product
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ session, product }) => {
+export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, product }) => {
 
   console.log("sess", session)
+  console.log("prod", product)
   // Find the cheapest and fastest options
-  const cheapestOption = product.priceOptions.reduce(
-    (prev, current) => (prev.price < current.price ? prev : current),
-    product.priceOptions[0],
-  )
+  // const cheapestOption = product.priceOptions.reduce(
+  //   (prev, current) => (prev.price < current.price ? prev : current),
+  //   product.priceOptions[0],
+  // )
 
-  const fastestOption = product.priceOptions.reduce(
-    (prev, current) => (prev.deliveryTime < current.deliveryTime ? prev : current),
-    product.priceOptions[0],
-  )
+  // const fastestOption = product.priceOptions.reduce(
+  //   (prev, current) => (prev.deliveryTime < current.deliveryTime ? prev : current),
+  //   product.priceOptions[0],
+  // )
 
   // Check if cheapest is also fastest
-  const isCheapestAlsoFastest = cheapestOption.id === fastestOption.id
+  //const isCheapestAlsoFastest = cheapestOption.id === fastestOption.id
 
   return (
-    <View style={styles.container}>
+    <View style={fullWidth ? styles.fullWidthContainer : styles.container}>
       {/* Product Image */}
       <View style={styles.imageContainer}>
         {product.isNewPack && (
@@ -80,8 +82,6 @@ interface PriceOptionSingleProps {
 
 const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOption, label }) => {
 
-  
-
   const handleDeepLink = async (url: string) => {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
@@ -102,12 +102,11 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
               priceOption.platform == "zepto" && <Image source={require('@/assets/images/zepto.svg')} />
             }
             {
-              priceOption.platform == "blinkit" && <Image source={require('@/assets/images/blinkit.svg')} />
+              priceOption.platform == "blinkit" && <Image style={{width: 32, height: 13}} source={require('@/assets/images/blinkit.png')} />
             }
             {
               priceOption.platform == "instamart" && <Image source={require('@/assets/images/instamart.png')} />
             }
-
             <View style={styles.tagSmall}>
               <Text style={styles.tagTextSmall}>{priceOption.weight}</Text>
             </View>
@@ -134,53 +133,53 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
   )
 }
 
-interface PriceOptionDoubleProps {
-  cheapestOption: PriceOption
-  fastestOption: PriceOption
-}
+// interface PriceOptionDoubleProps {
+//   cheapestOption: PriceOption
+//   fastestOption: PriceOption
+// }
 
-const PriceOptionDouble: React.FC<PriceOptionDoubleProps> = ({ cheapestOption, fastestOption }) => {
-  return (
-    <View>
-      <View style={styles.optionsLabelContainer}>
-        <Text style={styles.optionLabel}>Cheapest</Text>
-        <Text style={styles.optionLabel}>Fastest</Text>
-      </View>
-      <View style={styles.optionsContainer}>
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceText}>₹{cheapestOption.price}</Text>
-          <View style={[styles.platformBadge, { backgroundColor: getPlatformColor(cheapestOption.platform) }]}>
-            <Text style={[styles.platformText, { color: getPlatformTextColor(cheapestOption.platform) }]}>
-              {cheapestOption.platform}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.priceContainer}>
-          <Text style={styles.priceText}>₹{fastestOption.price}</Text>
-          <View style={[styles.platformBadge, { backgroundColor: getPlatformColor(fastestOption.platform) }]}>
-            <Text style={[styles.platformText, { color: getPlatformTextColor(fastestOption.platform) }]}>
-              {fastestOption.platform}
-            </Text>
-          </View>
-        </View>
-      </View>
-      <View style={styles.optionsContainer}>
-        <View style={styles.deliveryContainer}>
-          <View style={styles.deliveryDot}>
-            <View style={styles.deliveryDotInner} />
-          </View>
-          <Text style={styles.deliveryText}>{cheapestOption.deliveryTime} mins</Text>
-        </View>
-        <View style={styles.deliveryContainer}>
-          <View style={styles.deliveryDot}>
-            <View style={styles.deliveryDotInner} />
-          </View>
-          <Text style={styles.deliveryText}>{fastestOption.deliveryTime} mins</Text>
-        </View>
-      </View>
-    </View>
-  )
-}
+// const PriceOptionDouble: React.FC<PriceOptionDoubleProps> = ({ cheapestOption, fastestOption }) => {
+//   return (
+//     <View>
+//       <View style={styles.optionsLabelContainer}>
+//         <Text style={styles.optionLabel}>Cheapest</Text>
+//         <Text style={styles.optionLabel}>Fastest</Text>
+//       </View>
+//       <View style={styles.optionsContainer}>
+//         <View style={styles.priceContainer}>
+//           <Text style={styles.priceText}>₹{cheapestOption.price}</Text>
+//           <View style={[styles.platformBadge, { backgroundColor: getPlatformColor(cheapestOption.platform) }]}>
+//             <Text style={[styles.platformText, { color: getPlatformTextColor(cheapestOption.platform) }]}>
+//               {cheapestOption.platform}
+//             </Text>
+//           </View>
+//         </View>
+//         <View style={styles.priceContainer}>
+//           <Text style={styles.priceText}>₹{fastestOption.price}</Text>
+//           <View style={[styles.platformBadge, { backgroundColor: getPlatformColor(fastestOption.platform) }]}>
+//             <Text style={[styles.platformText, { color: getPlatformTextColor(fastestOption.platform) }]}>
+//               {fastestOption.platform}
+//             </Text>
+//           </View>
+//         </View>
+//       </View>
+//       <View style={styles.optionsContainer}>
+//         <View style={styles.deliveryContainer}>
+//           <View style={styles.deliveryDot}>
+//             <View style={styles.deliveryDotInner} />
+//           </View>
+//           <Text style={styles.deliveryText}>{cheapestOption.deliveryTime} mins</Text>
+//         </View>
+//         <View style={styles.deliveryContainer}>
+//           <View style={styles.deliveryDot}>
+//             <View style={styles.deliveryDotInner} />
+//           </View>
+//           <Text style={styles.deliveryText}>{fastestOption.deliveryTime} mins</Text>
+//         </View>
+//       </View>
+//     </View>
+//   )
+// }
 
 // Helper function to get platform badge color
 const getPlatformColor = (platform: string): string => {
@@ -209,6 +208,10 @@ const getPlatformTextColor = (platform: string): string => {
 const styles = StyleSheet.create({
   container: {
     width: "48%",
+    marginBottom: 16,
+  },
+  fullWidthContainer: {
+    width: 234,
     marginBottom: 16,
   },
   imageContainer: {

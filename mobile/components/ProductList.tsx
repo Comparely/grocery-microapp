@@ -43,7 +43,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
       <FlatList
         data={products}
         numColumns={2}
-        renderItem={({ item }) => <ProductCard session={session} product={item} key={item.id} />}
+        renderItem={({ item }) => <ProductCard fullWidth={false} session={session} product={item} key={item.id} />}
         keyExtractor={(item) => item.id.toString()}
         columnWrapperStyle={styles.columnWrapper}
         showsVerticalScrollIndicator={false}

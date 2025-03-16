@@ -10,6 +10,7 @@ type Session struct {
 	DeviceID              string                `json:"deviceID" bson:"deviceID"`
 	Lat                   string                `json:"lat" bson:"lat"`
 	Lng                   string                `json:"lng" bson:"lng"`
+	Address               string                `json:"address" bson:"address"`
 	UpdatedAt             int64                 `json:"updatedAt" bson:"updatedAt"`
 	MarketPlaceAttributes MarketPlaceAttributes `json:"marketplaceAttributes" bson:"marketplaceAttributes"`
 }

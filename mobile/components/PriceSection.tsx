@@ -4,69 +4,13 @@ import { ProductCard } from './ProductCard';
 import { Product } from '@/types/Product';
 import { Session } from '@/types/Session';
 
-// Sample product data
-const products: Product[] = [
-  {
-    id: 1,
-    imageUrl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    weight: '1 kg',
-    brand: 'Daawat',
-    name: 'Daawat Basmati Rice - Rozana Super',
-    mrp: 100,
-    priceOptions: [
-        {
-            platform: "zepto",
-            price: 82
-        },
-        {
-            platform: "blinkit",
-            price: 89
-        }
-    ]
-  },
-  {
-    id: 2,
-    imageUrl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    weight: '1 kg',
-    brand: 'Whole Farm',
-    name: 'Whole Farm Premium Parmal Rice',
-    mrp: 120,
-    priceOptions: [
-        {
-            platform: "zepto",
-            price: 62
-        },
-        {
-            platform: "blinkit",
-            price: 89
-        }
-    ]
-  },
-  {
-    id: 3,
-    imageUrl: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    weight: '10 kg',
-    brand: 'Chakki',
-    name: 'Chakki Atta',
-    mrp: 485,
-    priceOptions: [
-        {
-            platform: "zepto",
-            price: 480
-        },
-        {
-            platform: "blinkit",
-            price: 480
-        }
-    ]
-  },
-];
-
 type PriceSectionParams = {
-    session: Session
+  session: Session
+  products: Product[]
 }
 
-const PriceSection: React.FC<PriceSectionParams> = ({session}) => {
+const PriceSection: React.FC<PriceSectionParams> = ({session, products}) => {
+  console.log("products", products)
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Lowest Prices</Text>
@@ -74,7 +18,7 @@ const PriceSection: React.FC<PriceSectionParams> = ({session}) => {
       
       <FlatList
         data={products}
-        renderItem={({ item }) => <ProductCard session={session} product={item} />}
+        renderItem={({ item }) => <ProductCard fullWidth={true} session={session} product={item} />}
         keyExtractor={item => String(item.id)}
         horizontal
         showsHorizontalScrollIndicator={false}

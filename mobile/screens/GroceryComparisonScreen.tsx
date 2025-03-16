@@ -83,7 +83,7 @@ export const GroceryComparisonScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <SearchBar value={searchQuery} onChangeText={handleSearch} placeholder="Search for groceries..." />
+      <SearchBar onClick={() => {}} value={searchQuery} onChangeText={handleSearch} placeholder="Search for groceries..." />
       <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
         <ProductList products={products} isLoading={isLoading} session={session!} />
       </ScrollView>

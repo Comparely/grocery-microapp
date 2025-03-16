@@ -1,46 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 
-// Sample categories data
-const categories = [
-  {
-    id: '1',
-    name: 'Fresh Fruits & Vegetable',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    backgroundColor: '#e8f5e9',
-  },
-  {
-    id: '2',
-    name: 'Cooking Oil & Ghee',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    backgroundColor: '#fff3e0',
-  },
-  {
-    id: '3',
-    name: 'Bakery & Snacks',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    backgroundColor: '#f3e5f5',
-  },
-  {
-    id: '4',
-    name: 'Meat & Fish',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    backgroundColor: '#ffebee',
-  },
-  {
-    id: '5',
-    name: 'Dairy & Eggs',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    backgroundColor: '#fffde7',
-  },
-  {
-    id: '6',
-    name: 'Beverages',
-    image: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png',
-    backgroundColor: '#e3f2fd',
-  },
-];
-
 interface CategoryCardProps {
   category: {
     name: string;
@@ -61,7 +21,11 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
   );
 };
 
-const CategoriesSection = () => {
+type CategoriesSectionProps = {
+  categories: any
+}
+
+const CategoriesSection: React.FC<CategoriesSectionProps> = ({categories}) => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Popular Categories</Text>

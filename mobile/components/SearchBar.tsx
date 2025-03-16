@@ -6,10 +6,12 @@ interface SearchBarProps {
   value: string
   onChangeText: (text: string) => void
   placeholder?: string
+  onClick: () => void
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ value, onChangeText, placeholder = "Search" }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({ value, onChangeText, placeholder = "Search", onClick }) => {
   return (
+    <TouchableOpacity onPress={onClick}>
     <View style={styles.container}>
       <Feather name="search" size={20} color="#181b19" style={styles.icon} />
       <TextInput
@@ -26,7 +28,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ value, onChangeText, place
           <Feather name="x" size={20} color="#181b19" />
         </TouchableOpacity>
       )}
-    </View>
+    </View></TouchableOpacity>
   )
 }
 
