@@ -155,8 +155,10 @@ func fetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, error
 		return ZeptoStoreAttributes{}, err
 	}
 	if data, ok := res["storeServiceableResponse"].(map[string]interface{}); ok {
-		result.StoreID = data["storeId"].(string)
-		result.Serviceable = data["serviceable"].(bool)
+		if data["storeId"] != nil && data["serviceable"] != nil {
+			result.StoreID = data["storeId"].(string)
+			result.Serviceable = data["serviceable"].(bool)
+		}
 	}
 
 	if pageLayout, ok := res["pageLayout"].(map[string]interface{}); ok {
