@@ -15,7 +15,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/app-icons/android-adaptive-icon.png",
         "backgroundColor": "#004738"
-      }
+      },
+      "package": "in.comparely.app"
     },
     "web": {
       "bundler": "metro",
@@ -26,6 +27,12 @@
       "**/*"
     ],
     "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Comparely to use your location."
+        }
+      ],
       "expo-router",
       [
         "expo-splash-screen",
