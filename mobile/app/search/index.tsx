@@ -1,0 +1,21 @@
+import { GroceryComparisonScreen } from "@/screens/GroceryComparisonScreen"
+import { SafeAreaView, StatusBar, StyleSheet } from "react-native"
+
+const App = () => {
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#004738" />
+      <GroceryComparisonScreen />
+    </SafeAreaView>
+  )
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#004738",
+  },
+})
+
+export default App
+

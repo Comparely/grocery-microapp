@@ -239,6 +239,7 @@ func mapZepto(data map[string]interface{}) []Product {
 			discounted = storePrice
 		}
 		discounted = discounted / 100.0
+		mrp = mrp / 100.0
 		var imageURL string
 		if imgs, ok := variantData["images"].([]interface{}); ok && len(imgs) > 0 {
 			if im, ok := imgs[0].(map[string]interface{}); ok {

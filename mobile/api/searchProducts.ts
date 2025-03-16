@@ -103,7 +103,8 @@ export async function initiateSessionForUser(
     body: JSON.stringify(body)
   });
   const data = await response.json();
-  setItem("session", data)
+  await setItem("session", data)
+  localStorage.setItem("session", JSON.stringify(data))
   console.log("rec sess", data)
   return data as Session
 }

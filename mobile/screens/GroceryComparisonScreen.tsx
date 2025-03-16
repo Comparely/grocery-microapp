@@ -49,10 +49,6 @@ export const GroceryComparisonScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    console.log("Updated session:", session);
-  }, [session]);
-
-  useEffect(() => {
     if (searchQuery.trim()) {
       setIsLoading(true);
       const timer = setTimeout(async () => {

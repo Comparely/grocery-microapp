@@ -4,23 +4,26 @@ import Header from '../components/Header';
 import { SearchBar } from '../components/SearchBar';
 import PriceSection from '../components/PriceSection';
 import CategoriesSection from '../components/CategoriesSection';
-import { fetchAndConvertProducts, initiateSessionForUser } from '@/api/searchProducts';
+import { initiateSessionForUser } from '@/api/searchProducts';
 import { getItem } from '@/api/localStorage';
 import { Session } from '@/types/Session';
-import { Product } from '@/types/Product';
+import { Link } from 'expo-router';
 
 const HomeScreen = () => {
-    const [searchQuery, setSearchQuery] = useState<string>("")
-    const [isLoading, setIsLoading] = useState<boolean>(false)
-    const [products, setProducts] = useState<Product[]>([])
-    const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
-    const [session, setSession] = useState<Session>()
-    
-    useEffect(() => {
+  const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
+  const [session, setSession] = useState<Session>()
+
+  useEffect(() => {
       getItem("session").then((val) => {
         console.log("localSt", session)
         if(val != null) setSession(val)
       }).catch(err => console.log("Could not find session", err))
+
+      try{
+        setSession(JSON.parse(localStorage.getItem("session")!))
+      }catch(err){
+        console.log("nil sess")
+      }
       
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -29,7 +32,7 @@ const HomeScreen = () => {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
             });
-
+  
             initiateSessionForUser(position.coords.latitude, position.coords.longitude).then((val: any) => {
               setSession(val)
               console.log("remote", val)
@@ -46,48 +49,14 @@ const HomeScreen = () => {
         console.error('Geolocation is not supported by this device.');
       }
     }, []);
-
-    useEffect(() => {
-      console.log("Updated session:", session);
-    }, [session]);
-
-    useEffect(() => {
-      if (searchQuery.trim()) {
-        setIsLoading(true);
-        const timer = setTimeout(async () => {
-          try {
-            // Optionally, you can pass lat and lng if available.
-            const result = await fetchAndConvertProducts(
-              searchQuery,
-              location.lat || undefined,
-              location.lng || undefined
-            );
-            setProducts(result);
-            console.log("Products", result)
-          } catch (error) {
-            console.error('Error fetching products:', error);
-          } finally {
-            setIsLoading(false);
-          }
-        }, 300); // 300ms debounce delay
-
-        return () => clearTimeout(timer);
-      } else {
-        setProducts([]);
-      }
-    }, [searchQuery]);
-
-    const handleSearch = (text: string) => {
-      setSearchQuery(text)
-      if (text.trim() === "") {
-        setProducts([])
-      }
-    }
+    
   return (
     <View style={styles.container}>
       <Header />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
-        <SearchBar value={searchQuery} onChangeText={handleSearch} placeholder="Search for groceries..." />
+        <Link href="./search" relativeToDirectory>
+          <SearchBar value="" onChangeText={() => {}} placeholder="Search for groceries..." />
+        </Link>
         <PriceSection session={session!} />
         <CategoriesSection />
       </ScrollView>
