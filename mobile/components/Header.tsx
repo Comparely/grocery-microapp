@@ -33,12 +33,19 @@ const Header: React.FC<HeaderProps> = ({session}) => {
     }
     return str;
   }
+
+  const findBgColor = (storeName: string): string => {
+    if(storeName == "instamart") return "#fff"
+    if(storeName == "blinkit") return "#cbd402"
+    if(storeName == "zepto") return "#cbd402"
+    return "#cbd402"
+  }
   
   return (
     <View style={styles.container}>
-      <View style={styles.logoContainer}>
+      {/* <View style={styles.logoContainer}>
         <Image source={require('@/assets/images/comparely.svg')} />
-      </View>
+      </View> */}
       
       <View style={styles.locationContainer}>
         <Ionicons name="location" size={24} color="#cbd402" />
@@ -51,22 +58,34 @@ const Header: React.FC<HeaderProps> = ({session}) => {
       <Text style={styles.addressText}>{trimIfNeeded(session.address)}</Text>
       
       <View style={styles.rightContainer}>
+        <View style={[styles.timeContainer, {
+          backgroundColor: `${findBgColor(String(findLeastTimeStore()[1]))}`
+        }]}>
+          <Ionicons name="flash" size={18} color="#000000" />
+          <Text style={styles.timeText}>{findLeastTimeStore()[0]} mins</Text>
+          <View style={styles.blinkitBadge}>
+            {
+              findLeastTimeStore()[1] == "blinkit" && <Image style={{ width: 28, height:28 }} source={require('@/assets/images/blinkit.png')} />
+            }
+            {
+              findLeastTimeStore()[1] == "zepto" && <Image style={{ height:28, width:42 }} source={require('@/assets/images/zepto.png')} />
+            }
+            {
+              findLeastTimeStore()[1] == "instamart" && <Image style={{ width: 72, height:28 }} source={require('@/assets/images/swiggy_instamart.webp')} />
+            }
+          </View>
+        </View>
         
-        
-        <TouchableOpacity style={styles.profileButton}>
+        {/* <TouchableOpacity style={styles.profileButton}>
           <Image 
             source={require('@/assets/images/face.png')} 
             style={styles.profileImage} 
           />
-          {/* <Image 
-            source={{ uri: 'https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Comparely_App-S1tHdjD85X2cF8GpYqUWzmikD4U2jy.png' }} 
-            style={styles.profileImage} 
-          /> */}
-        </TouchableOpacity>
+        </TouchableOpacity> */}
 
         <View style={styles.deliveryInfo}>
-          <Text style={styles.deliveryText}>Fastest Delivery</Text>
-          <View style={styles.timeContainer}>
+          {/* <Text style={styles.deliveryText}>Fastest Delivery</Text> */}
+          {/* <View style={styles.timeContainer}>
             <Ionicons name="flash" size={18} color="#000000" />
             <Text style={styles.timeText}>{findLeastTimeStore()[0]} mins</Text>
             <View style={styles.blinkitBadge}>
@@ -80,7 +99,7 @@ const Header: React.FC<HeaderProps> = ({session}) => {
                 findLeastTimeStore()[1] == "instamart" && <Image style={{ width: 28, height:28 }} source={require('@/assets/images/instamart.png')} />
               }
             </View>
-          </View>
+          </View> */}
         </View>
       </View>
       <SearchBar onClick={() => {
@@ -108,6 +127,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   locationContainer: {
+    marginTop: 8,
     paddingHorizontal: 20,
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,8 +151,10 @@ const styles = StyleSheet.create({
     marginLeft: 29,
   },
   rightContainer: {
-    marginTop: 20,
+   // marginTop: 20,
     position: 'absolute',
+    flexDirection: 'row',
+    columnGap: 7,
     top: 15,
     right: 20,
     alignItems: 'flex-end',
@@ -149,7 +171,6 @@ const styles = StyleSheet.create({
   timeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#cbd402',
     borderRadius: 15,
     paddingHorizontal: 10,
     paddingVertical: 5,

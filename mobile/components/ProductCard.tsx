@@ -105,7 +105,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
               priceOption.platform == "blinkit" && <Image style={{width: 32, height: 13}} source={require('@/assets/images/blinkit.png')} />
             }
             {
-              priceOption.platform == "instamart" && <Image source={require('@/assets/images/instamart.png')} />
+              priceOption.platform == "instamart" && <Image style={{ width: 32, height:13 }} source={require('@/assets/images/swiggy_instamart.webp')} />
             }
             <View style={styles.tagSmall}>
               <Text style={styles.tagTextSmall}>{priceOption.weight}</Text>
