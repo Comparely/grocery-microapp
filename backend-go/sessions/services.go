@@ -114,8 +114,10 @@ func fetchBlinkitStoreDetails(lat string, lng string) (BlinkitStoreAttributes, e
 		result.StoreID = ""
 		result.Serviceable = true //TODO: Change tis
 
-		eta := fmt.Sprintf("%s Mins", strconv.Itoa(int(data["eta_in_minutes"].(float64))))
-		result.ETA = eta
+		if data["eta_in_minutes"] != nil {
+			eta := fmt.Sprintf("%s Mins", strconv.Itoa(int(data["eta_in_minutes"].(float64))))
+			result.ETA = eta
+		}
 	}
 
 	return result, nil
