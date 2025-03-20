@@ -1,4 +1,3 @@
-import { router } from 'expo-router';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 
@@ -11,13 +10,13 @@ interface CategoryCardProps {
 }
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
-  const handleCategoryClick = () => {
-    router.push(`/search?q=${encodeURIComponent(category.name)}`);
-  };
-
   return (
-    <TouchableOpacity onPress={handleCategoryClick} style={[styles.categoryCard, { backgroundColor: category.backgroundColor }]}>
-      {/* Existing content */}
+    <TouchableOpacity 
+      style={[styles.categoryCard, { backgroundColor: category.backgroundColor }]}
+      activeOpacity={0.7}
+    >
+      <Image source={{ uri: category.image }} style={styles.categoryImage} />
+      <Text style={styles.categoryName}>{category.name}</Text>
     </TouchableOpacity>
   );
 };

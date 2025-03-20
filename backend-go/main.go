@@ -26,6 +26,7 @@ func main() {
 		os.Exit(1)
 	}
 	log.Println("✅ Redis connected")
+	log.Println("Redis AppState", appState)
 
 	var cancelMongo func()
 	if appState.MongoClient, cancelMongo, err = config.InitMongo(); err != nil {
@@ -33,11 +34,13 @@ func main() {
 		os.Exit(1)
 	}
 	log.Println("✅ Mongo connected")
+	log.Println("Mongo AppState", appState)
+
 	defer cancelMongo()
 
 	router := gin.Default()
-	router.Use(cors.New(config.GetCorsConfig()))
 
+	router.Use(cors.New(config.GetCorsConfig()))
 	router.POST("/start-session", func(c *gin.Context) {
 		var input sessions.SessionInput
 		if err := c.ShouldBindJSON(&input); err != nil {
@@ -50,13 +53,12 @@ func main() {
 			Lng:       input.Lng,
 			UpdatedAt: time.Now().Unix(),
 		}
+		log.Println("AppState", appState)
 		ctx := context.Background()
 		if err := sessions.SaveSession(ctx, appState, &sess); err != nil {
-			log.Printf("Failed to save session for deviceID %s: %v", sess.DeviceID, err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save session"})
 			return
 		}
-		log.Printf("Session saved successfully: %+v", sess)
 		c.JSON(http.StatusOK, sess)
 	})
 
@@ -75,29 +77,5 @@ func main() {
 		}
 		c.JSON(http.StatusOK, products)
 	})
-
-	// Add the suggestions endpoint
-	router.POST("/suggestions", func(c *gin.Context) {
-		var input struct {
-			Query    string `json:"query"`
-			DeviceID string `json:"deviceId"`
-		}
-		if err := c.ShouldBindJSON(&input); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-			return
-		}
-		if input.Query == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Query is required"})
-			return
-		}
-		suggestions, err := search.ZeptoSuggestions(appState, input.Query, input.DeviceID)
-		if err != nil {
-			log.Println("Error fetching suggestions:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch suggestions"})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"suggestions": suggestions})
-	})
-
 	router.Run(fmt.Sprintf(":%d", PORT))
 }

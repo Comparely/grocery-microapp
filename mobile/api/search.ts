@@ -37,7 +37,7 @@ export async function searchProducts(
 ): Promise<Product[]> {
   try {
     const locParams = lat && lng ? `&lat=${lat}&lng=${lng}` : "";
-    const url = `http://192.168.1.36:4500/search?q=${encodeURIComponent(query)}${locParams}`;
+    const url = `http://localhost:3000/search?q=${encodeURIComponent(query)}${locParams}`;
     const response = await fetch(url);
     const data = await response.json();
 

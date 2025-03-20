@@ -21,18 +21,13 @@ func GetCorsConfig() cors.Config {
 }
 
 func InitRedis() (*redis.Client, error) {
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379", // Change to local Redis
-		Password: "",               
-		DB:       0,                
-	})
-
-	// Test connection
-	_, err := client.Ping(context.Background()).Result()
+	url := "redis://34.118.230.24:6379/" //34.118.230.24
+	opts, err := redis.ParseURL(url)
 	if err != nil {
 		return nil, err
 	}
-	return client, nil
+
+	return redis.NewClient(opts), nil
 }
 
 func InitMongo() (*mongo.Client, func(), error) {

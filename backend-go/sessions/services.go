@@ -7,14 +7,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/comparely/comparely-grocery-backend/config"
-	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -39,17 +37,10 @@ func fetchJSON(url string, method string, headers map[string]string, body string
 		return nil, err
 	}
 	defer resp.Body.Close()
-
-	// Log response details for debugging
-	log.Printf("FetchJSON Response Status: %s", resp.Status)
-	log.Printf("FetchJSON Response Headers: %v", resp.Header)
-
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("FetchJSON Raw Response Body: %s", string(bytes))
-
 	var result map[string]interface{}
 	if err := json.Unmarshal(bytes, &result); err != nil {
 		log.Printf("Failed to parse JSON from %s: %v", url, err)
@@ -91,9 +82,11 @@ func fetchInstamartStoreDetails(lat string, lng string) (InstamartStoreAttribute
 		if serviceability == "SERVICEABLE" {
 			result.Serviceable = true
 		}
+
 		eta := data["slaString"].(string)
 		result.ETA = eta
 	}
+
 	return result, nil
 }
 
@@ -117,6 +110,7 @@ func fetchBlinkitStoreDetails(lat string, lng string) (BlinkitStoreAttributes, e
 		return BlinkitStoreAttributes{}, err
 	}
 	if data, ok := res["data"].(map[string]interface{}); ok {
+
 		result.StoreID = ""
 		result.Serviceable = true //TODO: Change tis
 
@@ -125,30 +119,21 @@ func fetchBlinkitStoreDetails(lat string, lng string) (BlinkitStoreAttributes, e
 			result.ETA = eta
 		}
 	}
+
 	return result, nil
 }
 
-func FetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, ZeptoAuthData, error) {
-	initialCookie, initialXSRFToken, err := fetchZeptoInitialCookies()
-	if err != nil {
-		log.Printf("Failed to fetch initial cookies: %v", err)
-	}
-
+func fetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, error) {
 	zeptoUrl := "https://api.zeptonow.com/api/v2/get_page?"
 	headers := map[string]string{
-		"accept":                "application/json, text/plain, */*",
-		"accept-language":       "en-US,en;q=0.9",
-		"app_sub_platform":      "WEB",
-		"app_version":           "12.55.3",
-		"appversion":            "12.55.3",
-		"auth_revamp_flow":      "v2",
-		"compatible_components": "CONVENIENCE_FEE,RAIN_FEE,EXTERNAL_COUPONS,STANDSTILL,BUNDLE,MULTI_SELLER_ENABLED,PIP_V1,ROLLUPS,SCHEDULED_DELIVERY,SAMPLING_ENABLED,ETA_NORMAL_WITH_149_DELIVERY,ETA_NORMAL_WITH_199_DELIVERY,HOMEPAGE_V2,NEW_ETA_BANNER,VERTICAL_FEED_PRODUCT_GRID,AUTOSUGGESTION_PAGE_ENABLED,AUTOSUGGESTION_PIP,AUTOSUGGESTION_AD_PIP,BOTTOM_NAV_FULL_ICON,COUPON_WIDGET_CART_REVAMP,DELIVERY_UPSELLING_WIDGET,MARKETPLACE_CATEGORY_GRID,NO_PLATFORM_CHECK_ENABLED_V2,SUPER_SAVER:1,SUPERSTORE_V1,PROMO_CASH:0,24X7_ENABLED_V1,TABBED_CAROUSEL_V2,HP_V4_FEED,NEW_ROLLUPS_ENABLED,RERANKING_QCL_RELATED_PRODUCTS,PLP_ON_SEARCH,PAAN_BANNER_WIDGETIZED,ROLLUPS_UOM,DYNAMIC_FILTERS,PHARMA_ENABLED,AUTOSUGGESTION_RECIPE_PIP,SEARCH_FILTERS_V1,QUERY_DESCRIPTION_WIDGET,MEDS_WITH_SIMILAR_SALT_WIDGET,NEW_FEE_STRUCTURE,NEW_BILL_INFO,RE_PROMISE_ETA_ORDER_SCREEN_ENABLED,SUPERSTORE_V1,MANUALLY_APPLIED_DELIVERY_FEE_RECEIVABLE,MARKETPLACE_REPLACEMENT,ZEPTO_PASS,ZEPTO_PASS:1,ZEPTO_PASS:2,ZEPTO_PASS_RENEWAL,CART_REDESIGN_ENABLED,SHIPMENT_WIDGETIZATION_ENABLED,TABBED_CAROUSEL_V2,24X7_ENABLED_V1,PROMO_CASH:0,HOMEPAGE_V2,SUPER_SAVER:1,NO_PLATFORM_CHECK_ENABLED_V2",
-		"content-type":          "application/json",
-		"marketplace_type":      "ZEPTO_NOW",
-		"platform":              "WEB",
-		"user-agent":            "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
+		"accept":           "application/json, text/plain, */*",
+		"appversion":       "12.59.0",
+		"content-type":     "application/json",
+		"Cookie":           "__SW=9QmfCnSQcvpkyIwI-6umQ18QRNdGE9sc; _cid=MTA2ODg4NDU5; _device_id=846a4f24-003f-b080-2d71-53faeaf6141e; _session_tid=585d1f947945ddfe9d2fa8633361264a1c2ace308d38f5be3ba5e3e958dfc362d690f000d6276eb14a9c155d9492dfc42cb984676e49b219e0dfcaf1f14d8e69253138148da9e3a46a701912480bdcd83341b2e4375a2d1abe05b803f2f574976406492fce2c426e049b76ac823c35f5; _swuid=846a4f24-003f-b080-2d71-53faeaf6141e; ally-on=false; bottomOffset=0; deviceId=s%3A7d44adb5-c252-405f-a395-68222759bb78.oVmO1zqM2i5%2BNBTrHeUaXoV91npFCHkqtq5BmQ0QxaE; genieTrackOn=false; isNative=false; openIMHP=false; platform=web; sid=s%3Aj833e338-b6d7-4c9a-bc97-b41c064f873d.JCSEPujJwmNk7qRempcIYBmANtzySDxF%2F9BZm9iVcpU; statusBarHeight=0; strId=; subplatform=mweb; tid=s%3Ae3e4fbaf-5aa2-4d09-9c06-f031fc2d044c.cJNiPnkRnuMxVeW6j%2BhVZOxJwYPizk6n%2FwaBtNrmzUE; versionCode=1200",
+		"marketplace_type": "ZEPTO_NOW",
+		"platform":         "WEB",
+		"app_version":      "12.59.0",
 	}
-
 	zeptoQueryParams := map[string]string{
 		"latitude":              lat,
 		"longitude":             lng,
@@ -160,71 +145,35 @@ func FetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, Zepto
 		"layout_id":             "5618",
 	}
 
-	params := url.Values{}
 	for key, val := range zeptoQueryParams {
-		params.Add(key, val)
+		zeptoUrl += key + "=" + val + "&"
 	}
-	zeptoUrl += params.Encode()
+	zeptoUrl = zeptoUrl[:len(zeptoUrl)-1]
 
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("GET", zeptoUrl, nil)
+	var result ZeptoStoreAttributes
+
+	res, err := fetchJSON(zeptoUrl, "GET", headers, "")
 	if err != nil {
-		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
+		return ZeptoStoreAttributes{}, err
 	}
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	if initialCookie != "" {
-		req.Header.Set("Cookie", initialCookie)
-	}
-	if initialXSRFToken != "" {
-		req.Header.Set("X-XSRF-TOKEN", initialXSRFToken)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
-	}
-	defer resp.Body.Close()
-
-	log.Printf("Zepto Response Status: %s", resp.Status)
-	log.Printf("Zepto Response Headers: %v", resp.Header)
-
-	bytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
-	}
-	log.Printf("Zepto Raw Response Body: %s", string(bytes))
-
-	var result map[string]interface{}
-	if err := json.Unmarshal(bytes, &result); err != nil {
-		log.Printf("Failed to parse JSON from %s: %v", zeptoUrl, err)
-		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
-	}
-
-	var storeAttrs ZeptoStoreAttributes
-	if data, ok := result["storeServiceableResponse"].(map[string]interface{}); ok {
+	if data, ok := res["storeServiceableResponse"].(map[string]interface{}); ok {
 		if data["storeId"] != nil && data["serviceable"] != nil {
-			storeAttrs.StoreID = data["storeId"].(string)
-			storeAttrs.Serviceable = data["serviceable"].(bool)
+			result.StoreID = data["storeId"].(string)
+			result.Serviceable = data["serviceable"].(bool)
 		}
 	}
 
-	if pageLayout, ok := result["pageLayout"].(map[string]interface{}); ok {
+	if pageLayout, ok := res["pageLayout"].(map[string]interface{}); ok {
 		if widgets, ok := pageLayout["widgets"].([]interface{}); ok && len(widgets) > 0 {
 			for _, widget := range widgets {
 				widget := widget.(map[string]interface{})
 				if widget["widgetName"] == "ETA_BANNER" {
 					if widgetData, ok := widget["data"].(map[string]interface{}); ok {
 						if widgetDataItems, ok := widgetData["items"].(map[string]interface{}); ok {
-							if displayText, ok := widgetDataItems["displayText"].(string); ok && strings.Compare(displayText, "Delivery In") == 0 {
-								if etaInMinutes, ok := widgetDataItems["etaInMinutes"].(string); ok {
-									storeAttrs.ETA = fmt.Sprintf("%s Mins", etaInMinutes)
-								} else if etaInMinutesFloat, ok := widgetDataItems["etaInMinutes"].(float64); ok {
-									storeAttrs.ETA = fmt.Sprintf("%d Mins", int(etaInMinutesFloat))
-								}
-							} else if displayText, ok := widgetDataItems["displayText"].(string); ok {
-								storeAttrs.ETA = displayText
+							if strings.Compare(widgetDataItems["displayText"].(string), "Delivery In") == 0 {
+								result.ETA = fmt.Sprintf("%s Mins", widgetDataItems["etaInMinutes"].(string))
+							} else {
+								result.ETA = widgetDataItems["displayText"].(string)
 							}
 						}
 					}
@@ -234,79 +183,7 @@ func FetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, Zepto
 		}
 	}
 
-	// Capture auth data from response headers
-	cookies := resp.Header["Set-Cookie"]
-	cookieStr := strings.Join(cookies, "; ")
-	xsrfToken := resp.Header.Get("x-xsrf-token")
-
-	// Use initial values if response doesn’t provide new ones
-	if cookieStr == "" && initialCookie != "" {
-		cookieStr = initialCookie
-	}
-	if xsrfToken == "" && initialXSRFToken != "" {
-		xsrfToken = initialXSRFToken
-	}
-
-	var sessionID string
-	if cookieStr != "" {
-		cookieParts := strings.Split(cookieStr, "; ")
-		for _, part := range cookieParts {
-			if strings.HasPrefix(part, "XSRF-TOKEN=") {
-				xsrfToken = strings.TrimPrefix(part, "XSRF-TOKEN=")
-			}
-			if strings.HasPrefix(part, "session_id=") {
-				sessionID = strings.TrimPrefix(part, "session_id=")
-			}
-		}
-	}
-
-	if sessionID == "" {
-		if userSessionID, ok := result["userSessionId"]; ok && userSessionID != nil {
-			if sessionIDStr, ok := userSessionID.(string); ok {
-				sessionID = sessionIDStr
-			}
-		}
-		if sessionID == "" {
-			sessionID = uuid.New().String()
-		}
-	}
-
-	authData := ZeptoAuthData{
-		Cookie:    cookieStr,
-		XSRFToken: xsrfToken,
-		SessionID: sessionID,
-	}
-	log.Printf("Captured Zepto auth data - Cookie: %s, XSRFToken: %s, SessionID: %s", authData.Cookie, authData.XSRFToken, authData.SessionID)
-
-	return storeAttrs, authData, nil
-}
-
-func fetchZeptoInitialCookies() (string, string, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("GET", "https://www.zeptonow.com/", nil)
-	if err != nil {
-		return "", "", err
-	}
-
-	req.Header.Set("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8")
-	req.Header.Set("user-agent", "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Mobile Safari/537.36")
-	req.Header.Set("accept-language", "en-US,en;q=0.9")
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", "", err
-	}
-	defer resp.Body.Close()
-
-	cookies := resp.Header["Set-Cookie"]
-	cookieStr := strings.Join(cookies, "; ")
-	xsrfToken := resp.Header.Get("x-xsrf-token")
-
-	log.Printf("Initial Zepto Response Status: %s", resp.Status)
-	log.Printf("Initial Zepto Cookies: %s", cookieStr)
-	log.Printf("Initial Zepto XSRF-Token: %s", xsrfToken)
-
-	return cookieStr, xsrfToken, nil
+	return result, nil
 }
 
 func fetchAddressUsingInstamart(lat string, lng string) (string, error) {
@@ -332,119 +209,96 @@ func fetchAddressUsingInstamart(lat string, lng string) (string, error) {
 			address = addressData["title"].(string)
 		}
 	}
+
 	return address, nil
 }
 
+// SaveSession saves or updates a session in MongoDB and Redis.
 func SaveSession(ctx context.Context, appState config.AppState, sess *Session) error {
-	var instamartErr, zeptoErr, blinkitErr, addressErr error
-	var zeptoAuth ZeptoAuthData
+	log.Println("AppState", appState)
+	var instamartErr, zeptoErr, blinkitErr error
 	var wg sync.WaitGroup
 	wg.Add(4)
 
 	go func() {
-		defer wg.Done()
 		sess.MarketPlaceAttributes.InstamartStoreAttributes, instamartErr = fetchInstamartStoreDetails(sess.Lat, sess.Lng)
-		if instamartErr != nil {
-			log.Printf("Instamart fetch error: %v", instamartErr)
-		}
+		wg.Done()
 	}()
 
 	go func() {
-		defer wg.Done()
-		var zeptoStore ZeptoStoreAttributes
-		zeptoStore, zeptoAuth, zeptoErr = FetchZeptoStoreDetails(sess.Lat, sess.Lng)
-		sess.MarketPlaceAttributes.ZeptoStoreAttributes = zeptoStore
-		sess.ZeptoAuth = zeptoAuth
-		if zeptoErr != nil {
-			log.Printf("Zepto fetch error: %v", zeptoErr)
-		}
+		sess.MarketPlaceAttributes.ZeptoStoreAttributes, zeptoErr = fetchZeptoStoreDetails(sess.Lat, sess.Lng)
+		wg.Done()
 	}()
 
 	go func() {
-		defer wg.Done()
 		sess.MarketPlaceAttributes.BlinkitStoreAttributes, blinkitErr = fetchBlinkitStoreDetails(sess.Lat, sess.Lng)
-		if blinkitErr != nil {
-			log.Printf("Blinkit fetch error: %v", blinkitErr)
-		}
+		wg.Done()
 	}()
 
 	go func() {
-		defer wg.Done()
-		sess.Address, addressErr = fetchAddressUsingInstamart(sess.Lat, sess.Lng)
-		if addressErr != nil {
-			log.Printf("Address fetch error: %v", addressErr)
-		}
+		sess.Address, _ = fetchAddressUsingInstamart(sess.Lat, sess.Lng)
+		wg.Done()
 	}()
 
 	wg.Wait()
 
 	if instamartErr != nil {
-		return fmt.Errorf("failed to fetch Instamart store details: %v", instamartErr)
-	}
-	if zeptoErr != nil {
-		return fmt.Errorf("failed to fetch Zepto store details: %v", zeptoErr)
-	}
-	if blinkitErr != nil {
-		return fmt.Errorf("failed to fetch Blinkit store details: %v", blinkitErr)
-	}
-	if addressErr != nil {
-		return fmt.Errorf("failed to fetch address: %v", addressErr)
+		log.Println("StoreMETA Fetch Err", instamartErr)
 	}
 
-	// Upsert into MongoDB
+	if zeptoErr != nil {
+		log.Println("StoreMETA Fetch Err", zeptoErr)
+	}
+
+	if blinkitErr != nil {
+		log.Println("StoreMETA Fetch Err", blinkitErr)
+	}
+
+	// Upsert into MongoDB.
 	sessionCollection := appState.MongoClient.Database("comparelySBX").Collection("UserSessions")
+	log.Println("Session Collection", sessionCollection)
+
 	filter := bson.M{"deviceID": sess.DeviceID}
 	update := bson.M{"$set": sess}
 	opts := options.Update().SetUpsert(true)
 	_, err := sessionCollection.UpdateOne(ctx, filter, update, opts)
+	//log.Println("Session Collection", *updateRes)
 	if err != nil {
-		log.Printf("MongoDB upsert error: %v", err)
-		return fmt.Errorf("failed to upsert session in MongoDB: %v", err)
+		return err
 	}
-
-	// Save to Redis with expiration
+	// Save to Redis with expiration (e.g., 1 hour).
 	sessionJSON, err := json.Marshal(sess)
 	if err != nil {
-		log.Printf("JSON marshal error: %v", err)
-		return fmt.Errorf("failed to marshal session: %v", err)
+		return err
 	}
 	redisCtx := context.Background()
 	err = appState.RedisClient.Set(redisCtx, "session:"+sess.DeviceID, sessionJSON, time.Hour).Err()
-	if err != nil {
-		log.Printf("Redis set error: %v", err)
-		return fmt.Errorf("failed to set session in Redis: %v", err)
-	}
-
-	log.Printf("Session saved successfully: %+v", sess)
-	return nil
+	return err
 }
 
-func GetSession(ctx context.Context, appState config.AppState, deviceID string) (Session, error) {
-	var sess Session
-
-	// Try Redis first
+// GetSession retrieves a session by deviceID.
+// It first tries Redis, then falls back to MongoDB and caches it in Redis.
+func GetSession(ctx context.Context, appState config.AppState, deviceID string) (*Session, error) {
+	sessionCollection := appState.MongoClient.Database("comparelySBX").Collection("UserSessions")
 	redisCtx := context.Background()
-	sessionJSON, err := appState.RedisClient.Get(redisCtx, "session:"+deviceID).Result()
+	val, err := appState.RedisClient.Get(redisCtx, "session:"+deviceID).Result()
 	if err == nil {
-		if err := json.Unmarshal([]byte(sessionJSON), &sess); err == nil {
-			return sess, nil
+		var sess Session
+		if err := json.Unmarshal([]byte(val), &sess); err == nil {
+			return &sess, nil
 		}
 	}
-
-	// Fallback to MongoDB
-	sessionCollection := appState.MongoClient.Database("comparelySBX").Collection("UserSessions")
+	// Fall back to MongoDB.
 	filter := bson.M{"deviceID": deviceID}
+	var sess Session
 	err = sessionCollection.FindOne(ctx, filter).Decode(&sess)
 	if err != nil {
-		return Session{}, fmt.Errorf("failed to find session for deviceID %s: %v", deviceID, err)
+		return nil, err
 	}
-
-	// Cache in Redis for future use
-	sessionJSONBytes, err := json.Marshal(sess)
+	// Cache in Redis.
+	sessionJSON, err := json.Marshal(sess)
 	if err == nil {
-		sessionJSON = string(sessionJSONBytes)
-		appState.RedisClient.Set(redisCtx, "session:"+deviceID, sessionJSON, time.Hour)
+		appState.RedisClient.Set(redisCtx, "session:"+sess.DeviceID, sessionJSON, time.Hour)
 	}
-
-	return sess, nil
+	return &sess, nil
 }
