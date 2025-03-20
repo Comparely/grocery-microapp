@@ -1,96 +1,162 @@
 {
-    "featuredProducts": [
+  "featuredProducts": [
+    {
+      "id": 1,
+      "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/image%205.png",
+      "weight": "1 kg",
+      "brand": "Daawat",
+      "name": "Daawat Basmati Rice - Rozana Super",
+      "mrp": 100,
+      "priceOptions": [
         {
-          "id": 1,
-          "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/image%205.png",
-          "weight": "1 kg",
-          "brand": "Daawat",
-          "name": "Daawat Basmati Rice - Rozana Super",
-          "mrp": 100,
-          "priceOptions": [
-              {
-                  "platform": "zepto",
-                  "price": 82
-              },
-              {
-                  "platform": "blinkit",
-                  "price": 89
-              }
-          ]
+          "platform": "zepto",
+          "price": 82,
+          "deeplink": "https://www.zeptonow.com/pn/daawat-rozana-super-basmati-rice-medium-grain/pvid/6b78d070-ba4c-459c-9d4d-fe058f71d5cf"
         },
         {
-          "id": 2,
-          "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/image.png",
-          "weight": "1 kg",
-          "brand": "Whole Farm",
-          "name": "Whole Farm Premium Parmal Rice",
-          "mrp": 120,
-          "priceOptions": [
-              {
-                  "platform": "zepto",
-                  "price": 62
-              },
-              {
-                  "platform": "blinkit",
-                  "price": 89
-              }
-          ]
-        },
-        {
-          "id": 3,
-          "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/a821b7c3800da72ef25240841c39b5b5.webp",
-          "weight": "10 kg",
-          "brand": "Chakki",
-          "name": "Chakki Atta",
-          "mrp": 485,
-          "priceOptions": [
-              {
-                  "platform": "zepto",
-                  "price": 480
-              },
-              {
-                  "platform": "blinkit",
-                  "price": 480
-              }
-          ]
+          "platform": "blinkit",
+          "price": 89,
+          "deeplink": "https://blinkit.com/prn/daawat-rozana-super-basmati-rice-1-kg/prid/60660"
         }
-    ],
-    "categories": [
+      ]
+    },
+    {
+      "id": 2,
+      "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/image.png",
+      "weight": "1 kg",
+      "brand": "Whole Farm",
+      "name": "Whole Farm Premium Parmal Rice",
+      "mrp": 120,
+      "priceOptions": [
         {
-          "id": "1",
-          "name": "Fresh Fruits & Vegetable",
-          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/vegetable_fruit.webp",
-          "backgroundColor": "#e8f5e9"
+          "platform": "zepto",
+          "price": 62,
+          "deeplink": "https://www.zeptonow.com/pn/whole-farm-premium-parmal-rice/pvid/528010"
         },
         {
-          "id": "2",
-          "name": "Cooking Oil & Ghee",
-          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/cooking_oil.webp",
-          "backgroundColor": "#fff3e0"
-        },
-        {
-          "id": "3",
-          "name": "Bakery & Snacks",
-          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/bakery.webp",
-          "backgroundColor": "#f3e5f5"
-        },
-        {
-          "id": "4",
-          "name": "Meat & Fish",
-          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/meat.webp",
-          "backgroundColor": "#ffebee"
-        },
-        {
-          "id": "5",
-          "name": "Dairy & Eggs",
-          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/milk.webp",
-          "backgroundColor": "#fffde7"
-        },
-        {
-          "id": "6",
-          "name": "Beverages",
-          "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/my_pussy_tastes_like_pepsi_cola.webp",
-          "backgroundColor": "#e3f2fd"
+          "platform": "blinkit",
+          "price": 89,
+          "deeplink": "https://blinkit.com/prn/whole-farm-premium-parmal-rice/prid/528010"
         }
-    ]
+      ]
+    },
+    {
+      "id": 3,
+      "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/a821b7c3800da72ef25240841c39b5b5.webp",
+      "weight": "10 kg",
+      "brand": "Chakki",
+      "name": "Chakki Atta",
+      "mrp": 485,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 480,
+          "deeplink": "https://www.zeptonow.com/pn/fortune-chakki-fresh-atta/pvid/09100e95-eb80-4089-8f4a-7cad4fc65be7"
+        },
+        {
+          "platform": "blinkit",
+          "price": 480,
+          "deeplink": "https://blinkit.com/prn/fortune-chakki-fresh-100-atta-0-maida-atta-10-kg/prid/380157"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-640,ar-1000-1000,pr-true,f-auto,q-80/cms/product_variant/4f6192ae-7806-4f43-b148-a44169cf2b0e/Kurkure-Masala-Munch.jpeg",
+      "weight": "100 g",
+      "brand": "Kurkure",
+      "name": "Kurkure Masala Munch",
+      "mrp": 20,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 18,
+          "deeplink": "https://www.zeptonow.com/pn/kurkure-masala-munch/pvid/c32d9425-0bdb-4d31-bb21-47630f1811f9"
+        },
+        {
+          "platform": "blinkit",
+          "price": 19,
+          "deeplink": "https://blinkit.com/prn/kurkure-masala-munch-crisps/prid/67372"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=480,h=480/da/cms-assets/cms/product/ead1bbae-ef23-4f85-b971-c849710b8a9a.jpg?ts=1735215741",
+      "weight": "1 kg",
+      "brand": "Surf Excel",
+      "name": "Surf Excel Easy Wash Detergent Powder",
+      "mrp": 250,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 230,
+          "deeplink": "https://www.zeptonow.com/pn/surf-excel-easy-wash-detergent-powder/pvid/4c2fc8ec-dfde-49db-9031-8f8795898919"
+        },
+        {
+          "platform": "blinkit",
+          "price": 235,
+          "deeplink": "https://blinkit.com/prn/x/prid/18555"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/54085ed6-6982-45ca-a8f1-5e864e3a7ae6/Pepsi-Soft-Drink.jpeg",
+      "weight": "2.25 L",
+      "brand": "Pepsi",
+      "name": "Pepsi Soft Drink",
+      "mrp": 90,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 85,
+          "deeplink": "https://www.zeptonow.com/pn/pepsi-soft-drink/pvid/82675cec-f35e-4f33-86c9-39d6b0b94f39"
+        },
+        {
+          "platform": "blinkit",
+          "price": 87,
+          "deeplink": "https://blinkit.com/prn/pepsi-soft-drink-2.25-l/prid/77493"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Fresh Fruits & Vegetable",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/vegetable_fruit.webp",
+      "backgroundColor": "#e8f5e9"
+    },
+    {
+      "id": "2",
+      "name": "Cooking Oil & Ghee",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/cooking_oil.webp",
+      "backgroundColor": "#fff3e0"
+    },
+    {
+      "id": "3",
+      "name": "Bakery & Snacks",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/bakery.webp",
+      "backgroundColor": "#f3e5f5"
+    },
+    {
+      "id": "4",
+      "name": "Meat & Fish",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/meat.webp",
+      "backgroundColor": "#ffebee"
+    },
+    {
+      "id": "5",
+      "name": "Dairy & Eggs",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/milk.webp",
+      "backgroundColor": "#fffde7"
+    },
+    {
+      "id": "6",
+      "name": "Beverages",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/my_pussy_tastes_like_pepsi_cola.webp",
+      "backgroundColor": "#e3f2fd"
+    }
+  ]
 }
