@@ -118,9 +118,12 @@ func fetchBlinkitStoreDetails(lat string, lng string) (BlinkitStoreAttributes, e
 	}
 	if data, ok := res["data"].(map[string]interface{}); ok {
 		result.StoreID = ""
-		result.Serviceable = true // TODO: Change this
-		eta := fmt.Sprintf("%s Mins", strconv.Itoa(int(data["eta_in_minutes"].(float64))))
-		result.ETA = eta
+		result.Serviceable = true //TODO: Change tis
+
+		if data["eta_in_minutes"] != nil {
+			eta := fmt.Sprintf("%s Mins", strconv.Itoa(int(data["eta_in_minutes"].(float64))))
+			result.ETA = eta
+		}
 	}
 	return result, nil
 }
