@@ -1,7 +1,6 @@
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native"
 import { GroceryComparisonScreen } from "../screens/GroceryComparisonScreen"
 import HomeScreen from "@/screens/HomeScreen"
-import '../global.css';
 
 const App = () => {
   return (

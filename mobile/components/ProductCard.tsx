@@ -1,19 +1,33 @@
-import React from 'react';
-import { StyleSheet, View, Text, Image, Linking, TouchableOpacity, Dimensions } from 'react-native';
-import type { Product, PriceOption } from '../types/Product';
-import { Session } from '@/types/Session';
-
-const { width } = Dimensions.get('window'); // For responsive design
+import type React from "react"
+import { StyleSheet, View, Text, Image, Linking, TouchableOpacity } from "react-native"
+import type { Product, PriceOption } from "../types/Product"
+import { getItem } from "@/api/localStorage"
+import { useEffect, useState } from "react"
+import { Session } from "@/types/Session"
 
 interface ProductCardProps {
-  fullWidth: boolean;
-  session: Session;
-  product: Product;
+  fullWidth: boolean
+  session: Session
+  product: Product
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, product }) => {
-  console.log('sess', session);
-  console.log('prod', product);
+
+  console.log("sess", session)
+  console.log("prod", product)
+  // Find the cheapest and fastest options
+  // const cheapestOption = product.priceOptions.reduce(
+  //   (prev, current) => (prev.price < current.price ? prev : current),
+  //   product.priceOptions[0],
+  // )
+
+  // const fastestOption = product.priceOptions.reduce(
+  //   (prev, current) => (prev.deliveryTime < current.deliveryTime ? prev : current),
+  //   product.priceOptions[0],
+  // )
+
+  // Check if cheapest is also fastest
+  //const isCheapestAlsoFastest = cheapestOption.id === fastestOption.id
 
   return (
     <View style={fullWidth ? styles.fullWidthContainer : styles.container}>
@@ -45,26 +59,29 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
         </Text>
 
         {/* Price Options */}
-        {product.priceOptions.map((priceOption) => (
-          <PriceOptionSingle
-            session={session}
-            key={priceOption.id}
-            priceOption={priceOption}
-            label=""
-          />
-        ))}
+        {
+          product.priceOptions.map(priceOption => 
+            <PriceOptionSingle session={session} key={priceOption.id} priceOption={priceOption} label="" />
+          )
+        }
+        {/* {isCheapestAlsoFastest ? (
+          <PriceOptionSingle priceOption={cheapestOption} label="Cheapest & Fastest" />
+        ) : (
+          <PriceOptionDouble cheapestOption={cheapestOption} fastestOption={fastestOption} />
+        )} */}
       </View>
     </View>
-  );
-};
+  )
+}
 
 interface PriceOptionSingleProps {
-  session: Session;
-  priceOption: PriceOption;
-  label: string;
+  session: any
+  priceOption: PriceOption
+  label: string
 }
 
 const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOption, label }) => {
+
   const handleDeepLink = async (url: string) => {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
@@ -74,37 +91,22 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
     }
   };
 
-  // Determine ETA based on platform
-  const eta = {
-    zepto: session.marketplaceAttributes?.zeptoStoreAttributes?.eta || 'N/A',
-    blinkit: session.marketplaceAttributes?.blinkitStoreAttributes?.eta || 'N/A',
-    instamart: session.marketplaceAttributes?.instamartStoreAttributes?.eta || 'N/A',
-  }[priceOption.platform] || 'N/A';
-
   return (
-    <TouchableOpacity
-      onPress={() => handleDeepLink(priceOption.deeplink)}
-      style={styles.priceOptionContainer}
-    >
-      <View style={styles.priceRow}>
+    <TouchableOpacity onPress={() => handleDeepLink(priceOption.deeplink)} style={styles.priceOptionContainer}>
+      <View>
+        <Text style={styles.optionLabel}>{label}</Text>
         <View style={styles.priceContainer}>
           <Text style={styles.priceText}>₹{priceOption.price}</Text>
-          <View style={styles.platformBadge}>
-            {priceOption.platform === 'zepto' && (
-              <Image source={require('@/assets/images/zepto.svg')} style={styles.platformImage} />
-            )}
-            {priceOption.platform === 'blinkit' && (
-              <Image
-                source={require('@/assets/images/blinkit.png')}
-                style={styles.platformImage}
-              />
-            )}
-            {priceOption.platform === 'instamart' && (
-              <Image
-                source={require('@/assets/images/swiggy_instamart.webp')}
-                style={styles.platformImage}
-              />
-            )}
+          <View style={[styles.platformBadge]}>
+            {
+              priceOption.platform == "zepto" && <Image source={require('@/assets/images/zepto.svg')} />
+            }
+            {
+              priceOption.platform == "blinkit" && <Image style={{width: 32, height: 13}} source={require('@/assets/images/blinkit.png')} />
+            }
+            {
+              priceOption.platform == "instamart" && <Image style={{ width: 32, height:13 }} source={require('@/assets/images/swiggy_instamart.webp')} />
+            }
             <View style={styles.tagSmall}>
               <Text style={styles.tagTextSmall}>{priceOption.weight}</Text>
             </View>
@@ -114,145 +116,242 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
           <View style={styles.deliveryDot}>
             <View style={styles.deliveryDotInner} />
           </View>
-          <Text style={styles.deliveryText}>{eta}</Text>
+          <Text style={styles.deliveryText}>
+            {
+              priceOption.platform == "zepto" && session.marketplaceAttributes.zeptoStoreAttributes.eta
+            }
+            {
+              priceOption.platform == "blinkit" && session.marketplaceAttributes.blinkitStoreAttributes.eta
+            }
+            {
+              priceOption.platform == "instamart" && session.marketplaceAttributes.instamartStoreAttributes.eta
+            }
+          </Text>
         </View>
       </View>
     </TouchableOpacity>
-  );
-};
+  )
+}
+
+// interface PriceOptionDoubleProps {
+//   cheapestOption: PriceOption
+//   fastestOption: PriceOption
+// }
+
+// const PriceOptionDouble: React.FC<PriceOptionDoubleProps> = ({ cheapestOption, fastestOption }) => {
+//   return (
+//     <View>
+//       <View style={styles.optionsLabelContainer}>
+//         <Text style={styles.optionLabel}>Cheapest</Text>
+//         <Text style={styles.optionLabel}>Fastest</Text>
+//       </View>
+//       <View style={styles.optionsContainer}>
+//         <View style={styles.priceContainer}>
+//           <Text style={styles.priceText}>₹{cheapestOption.price}</Text>
+//           <View style={[styles.platformBadge, { backgroundColor: getPlatformColor(cheapestOption.platform) }]}>
+//             <Text style={[styles.platformText, { color: getPlatformTextColor(cheapestOption.platform) }]}>
+//               {cheapestOption.platform}
+//             </Text>
+//           </View>
+//         </View>
+//         <View style={styles.priceContainer}>
+//           <Text style={styles.priceText}>₹{fastestOption.price}</Text>
+//           <View style={[styles.platformBadge, { backgroundColor: getPlatformColor(fastestOption.platform) }]}>
+//             <Text style={[styles.platformText, { color: getPlatformTextColor(fastestOption.platform) }]}>
+//               {fastestOption.platform}
+//             </Text>
+//           </View>
+//         </View>
+//       </View>
+//       <View style={styles.optionsContainer}>
+//         <View style={styles.deliveryContainer}>
+//           <View style={styles.deliveryDot}>
+//             <View style={styles.deliveryDotInner} />
+//           </View>
+//           <Text style={styles.deliveryText}>{cheapestOption.deliveryTime} mins</Text>
+//         </View>
+//         <View style={styles.deliveryContainer}>
+//           <View style={styles.deliveryDot}>
+//             <View style={styles.deliveryDotInner} />
+//           </View>
+//           <Text style={styles.deliveryText}>{fastestOption.deliveryTime} mins</Text>
+//         </View>
+//       </View>
+//     </View>
+//   )
+// }
+
+// Helper function to get platform badge color
+const getPlatformColor = (platform: string): string => {
+  switch (platform.toLowerCase()) {
+    case "zepto":
+      return "#6f1ab6"
+    case "blinkit":
+      return "#cbd402"
+    default:
+      return "#cbd402"
+  }
+}
+
+// Helper function to get platform text color
+const getPlatformTextColor = (platform: string): string => {
+  switch (platform.toLowerCase()) {
+    case "zepto":
+      return "#ffffff"
+    case "blinkit":
+      return "#181b19"
+    default:
+      return "#181b19"
+  }
+}
 
 const styles = StyleSheet.create({
   container: {
-    width: width > 768 ? '48%' : 234, // Fixed width on mobile, percentage on web
+    width: "48%",
     marginBottom: 16,
   },
   fullWidthContainer: {
-    width: 234, // Fixed width for horizontal scroll on mobile
-    marginRight: 10, // Spacing between cards in FlatList
+    width: 234,
+    marginBottom: 16,
   },
   imageContainer: {
-    backgroundColor: 'white',
+    backgroundColor: "white",
     borderRadius: 12,
     padding: 16,
-    height: width > 768 ? 180 : 150, // Smaller on mobile
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: 180,
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 8,
-    position: 'relative',
+    position: "relative",
   },
   newPackBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
-    backgroundColor: 'red',
+    backgroundColor: "red",
     borderTopLeftRadius: 12,
     borderBottomRightRadius: 12,
     paddingHorizontal: 6,
     paddingVertical: 2,
   },
   newPackText: {
-    color: 'white',
+    color: "white",
     fontSize: 8,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   image: {
-    width: '80%',
-    height: '80%',
-    resizeMode: 'contain',
+    width: "80%",
+    height: "80%",
+    resizeMode: "contain",
   },
   detailsContainer: {
     paddingHorizontal: 4,
   },
   tagsContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 6,
   },
   tag: {
-    backgroundColor: '#fde5b6',
+    backgroundColor: "#fde5b6",
     borderRadius: 50,
     paddingHorizontal: 8,
     paddingVertical: 4,
     marginRight: 8,
   },
   tagSmall: {
-    backgroundColor: '#fde5b6',
+    backgroundColor: "#fde5b6",
     borderRadius: 50,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 4, // Space from platform image
+    paddingHorizontal: 8,
+    paddingVertical: 1,
+    marginRight: 8,
   },
   tagText: {
-    color: '#181b19',
+    color: "#181b19",
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   tagTextSmall: {
-    color: '#181b19',
+    color: "#181b19",
     fontSize: 10,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   mrpText: {
-    color: '#9d9d9d',
+    color: "#9d9d9d",
     fontSize: 12,
     marginBottom: 4,
   },
   nameText: {
-    color: '#181b19',
-    fontSize: width > 768 ? 16 : 14, // Smaller on mobile
-    fontWeight: 'bold',
+    color: "#181b19",
+    fontSize: 16,
+    fontWeight: "bold",
     marginBottom: 8,
     lineHeight: 20,
   },
-  priceOptionContainer: {
-    marginBottom: 8,
+  optionsLabelContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
   },
-  priceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  optionLabel: {
+    color: "#004738",
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  optionsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 4,
   },
   priceContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 4,
   },
   priceText: {
-    fontSize: width > 768 ? 16 : 14, // Smaller on mobile
-    fontWeight: 'bold',
-    color: '#181b19',
-    marginRight: 8,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#181b19",
+    marginRight: 4,
   },
   platformBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+    borderRadius: 4,
+    display: "flex",
+    flexDirection: "row",
+    columnGap: 8
   },
-  platformImage: {
-    width: 32,
-    height: 13,
-    resizeMode: 'contain',
+  platformText: {
+    fontSize: 10,
+    fontWeight: "bold",
   },
   deliveryContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   deliveryDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#ffeb3b',
-    justifyContent: 'center',
-    alignItems: 'center',
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#ffeb3b",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 4,
   },
   deliveryDotInner: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: '#ffa000',
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#ffa000",
   },
   deliveryText: {
     fontSize: 12,
-    color: '#181b19',
+    color: "#181b19",
   },
-});
+  priceOptionContainer: {
+    display: "flex",
+    flexDirection: "row",
+    rowGap: 8
+  }
+})
 
-export default ProductCard;
