@@ -1,48 +1,69 @@
-import type React from "react"
-import { StyleSheet, TextInput, View, TouchableOpacity } from "react-native"
-import { Feather } from "@expo/vector-icons"
+import React from 'react';
+import { StyleSheet, TextInput, View, TouchableOpacity, Platform } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import Navbar from './Navbar';
 
 interface SearchBarProps {
-  value: string
-  onChangeText: (text: string) => void
-  placeholder?: string
-  onClick: () => void
+  value: string;
+  onChangeText: (text: string) => void;
+  placeholder?: string;
+  onClick?: () => void; // Optional: for navigation
+  editable?: boolean;  // Control editability
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({ value, onChangeText, placeholder = "Search", onClick }) => {
+export const SearchBar: React.FC<SearchBarProps> = ({
+  value,
+  onChangeText,
+  placeholder = 'Search',
+  onClick,
+  editable = Platform.OS === 'web', // Default: editable on web, not on mobile
+}) => {
+  const handlePress = () => {
+    if (onClick && !editable) {
+      onClick(); // Trigger navigation only if not editable
+    }
+  };
+
   return (
-    <TouchableOpacity onPress={onClick}>
-    <View style={styles.container}>
-      <Feather name="search" size={20} color="#181b19" style={styles.icon} />
-      <TextInput
-        style={styles.input}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor="#9d9d9d"
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
-      {value.length > 0 && (
-        <TouchableOpacity onPress={() => onChangeText("")}>
-          <Feather name="x" size={20} color="#181b19" />
-        </TouchableOpacity>
-      )}
-    </View></TouchableOpacity>
-  )
-}
+    <TouchableOpacity
+      onPress={editable ? undefined : handlePress} // Only make it tappable if not editable
+      style={styles.touchableContainer}
+      activeOpacity={editable ? 1 : 0.7} // No opacity change if editable
+    >
+      <View style={styles.container} pointerEvents={editable ? 'auto' : 'none'}>
+        <Feather name="search" size={20} color="#181b19" style={styles.icon} />
+        <TextInput
+          style={styles.input}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor="#9d9d9d"
+          autoCapitalize="none"
+          autoCorrect={false}
+          editable={editable}
+          onFocus={editable ? undefined : handlePress} // Fallback for navigation
+        />
+        {value.length > 0 && editable && (
+          <TouchableOpacity onPress={() => onChangeText('')}>
+            <Feather name="x" size={20} color="#181b19" />
+          </TouchableOpacity>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+};
 
 const styles = StyleSheet.create({
+  touchableContainer: {
+    width: '100%',
+  },
   container: {
-    backgroundColor: "#fffaf0",
+    backgroundColor: '#fffaf0',
     borderRadius: 10,
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginLeft: 20,
-    marginRight: 20,
-    marginTop: 20,
   },
   icon: {
     marginRight: 8,
@@ -50,8 +71,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
-    color: "#181b19",
-    fontWeight: "500",
+    color: '#181b19',
+    fontWeight: '500',
   },
-})
-
+});
