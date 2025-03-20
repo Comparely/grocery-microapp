@@ -36,7 +36,7 @@ export default function Root({ children }: PropsWithChildren) {
         <title>Comparely - Compare Food Prices Across Platforms</title>
         <meta name="description" content="Compare food prices across Zomato, Swiggy, and Magicpin with Comparely. Find the best deals and save money on every order."/>
         <meta name="keywords" content="food price comparison, Zomato, Swiggy, Magicpin, best deals, food orders"/>
-        <meta name="viewport" content="width=768, initial-scale=1, maximum-scale=1, user-scalable=no" />
+        {/* <meta name="viewport" content="width=768, initial-scale=1, maximum-scale=1, user-scalable=no" /> */}
         <meta name="robots" content="index, follow"/>
         <link rel="canonical" href="https://comparely.co.in/"/>
 

@@ -70,7 +70,7 @@ export const GroceryComparisonScreen: React.FC = () => {
   
       setIsLoading(true);
       try {
-        const suggestionResponse = await fetch('http://192.168.1.36:4500/suggestions', {
+        const suggestionResponse = await fetch('http://localhost:4500/suggestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
