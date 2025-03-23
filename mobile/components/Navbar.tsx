@@ -11,7 +11,7 @@ const Navbar: React.FC = () => {
       <TouchableOpacity onPress={() => router.push('/')}>
         <Ionicons name="arrow-back" size={24} color="#fff" />
       </TouchableOpacity>
-      <Text style={styles.title}>Grocery Comparison</Text>
+      <Text style={styles.title}>Comparely</Text>
       <View style={styles.placeholder} /> {/* Balances the layout */}
     </View>
   );

@@ -63,6 +63,7 @@ const HomeScreen = () => {
     fetchHomePageData()
       .then((val) => {
         console.log('Fetched data:', val); // Debug log
+        console.log('Categories set:', val[1])
         setCategories(val[1] || []);
         setFeaturedProducts(val[0] || []);
       })

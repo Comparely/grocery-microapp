@@ -12,9 +12,6 @@ interface ProductCardProps {
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, product }) => {
-  console.log('sess', session);
-  console.log('prod', product);
-
   return (
     <View style={fullWidth ? styles.fullWidthContainer : styles.container}>
       {/* Product Image */}
@@ -74,7 +71,6 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
     }
   };
 
-  // Determine ETA based on platform
   const eta = {
     zepto: session.marketplaceAttributes?.zeptoStoreAttributes?.eta || 'N/A',
     blinkit: session.marketplaceAttributes?.blinkitStoreAttributes?.eta || 'N/A',
@@ -123,18 +119,19 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
 
 const styles = StyleSheet.create({
   container: {
-    width: width > 768 ? '48%' : 234, // Fixed width on mobile, percentage on web
+    width: '48%', // Responsive width for grid layout
     marginBottom: 16,
+    marginHorizontal: 4, // Adds spacing between cards
   },
   fullWidthContainer: {
-    width: 234, // Fixed width for horizontal scroll on mobile
-    marginRight: 10, // Spacing between cards in FlatList
+    width: 234, // Fixed width for horizontal scroll scenarios
+    marginRight: 10,
   },
   imageContainer: {
     backgroundColor: 'white',
     borderRadius: 12,
     padding: 16,
-    height: width > 768 ? 180 : 150, // Smaller on mobile
+    height: width > 768 ? 180 : 150,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
@@ -179,7 +176,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     paddingHorizontal: 6,
     paddingVertical: 2,
-    marginLeft: 4, // Space from platform image
+    marginLeft: 4,
   },
   tagText: {
     color: '#181b19',
@@ -198,7 +195,7 @@ const styles = StyleSheet.create({
   },
   nameText: {
     color: '#181b19',
-    fontSize: width > 768 ? 16 : 14, // Smaller on mobile
+    fontSize: width > 768 ? 16 : 14,
     fontWeight: 'bold',
     marginBottom: 8,
     lineHeight: 20,
@@ -216,7 +213,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priceText: {
-    fontSize: width > 768 ? 16 : 14, // Smaller on mobile
+    fontSize: width > 768 ? 16 : 14,
     fontWeight: 'bold',
     color: '#181b19',
     marginRight: 8,

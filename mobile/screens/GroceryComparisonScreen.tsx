@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { StyleSheet, View, ScrollView, FlatList, Text, TouchableOpacity } from 'react-native';
 import { SearchBar } from '../components/SearchBar';
 import { ProductList } from '../components/ProductList';
@@ -17,17 +17,18 @@ export const GroceryComparisonScreen: React.FC = () => {
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
   const [session, setSession] = useState<Session | undefined>();
+  const suggestionSelectedRef = useRef<boolean>(false);
 
-  // Debounce function
   const debounce = useCallback((func: (...args: any[]) => void, delay: number) => {
     let timeoutId: NodeJS.Timeout;
-    return (...args: any[]) => {
+    const debounced = (...args: any[]) => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(() => func(...args), delay);
     };
+    debounced.cancel = () => clearTimeout(timeoutId);
+    return debounced;
   }, []);
 
-  // Initialize session and location
   useEffect(() => {
     getItem('session')
       .then((val) => {
@@ -58,19 +59,14 @@ export const GroceryComparisonScreen: React.FC = () => {
     }
   }, []);
 
-  // Fetch suggestions and products
-  const fetchData = useCallback(
-    debounce(async (query: string) => {
-      if (!query.trim()) {
-        setProducts([]);
+  const fetchSuggestions = useCallback(
+    async (query: string) => {
+      if (!query.trim() || suggestionSelectedRef.current) {
         setSuggestions([]);
-        setIsLoading(false);
         return;
       }
-  
-      setIsLoading(true);
       try {
-        const suggestionResponse = await fetch('http://localhost:4500/suggestions', {
+        const suggestionResponse = await fetch('http://192.168.1.36:4500/suggestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -81,30 +77,65 @@ export const GroceryComparisonScreen: React.FC = () => {
         const suggestionData = await suggestionResponse.json();
         console.log('Suggestions Response:', suggestionData);
         setSuggestions(suggestionData.suggestions || []);
-  
+      } catch (error) {
+        console.error('Error fetching suggestions:', error);
+      }
+    },
+    [session]
+  );
+
+  const fetchProducts = useCallback(
+    async (query: string) => {
+      if (!query.trim()) {
+        setProducts([]);
+        return;
+      }
+      setIsLoading(true);
+      try {
         const result = await fetchAndConvertProducts(query, location.lat || undefined, location.lng || undefined);
         setProducts(result);
         console.log('Products:', result);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching products:', error);
       } finally {
         setIsLoading(false);
       }
-    }, 300),
-    [session, location]
+    },
+    [location]
   );
 
+  const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 300), [fetchSuggestions]);
+  const debouncedFetchProducts = useCallback(debounce(fetchProducts, 300), [fetchProducts]);
+
   useEffect(() => {
-    fetchData(searchQuery);
-  }, [searchQuery, fetchData]);
+    if (searchQuery && !suggestionSelectedRef.current) {
+      debouncedFetchSuggestions(searchQuery);
+      debouncedFetchProducts(searchQuery);
+    }
+  }, [searchQuery, debouncedFetchSuggestions, debouncedFetchProducts]);
 
   const handleSearch = (text: string) => {
+    suggestionSelectedRef.current = false;
     setSearchQuery(text);
   };
 
   const handleSuggestionSelect = (suggestion: string) => {
+    suggestionSelectedRef.current = true;
+    debouncedFetchSuggestions.cancel();
     setSearchQuery(suggestion);
-    setSuggestions([]);
+    setSuggestions([]); // Clear suggestions when a suggestion is selected
+    fetchProducts(suggestion);
+  };
+
+  // Handle search submission (e.g., pressing Enter or the keyboard's search button)
+  const handleSubmit = () => {
+    setSuggestions([]); // Clear suggestions on submit
+    fetchProducts(searchQuery); // Fetch products immediately
+  };
+
+  // Handle when the search input loses focus
+  const handleBlur = () => {
+    setSuggestions([]); // Clear suggestions when focus is lost
   };
 
   return (
@@ -117,6 +148,8 @@ export const GroceryComparisonScreen: React.FC = () => {
           onChangeText={handleSearch}
           placeholder="Search for groceries..."
           editable={true}
+          onSubmitEditing={handleSubmit} // Add submit handler
+          onBlur={handleBlur} // Add blur handler
         />
         {suggestions.length > 0 && (
           <FlatList
@@ -151,19 +184,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     position: 'relative',
-    zIndex: 2000, // Increase zIndex to ensure it stays above scrollView
+    zIndex: 2000,
   },
   scrollView: {
     flex: 1,
     marginTop: 16,
-    zIndex: 1000, // Lower zIndex than searchContainer
+    zIndex: 1000,
   },
   scrollViewContent: {
     paddingBottom: 0,
   },
   suggestionList: {
     position: 'absolute',
-    top: 60, // Position below SearchBar
+    top: 60,
     left: 16,
     right: 16,
     backgroundColor: '#fff',
@@ -174,7 +207,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-    zIndex: 2500, // Higher zIndex than parent to ensure visibility
+    zIndex: 2500,
   },
   suggestionItem: {
     padding: 10,

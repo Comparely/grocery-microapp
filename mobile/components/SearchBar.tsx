@@ -1,7 +1,6 @@
 import React from 'react';
 import { StyleSheet, TextInput, View, TouchableOpacity, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import Navbar from './Navbar';
 
 interface SearchBarProps {
   value: string;
@@ -9,6 +8,8 @@ interface SearchBarProps {
   placeholder?: string;
   onClick?: () => void; // Optional: for navigation
   editable?: boolean;  // Control editability
+  onSubmitEditing?: () => void; // New: Handle submission (e.g., Enter key)
+  onBlur?: () => void; // New: Handle loss of focus
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -17,6 +18,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = 'Search',
   onClick,
   editable = Platform.OS === 'web', // Default: editable on web, not on mobile
+  onSubmitEditing, // Pass through to TextInput
+  onBlur, // Pass through to TextInput
 }) => {
   const handlePress = () => {
     if (onClick && !editable) {
@@ -42,6 +45,8 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           autoCorrect={false}
           editable={editable}
           onFocus={editable ? undefined : handlePress} // Fallback for navigation
+          onSubmitEditing={onSubmitEditing} // Pass through to parent
+          onBlur={onBlur} // Pass through to parent
         />
         {value.length > 0 && editable && (
           <TouchableOpacity onPress={() => onChangeText('')}>
