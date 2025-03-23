@@ -13,6 +13,13 @@ type Session struct {
 	Address               string                `json:"address" bson:"address"`
 	UpdatedAt             int64                 `json:"updatedAt" bson:"updatedAt"`
 	MarketPlaceAttributes MarketPlaceAttributes `json:"marketplaceAttributes" bson:"marketplaceAttributes"`
+	ZeptoAuth             ZeptoAuthData         `json:"zeptoAuth" bson:"zeptoAuth"` // Added Zepto auth data
+}
+
+type ZeptoAuthData struct {
+	Cookie    string `json:"cookie" bson:"cookie"`
+	XSRFToken string `json:"x-xsrf-token" bson:"x-xsrf-token"`
+	SessionID string `json:"sessionId" bson:"sessionId"`
 }
 
 type MarketPlaceAttributes struct {

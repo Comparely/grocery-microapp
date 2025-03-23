@@ -1,0 +1,7 @@
+@media (min-width: 769px) {
+    body {
+      max-width: 768px;
+      margin: 0 auto;
+      overflow-x: hidden;
+    }
+  }

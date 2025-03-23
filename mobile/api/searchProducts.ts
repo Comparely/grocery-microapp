@@ -1,59 +1,99 @@
-import { v4 } from "uuid";
-import { PriceOption, Product } from "../types/Product";
-import { setItem } from "./localStorage";
-import { Session } from "@/types/Session";
+import { PriceOption, Product } from '../types/Product';
+import { setItem } from './localStorage';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Session } from '@/types/Session';
+import { Platform } from 'react-native';
+import * as Crypto from 'expo-crypto';
+
+// Use expo-crypto's randomUUID for mobile, fallback to uuid v4 for web if needed
+const generateUUID = () => {
+  if (Platform.OS === 'web') {
+    // Web can use the native crypto API or a uuid library if preferred
+    return crypto.randomUUID ? crypto.randomUUID() : uuidv4Fallback();
+  } else {
+    return Crypto.randomUUID(); // Expo Crypto for mobile
+  }
+};
+
+// Fallback UUID generator for web if crypto.randomUUID isn’t available (rare cases)
+const uuidv4Fallback = () => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
+// Helper function to get storage based on platform
+const getStorage = () => (Platform.OS === 'web' ? localStorage : AsyncStorage);
+
+// Helper function to handle storage getItem
+const getItemAsync = async (key: string): Promise<string | null> => {
+  const storage = getStorage();
+  if (Platform.OS === 'web') {
+    return storage.getItem(key);
+  } else {
+    return await storage.getItem(key);
+  }
+};
+
+// Helper function to handle storage setItem
+const setItemAsync = async (key: string, value: string): Promise<void> => {
+  const storage = getStorage();
+  if (Platform.OS === 'web') {
+    storage.setItem(key, value);
+  } else {
+    await storage.setItem(key, value);
+  }
+};
 
 export async function fetchAndConvertProducts(
   query: string,
   lat?: number,
   lng?: number
 ): Promise<Product[]> {
-  let deviceID = localStorage.getItem("deviceID")
-  if(deviceID == null){
-    deviceID = v4()
-    localStorage.setItem("deviceID", deviceID)
+  let deviceID = await getItemAsync('deviceID');
+  if (!deviceID) {
+    deviceID = generateUUID();
+    await setItemAsync('deviceID', deviceID);
   }
-  const locParams = lat && lng ? `&lat=${lat}&lng=${lng}` : "";
-  const url = `https://grocery-api.comparely.co.in/search?q=${encodeURIComponent(query)}${locParams}&deviceID=${deviceID}`;
+
+  const locParams = lat && lng ? `&lat=${lat}&lng=${lng}` : '';
+  const url = `http://localhost:4500/search?q=${encodeURIComponent(query)}${locParams}&deviceID=${deviceID}`;
   const response = await fetch(url);
   const data = await response.json();
 
   const products: Product[] = data.map((item: any, index: number) => {
-    // Group variants by platform (source) and choose the lowest discounted_price for each.
     const priceMap: Record<string, { price: number; image_url: string; deeplink: string; weight: string }> = {};
 
     item.prices.forEach((priceEntry: any) => {
       const platform = priceEntry.source;
-      // Find the variant with the lowest discounted_price in this priceEntry.
       const lowestVariant = priceEntry.variants.reduce((min: any, variant: any) => {
         return !min || variant.discounted_price < min.discounted_price ? variant : min;
       }, null);
 
       if (lowestVariant) {
-        // If we've already seen this platform, update if we found a lower price.
         if (!priceMap[platform] || lowestVariant.discounted_price < priceMap[platform].price) {
           priceMap[platform] = {
             price: lowestVariant.discounted_price,
             image_url: lowestVariant.image_url,
             deeplink: lowestVariant.deeplink,
-            weight: lowestVariant.weight
+            weight: lowestVariant.weight,
           };
         }
       }
     });
 
-    // Build the PriceOption array. We assign a sequential id for each option.
     let priceOptionId = 1;
     const priceOptions: PriceOption[] = Object.entries(priceMap).map(([platform, value]) => ({
       id: priceOptionId++,
       platform,
       price: value.price,
-      deliveryTime: 0, // Not provided by API; defaulting to 0.
+      deliveryTime: 0,
       deeplink: value.deeplink,
-      weight: value.weight
+      weight: value.weight,
     }));
 
-    // Determine the product's mrp and imageUrl from the lowest original_price among all variants.
     let mrp = Infinity;
     let imageUrl = '';
     item.prices.forEach((priceEntry: any) => {
@@ -69,13 +109,13 @@ export async function fetchAndConvertProducts(
     }
 
     return {
-      id: index + 1,              // Converting string id to a sequential numeric id.
+      id: index + 1,
       name: item.name,
-      brand: item.brand,                  // Default value (adjust as needed)
-      weight: '',                 // Default value (adjust as needed)
+      brand: item.brand,
+      weight: '',
       mrp,
       imageUrl,
-      isNewPack: false,           // Default value; adjust as needed
+      isNewPack: false,
       priceOptions,
     };
   });
@@ -83,28 +123,34 @@ export async function fetchAndConvertProducts(
   return products;
 }
 
-export async function initiateSessionForUser(
-  lat: number,
-  lng: number
-): Promise<Session> {
-  let deviceID = localStorage.getItem("deviceID")
-  if(deviceID == null){
-    deviceID = v4()
-    localStorage.setItem("deviceID", deviceID)
+export async function initiateSessionForUser(lat: number, lng: number): Promise<Session> {
+  let deviceID = await getItemAsync('deviceID');
+  if (!deviceID) {
+    deviceID = generateUUID();
+    await setItemAsync('deviceID', deviceID);
   }
-  const url = `https://grocery-api.comparely.co.in/start-session`;
+
+  const url = 'http://localhost:4500/start-session'; // Use local backend
   const body = {
     deviceID: deviceID,
     lat: String(lat),
-    lng: String(lng)
-  }
+    lng: String(lng),
+  };
+
   const response = await fetch(url, {
-    method: "POST",
-    body: JSON.stringify(body)
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to initiate session: ${response.statusText}`);
+  }
+
   const data = await response.json();
-  await setItem("session", data)
-  localStorage.setItem("session", JSON.stringify(data))
-  console.log("rec sess", data)
-  return data as Session
+  await setItem('session', data);
+  console.log('rec sess', data);
+  return data as Session;
 }

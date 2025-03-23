@@ -1,18 +1,17 @@
-import type React from "react"
-import { StyleSheet, View, Text, FlatList } from "react-native"
-import { ProductCard } from "./ProductCard"
-import { ProductCardShimmer } from "./ProductCardShimmer"
-import type { Product } from "../types/Product"
-import { Session } from "@/types/Session"
+import type React from "react";
+import { StyleSheet, View, Text, FlatList } from "react-native";
+import { ProductCard } from "./ProductCard";
+import { ProductCardShimmer } from "./ProductCardShimmer";
+import type { Product } from "../types/Product";
+import { Session } from "@/types/Session";
 
 interface ProductListProps {
-  session: Session
-  products: Product[]
-  isLoading: boolean
+  session: Session;
+  products: Product[];
+  isLoading: boolean;
 }
 
 export const ProductList: React.FC<ProductListProps> = ({ session, products, isLoading }) => {
-  // Render shimmer loading state
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -25,32 +24,32 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
           showsVerticalScrollIndicator={false}
         />
       </View>
-    )
+    );
   }
 
-  // Render empty state
   if (products.length === 0) {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>Search for products to see results</Text>
       </View>
-    )
+    );
   }
 
-  // Render product list
   return (
     <View style={styles.container}>
       <FlatList
         data={products}
         numColumns={2}
-        renderItem={({ item }) => <ProductCard fullWidth={false} session={session} product={item} key={item.id} />}
+        renderItem={({ item }) => (
+          <ProductCard fullWidth={false} session={session} product={item} key={item.id} />
+        )}
         keyExtractor={(item) => item.id.toString()}
         columnWrapperStyle={styles.columnWrapper}
         showsVerticalScrollIndicator={false}
       />
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -58,7 +57,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fffaf0",
     borderRadius: 24,
     padding: 16,
-    height: '100%',
   },
   columnWrapper: {
     justifyContent: "space-between",
@@ -78,5 +76,4 @@ const styles = StyleSheet.create({
     color: "#9d9d9d",
     textAlign: "center",
   },
-})
-
+});

@@ -1,8 +1,10 @@
+import { router } from 'expo-router';
 import React from 'react';
 import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 
 interface CategoryCardProps {
   category: {
+    id: string;
     name: string;
     image: string;
     backgroundColor: string;
@@ -10,26 +12,33 @@ interface CategoryCardProps {
 }
 
 const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
+  const handleCategoryClick = () => {
+    router.push(`/search`);
+  };
+
   return (
-    <TouchableOpacity 
+    <TouchableOpacity
+      onPress={handleCategoryClick}
       style={[styles.categoryCard, { backgroundColor: category.backgroundColor }]}
-      activeOpacity={0.7}
     >
-      <Image source={{ uri: category.image }} style={styles.categoryImage} />
+      <Image
+        source={{ uri: category.image }}
+        style={styles.categoryImage}
+      />
       <Text style={styles.categoryName}>{category.name}</Text>
     </TouchableOpacity>
   );
 };
 
 type CategoriesSectionProps = {
-  categories: any
-}
+  categories: any[];
+};
 
-const CategoriesSection: React.FC<CategoriesSectionProps> = ({categories}) => {
+const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories }) => {
+  console.log('CategoriesSection received:', categories);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Popular Categories</Text>
-      
       <FlatList
         data={categories}
         renderItem={({ item }) => <CategoryCard category={item} />}
@@ -61,13 +70,13 @@ const styles = StyleSheet.create({
     margin: 8,
     borderRadius: 15,
     padding: 15,
-    height: 180,
+    aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   categoryImage: {
-    width: 100,
-    height: 100,
+    width: '80%',
+    height: '60%',
     resizeMode: 'contain',
     marginBottom: 10,
   },
