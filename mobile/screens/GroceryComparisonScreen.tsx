@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, View, ScrollView, FlatList, Text, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, ScrollView, FlatList, Text, TouchableOpacity, Keyboard } from 'react-native';
 import { SearchBar } from '../components/SearchBar';
 import { ProductList } from '../components/ProductList';
 import { Product } from '../types/Product';
@@ -66,7 +66,7 @@ export const GroceryComparisonScreen: React.FC = () => {
         return;
       }
       try {
-        const suggestionResponse = await fetch('http://192.168.1.36:4500/suggestions', {
+        const suggestionResponse = await fetch('http://localhost:4500/suggestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -167,7 +167,11 @@ export const GroceryComparisonScreen: React.FC = () => {
           />
         )}
       </View>
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollViewContent}>
+      <ScrollView
+        onTouchStart={()=>Keyboard.dismiss()}
+        onScroll={handleBlur}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}>
         <ProductList products={products} isLoading={isLoading} session={session!} />
       </ScrollView>
     </View>
