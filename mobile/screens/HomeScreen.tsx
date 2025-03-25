@@ -27,6 +27,32 @@ import { Ionicons } from '@expo/vector-icons';
 const { width } = Dimensions.get('window');
 const AARAV_NUMBER = '+918076078942';
 
+const LoadingProgress = () => {
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: 1500,
+      useNativeDriver: false,
+    }).start();
+  }, [progress]);
+
+  const widthInterpolated = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0%', '100%'],
+  });
+
+  return (
+    <View style={styles.loadingContainer}>
+      <Text style={styles.loadingText}>Loading Comparely</Text>
+      <View style={styles.progressBarBackground}>
+        <Animated.View style={[styles.progressBarFill, { width: widthInterpolated }]} />
+      </View>
+    </View>
+  );
+};
+
 const HomeScreen = () => {
   const [pageReady, setPageReady] = useState<boolean>(false);
   const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
@@ -60,18 +86,22 @@ const HomeScreen = () => {
       ])
     ).start();
 
+    // Fetch homepage data
     fetchHomePageData()
       .then((val) => {
-        console.log('Fetched data:', val); // Debug log
-        console.log('Categories set:', val[1])
+        console.log('Fetched data:', val);
         setCategories(val[1] || []);
         setFeaturedProducts(val[0] || []);
+        console.log('Featured Products set:', val[0]);
       })
       .catch((err) => console.log('Error fetching homepage data:', err));
 
     getItem('session')
       .then((val) => {
-        if (val) setSession(val);
+        if (val) {
+          setSession(val);
+          console.log('Session from local storage:', val);
+        }
       })
       .catch((err) => console.log('Could not find session:', err));
 
@@ -108,9 +138,9 @@ const HomeScreen = () => {
         }
 
         try {
-          let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-          setLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
-          initiateSessionForUser(location.coords.latitude, location.coords.longitude)
+          let loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+          setLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+          initiateSessionForUser(loc.coords.latitude, loc.coords.longitude)
             .then((val) => {
               setSession(val);
               setPageReady(true);
@@ -156,9 +186,9 @@ const HomeScreen = () => {
       }
 
       try {
-        let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-        setLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
-        initiateSessionForUser(location.coords.latitude, location.coords.longitude)
+        let loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        setLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+        initiateSessionForUser(loc.coords.latitude, loc.coords.longitude)
           .then((val) => {
             setSession(val);
             setPageReady(true);
@@ -213,11 +243,7 @@ const HomeScreen = () => {
   }
 
   if (!pageReady) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading Comparely...</Text>
-      </View>
-    );
+    return <LoadingProgress />;
   }
 
   const rotate = wiggleAnim.interpolate({
@@ -237,7 +263,9 @@ const HomeScreen = () => {
           <PriceSection session={session} products={featuredProducts} />
         ) : (
           <View style={styles.emptySection}>
-            <Text style={styles.emptyText}>No featured products available.</Text>
+            <Text style={styles.emptyText}>
+              {session ? 'No featured products available.' : 'Session not initialized.'}
+            </Text>
           </View>
         )}
         {categories.length > 0 ? (
@@ -249,9 +277,7 @@ const HomeScreen = () => {
         )}
 
         <View style={styles.waitlistContainer}>
-          <Text style={styles.waitlistHeader}>
-            We're Launching Soon!
-          </Text>
+          <Text style={styles.waitlistHeader}>We're Launching Soon!</Text>
           <Text style={styles.waitlistSubText}>
             Enter your email below to join our waitlist and get early access.
           </Text>
@@ -267,9 +293,7 @@ const HomeScreen = () => {
           <TouchableOpacity style={styles.waitlistSubmitButton} onPress={handleWaitlistSubmit}>
             <Text style={styles.waitlistSubmitButtonText}>Submit</Text>
           </TouchableOpacity>
-          <Text style={styles.appComingSoonText}>
-            Our app is coming soon!
-          </Text>
+          <Text style={styles.appComingSoonText}>Our app is coming soon!</Text>
           <View style={styles.storeIconsContainer}>
             <View style={styles.storeIconWrapper}>
               <Ionicons name="logo-google-playstore" size={40} color="#9d9d9d" />
@@ -283,13 +307,14 @@ const HomeScreen = () => {
 
       <Animated.View style={[styles.floatingWhatsapp, { transform: [{ rotate }] }]}>
         <TouchableOpacity onPress={handleWhatsappRedirect}>
-          <Ionicons name="logo-whatsapp" size={40} color="#fff" />
+          <Ionicons name="logo-whatsapp" size={30} color="#fff" />
         </TouchableOpacity>
       </Animated.View>
     </View>
   );
 };
 
+// Styles remain unchanged, included for completeness
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -334,11 +359,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#004738',
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 20,
   },
   loadingText: {
     color: '#fff',
-    fontSize: 20,
-    fontWeight: '500',
+    fontSize: 18,
+    marginBottom: 16,
+  },
+  progressBarBackground: {
+    width: '80%',
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#255C4A',
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: '#cbd402',
   },
   emptySection: {
     padding: 20,

@@ -1,7 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, View, ScrollView, FlatList, Text, TouchableOpacity } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  ScrollView,
+  FlatList,
+  Text,
+  TouchableOpacity,
+  TextInput,
+} from 'react-native';
 import { SearchBar } from '../components/SearchBar';
 import { ProductList } from '../components/ProductList';
 import { Product } from '../types/Product';
@@ -15,9 +23,14 @@ export const GroceryComparisonScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
+  const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({
+    lat: null,
+    lng: null,
+  });
   const [session, setSession] = useState<Session | undefined>();
   const suggestionSelectedRef = useRef<boolean>(false);
+  const isSuggestionClickedRef = useRef<boolean>(false);
+  const searchBarRef = useRef<TextInput>(null);
 
   const debounce = useCallback((func: (...args: any[]) => void, delay: number) => {
     let timeoutId: NodeJS.Timeout;
@@ -66,7 +79,7 @@ export const GroceryComparisonScreen: React.FC = () => {
         return;
       }
       try {
-        const suggestionResponse = await fetch('http://192.168.1.36:4500/suggestions', {
+        const suggestionResponse = await fetch('http://localhost:4500/suggestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -92,7 +105,11 @@ export const GroceryComparisonScreen: React.FC = () => {
       }
       setIsLoading(true);
       try {
-        const result = await fetchAndConvertProducts(query, location.lat || undefined, location.lng || undefined);
+        const result = await fetchAndConvertProducts(
+          query,
+          location.lat || undefined,
+          location.lng || undefined
+        );
         setProducts(result);
         console.log('Products:', result);
       } catch (error) {
@@ -104,13 +121,21 @@ export const GroceryComparisonScreen: React.FC = () => {
     [location]
   );
 
-  const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 300), [fetchSuggestions]);
-  const debouncedFetchProducts = useCallback(debounce(fetchProducts, 300), [fetchProducts]);
+  // Debounce suggestions (fast, 300ms)
+  const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 100), [fetchSuggestions]);
+
+  // Debounce products (slower, 1500ms)
+  const debouncedFetchProducts = useCallback(debounce(fetchProducts, 1000), [fetchProducts]);
 
   useEffect(() => {
     if (searchQuery && !suggestionSelectedRef.current) {
-      debouncedFetchSuggestions(searchQuery);
-      debouncedFetchProducts(searchQuery);
+      debouncedFetchSuggestions(searchQuery); // Fetch suggestions quickly
+      debouncedFetchProducts(searchQuery); // Fetch products with delay
+    } else {
+      debouncedFetchSuggestions.cancel();
+      debouncedFetchProducts.cancel();
+      setSuggestions([]);
+      setProducts([]);
     }
   }, [searchQuery, debouncedFetchSuggestions, debouncedFetchProducts]);
 
@@ -120,22 +145,27 @@ export const GroceryComparisonScreen: React.FC = () => {
   };
 
   const handleSuggestionSelect = (suggestion: string) => {
+    isSuggestionClickedRef.current = true;
     suggestionSelectedRef.current = true;
-    debouncedFetchSuggestions.cancel();
     setSearchQuery(suggestion);
-    setSuggestions([]); // Clear suggestions when a suggestion is selected
-    fetchProducts(suggestion);
+    setSuggestions([]); // Clear suggestions immediately
+    debouncedFetchProducts.cancel(); // Cancel any pending product fetch
+    fetchProducts(suggestion); // Fetch products immediately
   };
 
-  // Handle search submission (e.g., pressing Enter or the keyboard's search button)
   const handleSubmit = () => {
-    setSuggestions([]); // Clear suggestions on submit
-    fetchProducts(searchQuery); // Fetch products immediately
+    setSuggestions([]);
+    debouncedFetchProducts.cancel(); // Cancel debounce
+    fetchProducts(searchQuery); // Fetch immediately on submit
   };
 
-  // Handle when the search input loses focus
   const handleBlur = () => {
-    setSuggestions([]); // Clear suggestions when focus is lost
+    setTimeout(() => {
+      if (!isSuggestionClickedRef.current) {
+        setSuggestions([]);
+      }
+      isSuggestionClickedRef.current = false;
+    }, 200);
   };
 
   return (
@@ -143,13 +173,13 @@ export const GroceryComparisonScreen: React.FC = () => {
       <Navbar />
       <View style={styles.searchContainer}>
         <SearchBar
-          onClick={() => {}}
+          ref={searchBarRef}
           value={searchQuery}
           onChangeText={handleSearch}
           placeholder="Search for groceries..."
           editable={true}
-          onSubmitEditing={handleSubmit} // Add submit handler
-          onBlur={handleBlur} // Add blur handler
+          onSubmitEditing={handleSubmit}
+          onBlur={handleBlur}
         />
         {suggestions.length > 0 && (
           <FlatList
@@ -159,6 +189,7 @@ export const GroceryComparisonScreen: React.FC = () => {
               <TouchableOpacity
                 onPress={() => handleSuggestionSelect(item)}
                 style={styles.suggestionItem}
+                activeOpacity={0.7}
               >
                 <Text style={styles.suggestionText}>{item}</Text>
               </TouchableOpacity>

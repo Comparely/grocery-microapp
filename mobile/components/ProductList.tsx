@@ -57,6 +57,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fffaf0",
     borderRadius: 24,
     padding: 16,
+    margin: 16,
   },
   columnWrapper: {
     justifyContent: "space-between",
@@ -67,9 +68,10 @@ const styles = StyleSheet.create({
     backgroundColor: "#fffaf0",
     borderRadius: 24,
     padding: 16,
+    margin: 16,
     justifyContent: "center",
     alignItems: "center",
-    minHeight: 200,
+    minHeight: 800,
   },
   emptyText: {
     fontSize: 16,

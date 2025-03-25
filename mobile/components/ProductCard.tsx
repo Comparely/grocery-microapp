@@ -3,7 +3,7 @@ import { StyleSheet, View, Text, Image, Linking, TouchableOpacity, Dimensions } 
 import type { Product, PriceOption } from '../types/Product';
 import { Session } from '@/types/Session';
 
-const { width } = Dimensions.get('window'); // For responsive design
+const { width } = Dimensions.get('window');
 
 interface ProductCardProps {
   fullWidth: boolean;
@@ -45,8 +45,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
         {product.priceOptions.map((priceOption) => (
           <PriceOptionSingle
             session={session}
-            key={priceOption.id}
+            key={priceOption.id || `${priceOption.platform}-${priceOption.price}`} // Fallback key since id is missing
             priceOption={priceOption}
+            productWeight={product.weight} // Pass product weight
             label=""
           />
         ))}
@@ -58,10 +59,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
 interface PriceOptionSingleProps {
   session: Session;
   priceOption: PriceOption;
+  productWeight: string; // Added prop for product weight
   label: string;
 }
 
-const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOption, label }) => {
+const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOption, productWeight, label }) => {
   const handleDeepLink = async (url: string) => {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
@@ -86,23 +88,31 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
         <View style={styles.priceContainer}>
           <Text style={styles.priceText}>₹{priceOption.price}</Text>
           <View style={styles.platformBadge}>
-            {priceOption.platform === 'zepto' && (
-              <Image source={require('@/assets/images/zepto.svg')} style={styles.platformImage} />
-            )}
-            {priceOption.platform === 'blinkit' && (
-              <Image
-                source={require('@/assets/images/blinkit.png')}
-                style={styles.platformImage}
-              />
-            )}
-            {priceOption.platform === 'instamart' && (
-              <Image
-                source={require('@/assets/images/swiggy_instamart.webp')}
-                style={styles.platformImage}
-              />
-            )}
+            <View style={styles.logoContainer}>
+              {priceOption.platform === 'zepto' && (
+                <Image
+                  source={require('@/assets/images/zepto.svg')}
+                  style={styles.platformImage}
+                  resizeMode="contain"
+                />
+              )}
+              {priceOption.platform === 'blinkit' && (
+                <Image
+                  source={require('@/assets/images/blinkit2.svg')}
+                  style={styles.platformImage}
+                  resizeMode="contain"
+                />
+              )}
+              {priceOption.platform === 'instamart' && (
+                <Image
+                  source={require('@/assets/images/swiggy_instamart.webp')}
+                  style={styles.platformImage}
+                  resizeMode="contain"
+                />
+              )}
+            </View>
             <View style={styles.tagSmall}>
-              <Text style={styles.tagTextSmall}>{priceOption.weight}</Text>
+              <Text style={styles.tagTextSmall}>{productWeight}</Text> {/* Use productWeight */}
             </View>
           </View>
         </View>
@@ -119,12 +129,12 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
 
 const styles = StyleSheet.create({
   container: {
-    width: '48%', // Responsive width for grid layout
+    width: '48%',
     marginBottom: 16,
-    marginHorizontal: 4, // Adds spacing between cards
+    marginHorizontal: 4,
   },
   fullWidthContainer: {
-    width: 234, // Fixed width for horizontal scroll scenarios
+    width: 234,
     marginRight: 10,
   },
   imageContainer: {
@@ -222,10 +232,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  platformImage: {
+  logoContainer: {
     width: 32,
     height: 13,
-    resizeMode: 'contain',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  platformImage: {
+    width: '100%',
+    height: '100%',
   },
   deliveryContainer: {
     flexDirection: 'row',

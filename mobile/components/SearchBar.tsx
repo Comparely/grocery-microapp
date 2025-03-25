@@ -1,4 +1,6 @@
-import React from 'react';
+"use client";
+
+import React, { forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, TextInput, View, TouchableOpacity, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
@@ -6,57 +8,73 @@ interface SearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
-  onClick?: () => void; // Optional: for navigation
-  editable?: boolean;  // Control editability
-  onSubmitEditing?: () => void; // New: Handle submission (e.g., Enter key)
-  onBlur?: () => void; // New: Handle loss of focus
+  onClick?: () => void;
+  editable?: boolean;
+  onSubmitEditing?: () => void;
+  onBlur?: () => void;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({
-  value,
-  onChangeText,
-  placeholder = 'Search',
-  onClick,
-  editable = Platform.OS === 'web', // Default: editable on web, not on mobile
-  onSubmitEditing, // Pass through to TextInput
-  onBlur, // Pass through to TextInput
-}) => {
-  const handlePress = () => {
-    if (onClick && !editable) {
-      onClick(); // Trigger navigation only if not editable
-    }
-  };
+export const SearchBar = forwardRef<TextInput, SearchBarProps>(
+  (
+    {
+      value,
+      onChangeText,
+      placeholder = 'Search',
+      onClick,
+      editable = Platform.OS === 'web' ? true : false, // Ensure editable is true by default on web
+      onSubmitEditing,
+      onBlur,
+    },
+    ref
+  ) => {
+    const inputRef = React.useRef<TextInput>(null);
 
-  return (
-    <TouchableOpacity
-      onPress={editable ? undefined : handlePress} // Only make it tappable if not editable
-      style={styles.touchableContainer}
-      activeOpacity={editable ? 1 : 0.7} // No opacity change if editable
-    >
-      <View style={styles.container} pointerEvents={editable ? 'auto' : 'none'}>
-        <Feather name="search" size={20} color="#181b19" style={styles.icon} />
-        <TextInput
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-          placeholder={placeholder}
-          placeholderTextColor="#9d9d9d"
-          autoCapitalize="none"
-          autoCorrect={false}
-          editable={editable}
-          onFocus={editable ? undefined : handlePress} // Fallback for navigation
-          onSubmitEditing={onSubmitEditing} // Pass through to parent
-          onBlur={onBlur} // Pass through to parent
-        />
-        {value.length > 0 && editable && (
-          <TouchableOpacity onPress={() => onChangeText('')}>
-            <Feather name="x" size={20} color="#181b19" />
-          </TouchableOpacity>
-        )}
-      </View>
-    </TouchableOpacity>
-  );
-};
+    useImperativeHandle(ref, () => ({
+      focus: () => inputRef.current?.focus(),
+      blur: () => inputRef.current?.blur(),
+      clear: () => {
+        inputRef.current?.clear();
+        onChangeText(''); // Ensure state is cleared
+      },
+    }));
+
+    const handlePress = () => {
+      if (onClick && !editable) {
+        onClick();
+      }
+    };
+
+    return (
+      <TouchableOpacity
+        onPress={editable ? undefined : handlePress}
+        style={styles.touchableContainer}
+        activeOpacity={editable ? 1 : 0.7}
+      >
+        <View style={styles.container} pointerEvents={editable ? 'auto' : 'none'}>
+          <Feather name="search" size={20} color="#181b19" style={styles.icon} />
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            value={value} // Controlled by parent state
+            onChangeText={onChangeText}
+            placeholder={placeholder}
+            placeholderTextColor="#9d9d9d"
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={editable}
+            onSubmitEditing={onSubmitEditing}
+            onBlur={onBlur}
+          />
+          {value.length > 0 && editable && (
+            <TouchableOpacity onPress={() => onChangeText('')}>
+              <Feather name="x" size={20} color="#181b19" />
+            </TouchableOpacity>
+          )}
+        </View>
+      </TouchableOpacity>
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   touchableContainer: {
@@ -80,3 +98,5 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
 });
+
+SearchBar.displayName = 'SearchBar';

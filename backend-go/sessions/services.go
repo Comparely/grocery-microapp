@@ -19,6 +19,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Removed global rate limiter variables
+
 func fetchJSON(url string, method string, headers map[string]string, body string) (map[string]interface{}, error) {
 	client := &http.Client{Timeout: 10 * time.Second}
 	var req *http.Request
@@ -40,15 +42,10 @@ func fetchJSON(url string, method string, headers map[string]string, body string
 	}
 	defer resp.Body.Close()
 
-	// Log response details for debugging
-	log.Printf("FetchJSON Response Status: %s", resp.Status)
-	log.Printf("FetchJSON Response Headers: %v", resp.Header)
-
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("FetchJSON Raw Response Body: %s", string(bytes))
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(bytes, &result); err != nil {
@@ -80,7 +77,6 @@ func fetchInstamartStoreDetails(lat string, lng string) (InstamartStoreAttribute
 		return string(b)
 	}
 	var result InstamartStoreAttributes
-	log.Println("Start InstamartAttr Fetch")
 	res, err := fetchJSON(baseUrl, "POST", headers, clientBody())
 	if err != nil {
 		return InstamartStoreAttributes{}, err
@@ -118,7 +114,7 @@ func fetchBlinkitStoreDetails(lat string, lng string) (BlinkitStoreAttributes, e
 	}
 	if data, ok := res["data"].(map[string]interface{}); ok {
 		result.StoreID = ""
-		result.Serviceable = true //TODO: Change tis
+		result.Serviceable = true // TODO: Change this if needed
 
 		if data["eta_in_minutes"] != nil {
 			eta := fmt.Sprintf("%s Mins", strconv.Itoa(int(data["eta_in_minutes"].(float64))))
@@ -126,159 +122,6 @@ func fetchBlinkitStoreDetails(lat string, lng string) (BlinkitStoreAttributes, e
 		}
 	}
 	return result, nil
-}
-
-func FetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, ZeptoAuthData, error) {
-	initialCookie, initialXSRFToken, err := fetchZeptoInitialCookies()
-	if err != nil {
-		log.Printf("Failed to fetch initial cookies: %v", err)
-	}
-
-	zeptoUrl := "https://api.zeptonow.com/api/v2/get_page?"
-	headers := map[string]string{
-		"accept":                "application/json, text/plain, */*",
-		"accept-language":       "en-US,en;q=0.9",
-		"app_sub_platform":      "WEB",
-		"app_version":           "12.55.3",
-		"appversion":            "12.55.3",
-		"auth_revamp_flow":      "v2",
-		"compatible_components": "CONVENIENCE_FEE,RAIN_FEE,EXTERNAL_COUPONS,STANDSTILL,BUNDLE,MULTI_SELLER_ENABLED,PIP_V1,ROLLUPS,SCHEDULED_DELIVERY,SAMPLING_ENABLED,ETA_NORMAL_WITH_149_DELIVERY,ETA_NORMAL_WITH_199_DELIVERY,HOMEPAGE_V2,NEW_ETA_BANNER,VERTICAL_FEED_PRODUCT_GRID,AUTOSUGGESTION_PAGE_ENABLED,AUTOSUGGESTION_PIP,AUTOSUGGESTION_AD_PIP,BOTTOM_NAV_FULL_ICON,COUPON_WIDGET_CART_REVAMP,DELIVERY_UPSELLING_WIDGET,MARKETPLACE_CATEGORY_GRID,NO_PLATFORM_CHECK_ENABLED_V2,SUPER_SAVER:1,SUPERSTORE_V1,PROMO_CASH:0,24X7_ENABLED_V1,TABBED_CAROUSEL_V2,HP_V4_FEED,NEW_ROLLUPS_ENABLED,RERANKING_QCL_RELATED_PRODUCTS,PLP_ON_SEARCH,PAAN_BANNER_WIDGETIZED,ROLLUPS_UOM,DYNAMIC_FILTERS,PHARMA_ENABLED,AUTOSUGGESTION_RECIPE_PIP,SEARCH_FILTERS_V1,QUERY_DESCRIPTION_WIDGET,MEDS_WITH_SIMILAR_SALT_WIDGET,NEW_FEE_STRUCTURE,NEW_BILL_INFO,RE_PROMISE_ETA_ORDER_SCREEN_ENABLED,SUPERSTORE_V1,MANUALLY_APPLIED_DELIVERY_FEE_RECEIVABLE,MARKETPLACE_REPLACEMENT,ZEPTO_PASS,ZEPTO_PASS:1,ZEPTO_PASS:2,ZEPTO_PASS_RENEWAL,CART_REDESIGN_ENABLED,SHIPMENT_WIDGETIZATION_ENABLED,TABBED_CAROUSEL_V2,24X7_ENABLED_V1,PROMO_CASH:0,HOMEPAGE_V2,SUPER_SAVER:1,NO_PLATFORM_CHECK_ENABLED_V2",
-		"content-type":          "application/json",
-		"marketplace_type":      "ZEPTO_NOW",
-		"platform":              "WEB",
-		"user-agent":            "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
-	}
-
-	zeptoQueryParams := map[string]string{
-		"latitude":              lat,
-		"longitude":             lng,
-		"page_type":             "HOME",
-		"version":               "v2",
-		"show_new_eta_banner":   "true",
-		"page_size":             "1",
-		"enforce_platform_type": "WEB",
-		"layout_id":             "5618",
-	}
-
-	params := url.Values{}
-	for key, val := range zeptoQueryParams {
-		params.Add(key, val)
-	}
-	zeptoUrl += params.Encode()
-
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest("GET", zeptoUrl, nil)
-	if err != nil {
-		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
-	}
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	if initialCookie != "" {
-		req.Header.Set("Cookie", initialCookie)
-	}
-	if initialXSRFToken != "" {
-		req.Header.Set("X-XSRF-TOKEN", initialXSRFToken)
-	}
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
-	}
-	defer resp.Body.Close()
-
-	log.Printf("Zepto Response Status: %s", resp.Status)
-	log.Printf("Zepto Response Headers: %v", resp.Header)
-
-	bytes, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
-	}
-	log.Printf("Zepto Raw Response Body: %s", string(bytes))
-
-	var result map[string]interface{}
-	if err := json.Unmarshal(bytes, &result); err != nil {
-		log.Printf("Failed to parse JSON from %s: %v", zeptoUrl, err)
-		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
-	}
-
-	var storeAttrs ZeptoStoreAttributes
-	if data, ok := result["storeServiceableResponse"].(map[string]interface{}); ok {
-		if data["storeId"] != nil && data["serviceable"] != nil {
-			storeAttrs.StoreID = data["storeId"].(string)
-			storeAttrs.Serviceable = data["serviceable"].(bool)
-		}
-	}
-
-	if pageLayout, ok := result["pageLayout"].(map[string]interface{}); ok {
-		if widgets, ok := pageLayout["widgets"].([]interface{}); ok && len(widgets) > 0 {
-			for _, widget := range widgets {
-				widget := widget.(map[string]interface{})
-				if widget["widgetName"] == "ETA_BANNER" {
-					if widgetData, ok := widget["data"].(map[string]interface{}); ok {
-						if widgetDataItems, ok := widgetData["items"].(map[string]interface{}); ok {
-							if displayText, ok := widgetDataItems["displayText"].(string); ok && strings.Compare(displayText, "Delivery In") == 0 {
-								if etaInMinutes, ok := widgetDataItems["etaInMinutes"].(string); ok {
-									storeAttrs.ETA = fmt.Sprintf("%s Mins", etaInMinutes)
-								} else if etaInMinutesFloat, ok := widgetDataItems["etaInMinutes"].(float64); ok {
-									storeAttrs.ETA = fmt.Sprintf("%d Mins", int(etaInMinutesFloat))
-								}
-							} else if displayText, ok := widgetDataItems["displayText"].(string); ok {
-								storeAttrs.ETA = displayText
-							}
-						}
-					}
-					break
-				}
-			}
-		}
-	}
-
-	// Capture auth data from response headers
-	cookies := resp.Header["Set-Cookie"]
-	cookieStr := strings.Join(cookies, "; ")
-	xsrfToken := resp.Header.Get("x-xsrf-token")
-
-	// Use initial values if response doesn’t provide new ones
-	if cookieStr == "" && initialCookie != "" {
-		cookieStr = initialCookie
-	}
-	if xsrfToken == "" && initialXSRFToken != "" {
-		xsrfToken = initialXSRFToken
-	}
-
-	var sessionID string
-	if cookieStr != "" {
-		cookieParts := strings.Split(cookieStr, "; ")
-		for _, part := range cookieParts {
-			if strings.HasPrefix(part, "XSRF-TOKEN=") {
-				xsrfToken = strings.TrimPrefix(part, "XSRF-TOKEN=")
-			}
-			if strings.HasPrefix(part, "session_id=") {
-				sessionID = strings.TrimPrefix(part, "session_id=")
-			}
-		}
-	}
-
-	if sessionID == "" {
-		if userSessionID, ok := result["userSessionId"]; ok && userSessionID != nil {
-			if sessionIDStr, ok := userSessionID.(string); ok {
-				sessionID = sessionIDStr
-			}
-		}
-		if sessionID == "" {
-			sessionID = uuid.New().String()
-		}
-	}
-
-	authData := ZeptoAuthData{
-		Cookie:    cookieStr,
-		XSRFToken: xsrfToken,
-		SessionID: sessionID,
-	}
-	log.Printf("Captured Zepto auth data - Cookie: %s, XSRFToken: %s, SessionID: %s", authData.Cookie, authData.XSRFToken, authData.SessionID)
-
-	return storeAttrs, authData, nil
 }
 
 func fetchZeptoInitialCookies() (string, string, error) {
@@ -301,10 +144,6 @@ func fetchZeptoInitialCookies() (string, string, error) {
 	cookies := resp.Header["Set-Cookie"]
 	cookieStr := strings.Join(cookies, "; ")
 	xsrfToken := resp.Header.Get("x-xsrf-token")
-
-	log.Printf("Initial Zepto Response Status: %s", resp.Status)
-	log.Printf("Initial Zepto Cookies: %s", cookieStr)
-	log.Printf("Initial Zepto XSRF-Token: %s", xsrfToken)
 
 	return cookieStr, xsrfToken, nil
 }
@@ -335,6 +174,197 @@ func fetchAddressUsingInstamart(lat string, lng string) (string, error) {
 	return address, nil
 }
 
+// FetchZeptoStoreDetails fetches store details from Zepto with improved session handling.
+// Removed rate limiter code.
+func FetchZeptoStoreDetails(lat string, lng string, sessionId string) (ZeptoStoreAttributes, ZeptoAuthData, error) {
+	initialCookie, initialXSRFToken, err := fetchZeptoInitialCookies()
+	if err != nil {
+		log.Printf("Failed to fetch initial cookies: %v", err)
+	}
+
+	zeptoUrl := "https://api.zeptonow.com/api/v2/get_page?"
+	headers := map[string]string{
+		"accept":                "application/json, text/plain, */*",
+		"accept-language":       "en-US,en;q=0.9",
+		"app_sub_platform":      "WEB",
+		"app_version":           "12.63.1", // Updated to match successful request
+		"appversion":            "12.63.1",
+		"auth_revamp_flow":      "v2",
+		"compatible_components": "CONVENIENCE_FEE,RAIN_FEE,EXTERNAL_COUPONS,STANDSTILL,BUNDLE,MULTI_SELLER_ENABLED,PIP_V1,ROLLUPS,SCHEDULED_DELIVERY,SAMPLING_ENABLED,ETA_NORMAL_WITH_149_DELIVERY,ETA_NORMAL_WITH_199_DELIVERY,HOMEPAGE_V2,NEW_ETA_BANNER,VERTICAL_FEED_PRODUCT_GRID,AUTOSUGGESTION_PAGE_ENABLED,AUTOSUGGESTION_PIP,AUTOSUGGESTION_AD_PIP,BOTTOM_NAV_FULL_ICON,COUPON_WIDGET_CART_REVAMP,DELIVERY_UPSELLING_WIDGET,MARKETPLACE_CATEGORY_GRID,NO_PLATFORM_CHECK_ENABLED_V2,SUPER_SAVER:1,SUPERSTORE_V1,PROMO_CASH:0,24X7_ENABLED_V1,TABBED_CAROUSEL_V2,HP_V4_FEED,WIDGET_BASED_ETA,NEW_FEE_STRUCTURE,NEW_BILL_INFO,RE_PROMISE_ETA_ORDER_SCREEN_ENABLED,SUPERSTORE_V1,MANUALLY_APPLIED_DELIVERY_FEE_RECEIVABLE,MARKETPLACE_REPLACEMENT,ZEPTO_PASS,ZEPTO_PASS:1,ZEPTO_PASS:2,ZEPTO_PASS_RENEWAL,CART_REDESIGN_ENABLED,SHIPMENT_WIDGETIZATION_ENABLED,TABBED_CAROUSEL_V2,24X7_ENABLED_V1,PROMO_CASH:0,HOMEPAGE_V2,SUPER_SAVER:1,NO_PLATFORM_CHECK_ENABLED_V2,HP_V4_FEED,GIFT_CARD,SCLP_ADD_MONEY,GIFTING_ENABLED,OFSE,WIDGET_BASED_ETA",
+		"content-type":          "application/json",
+		"marketplace_type":      "ZEPTO_NOW",
+		"platform":              "WEB",
+		"user-agent":            "Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Mobile Safari/537.36",
+		"requestid":             sessionId,
+		"sessionid":             sessionId,
+		"deviceid":              uuid.New().String(), // Unique device ID per request
+		"storeid":               "fa5e892d-65d7-4da6-9bde-e1f22deb7b6f",
+		"origin":                "https://www.zeptonow.com",
+		"referer":               "https://www.zeptonow.com/",
+	}
+
+	zeptoQueryParams := map[string]string{
+		"latitude":              lat,
+		"longitude":             lng,
+		"page_type":             "HOME",
+		"version":               "v2",
+		"show_new_eta_banner":   "false", // Match successful request
+		"page_size":             "1",
+		"enforce_platform_type": "WEB",
+	}
+
+	params := url.Values{}
+	for key, val := range zeptoQueryParams {
+		params.Add(key, val)
+	}
+	zeptoUrl += params.Encode()
+
+	const maxRetries = 5
+	var backoff time.Duration = 5 * time.Second // Increased initial delay
+
+	client := &http.Client{Timeout: 15 * time.Second}
+
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		req, err := http.NewRequest("GET", zeptoUrl, nil)
+		if err != nil {
+			return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
+		}
+
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		if initialCookie != "" {
+			req.Header.Set("Cookie", initialCookie)
+		}
+		if initialXSRFToken != "" {
+			req.Header.Set("x-xsrf-token", initialXSRFToken)
+		}
+
+		resp, err := client.Do(req)
+		if err != nil {
+			return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusTooManyRequests {
+			if attempt == maxRetries {
+				return ZeptoStoreAttributes{}, ZeptoAuthData{}, fmt.Errorf("max retries reached: Zepto returned 429 Too Many Requests")
+			}
+			retryAfter := resp.Header.Get("Retry-After")
+			if retryAfter != "" {
+				if seconds, err := strconv.Atoi(retryAfter); err == nil {
+					backoff = time.Duration(seconds) * time.Second
+				}
+			} else {
+				backoff = time.Duration(5*(attempt+1)) * time.Second // Linear backoff: 5s, 10s, 15s, 20s, 25s
+				if backoff > 30*time.Second {
+					backoff = 30 * time.Second // Cap at 30s
+				}
+			}
+			log.Printf("Rate limit hit, retrying after %v (attempt %d/%d)", backoff, attempt+1, maxRetries)
+			time.Sleep(backoff)
+			continue
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			return ZeptoStoreAttributes{}, ZeptoAuthData{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		}
+
+		bytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
+		}
+
+		var result map[string]interface{}
+		if err := json.Unmarshal(bytes, &result); err != nil {
+			log.Printf("Failed to parse JSON from %s: %v", zeptoUrl, err)
+			return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
+		}
+
+		var storeAttrs ZeptoStoreAttributes
+		if data, ok := result["storeServiceableResponse"].(map[string]interface{}); ok {
+			if data["storeId"] != nil && data["serviceable"] != nil {
+				storeAttrs.StoreID = data["storeId"].(string)
+				storeAttrs.Serviceable = data["serviceable"].(bool)
+				headers["storeid"] = storeAttrs.StoreID
+			}
+		}
+
+		if pageLayout, ok := result["pageLayout"].(map[string]interface{}); ok {
+			if widgets, ok := pageLayout["widgets"].([]interface{}); ok && len(widgets) > 0 {
+				for _, widget := range widgets {
+					widgetMap, ok := widget.(map[string]interface{})
+					if !ok {
+						continue
+					}
+					if widgetMap["widgetName"] == "ETA_BANNER" {
+						if widgetData, ok := widgetMap["data"].(map[string]interface{}); ok {
+							if widgetDataItems, ok := widgetData["items"].(map[string]interface{}); ok {
+								if displayText, ok := widgetDataItems["displayText"].(string); ok && strings.Compare(displayText, "Delivery In") == 0 {
+									if etaInMinutes, ok := widgetDataItems["etaInMinutes"].(string); ok {
+										storeAttrs.ETA = fmt.Sprintf("%s Mins", etaInMinutes)
+									} else if etaInMinutesFloat, ok := widgetDataItems["etaInMinutes"].(float64); ok {
+										storeAttrs.ETA = fmt.Sprintf("%d Mins", int(etaInMinutesFloat))
+									}
+								} else if displayText, ok := widgetDataItems["displayText"].(string); ok {
+									storeAttrs.ETA = displayText
+								}
+							}
+						}
+						break
+					}
+				}
+			}
+		}
+
+		cookies := resp.Header["Set-Cookie"]
+		cookieStr := strings.Join(cookies, "; ")
+		xsrfToken := resp.Header.Get("x-xsrf-token")
+
+		if cookieStr == "" && initialCookie != "" {
+			cookieStr = initialCookie
+		}
+		if xsrfToken == "" && initialXSRFToken != "" {
+			xsrfToken = initialXSRFToken
+		}
+
+		var sessionID string
+		if cookieStr != "" {
+			cookieParts := strings.Split(cookieStr, "; ")
+			for _, part := range cookieParts {
+				if strings.HasPrefix(part, "XSRF-TOKEN=") {
+					xsrfToken = strings.TrimPrefix(part, "XSRF-TOKEN=")
+				}
+				if strings.HasPrefix(part, "session_id=") {
+					sessionID = strings.TrimPrefix(part, "session_id=")
+				}
+			}
+		}
+
+		if sessionID == "" {
+			if userSessionID, ok := result["userSessionId"]; ok && userSessionID != nil {
+				if sessionIDStr, ok := userSessionID.(string); ok {
+					sessionID = sessionIDStr
+				}
+			}
+			if sessionID == "" {
+				sessionID = sessionId // Fall back to passed sessionId
+			}
+		}
+
+		authData := ZeptoAuthData{
+			Cookie:    cookieStr,
+			XSRFToken: xsrfToken,
+			SessionID: sessionID,
+		}
+
+		return storeAttrs, authData, nil
+	}
+
+	return ZeptoStoreAttributes{}, ZeptoAuthData{}, fmt.Errorf("max retries exceeded for Zepto API")
+}
+
+// SaveSession remains largely unchanged, but ensure it uses the updated FetchZeptoStoreDetails
 func SaveSession(ctx context.Context, appState config.AppState, sess *Session) error {
 	var instamartErr, zeptoErr, blinkitErr, addressErr error
 	var zeptoAuth ZeptoAuthData
@@ -352,7 +382,11 @@ func SaveSession(ctx context.Context, appState config.AppState, sess *Session) e
 	go func() {
 		defer wg.Done()
 		var zeptoStore ZeptoStoreAttributes
-		zeptoStore, zeptoAuth, zeptoErr = FetchZeptoStoreDetails(sess.Lat, sess.Lng)
+		sessionID := sess.ZeptoAuth.SessionID
+		if sessionID == "" {
+			sessionID = uuid.New().String()
+		}
+		zeptoStore, zeptoAuth, zeptoErr = FetchZeptoStoreDetails(sess.Lat, sess.Lng, sessionID)
 		sess.MarketPlaceAttributes.ZeptoStoreAttributes = zeptoStore
 		sess.ZeptoAuth = zeptoAuth
 		if zeptoErr != nil {
@@ -378,20 +412,6 @@ func SaveSession(ctx context.Context, appState config.AppState, sess *Session) e
 
 	wg.Wait()
 
-	if instamartErr != nil {
-		return fmt.Errorf("failed to fetch Instamart store details: %v", instamartErr)
-	}
-	if zeptoErr != nil {
-		return fmt.Errorf("failed to fetch Zepto store details: %v", zeptoErr)
-	}
-	if blinkitErr != nil {
-		return fmt.Errorf("failed to fetch Blinkit store details: %v", blinkitErr)
-	}
-	if addressErr != nil {
-		return fmt.Errorf("failed to fetch address: %v", addressErr)
-	}
-
-	// Upsert into MongoDB
 	sessionCollection := appState.MongoClient.Database("comparelySBX").Collection("UserSessions")
 	filter := bson.M{"deviceID": sess.DeviceID}
 	update := bson.M{"$set": sess}
@@ -402,7 +422,6 @@ func SaveSession(ctx context.Context, appState config.AppState, sess *Session) e
 		return fmt.Errorf("failed to upsert session in MongoDB: %v", err)
 	}
 
-	// Save to Redis with expiration
 	sessionJSON, err := json.Marshal(sess)
 	if err != nil {
 		log.Printf("JSON marshal error: %v", err)
@@ -416,6 +435,13 @@ func SaveSession(ctx context.Context, appState config.AppState, sess *Session) e
 	}
 
 	log.Printf("Session saved successfully: %+v", sess)
+
+	if instamartErr != nil && zeptoErr != nil && blinkitErr != nil {
+		return fmt.Errorf("all marketplace fetches failed: Instamart: %v, Zepto: %v, Blinkit: %v", instamartErr, zeptoErr, blinkitErr)
+	}
+	if zeptoErr != nil {
+		log.Printf("Proceeding with partial session save due to Zepto error: %v", zeptoErr)
+	}
 	return nil
 }
 
