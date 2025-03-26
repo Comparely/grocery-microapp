@@ -56,7 +56,7 @@ func main() {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		log.Printf("Session saved successfully: %+v", sess)
+		//log.Printf("Session saved successfully: %+v", sess)
 		c.JSON(http.StatusOK, sess)
 	})
 

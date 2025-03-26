@@ -41,14 +41,14 @@ func fetchJSON(url string, method string, headers map[string]string, body string
 	defer resp.Body.Close()
 
 	// Log response details for debugging
-	log.Printf("FetchJSON Response Status: %s", resp.Status)
-	log.Printf("FetchJSON Response Headers: %v", resp.Header)
+	// log.Printf("FetchJSON Response Status: %s", resp.Status)
+	// log.Printf("FetchJSON Response Headers: %v", resp.Header)
 
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("FetchJSON Raw Response Body: %s", string(bytes))
+	// log.Printf("FetchJSON Raw Response Body: %s", string(bytes))
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(bytes, &result); err != nil {
@@ -93,6 +93,7 @@ func fetchInstamartStoreDetails(lat string, lng string) (InstamartStoreAttribute
 		}
 		eta := data["slaString"].(string)
 		result.ETA = eta
+		log.Println("Blinkit eta", eta)
 	}
 	return result, nil
 }
@@ -121,6 +122,7 @@ func fetchBlinkitStoreDetails(lat string, lng string) (BlinkitStoreAttributes, e
 		result.Serviceable = true //TODO: Change tis
 
 		if data["eta_in_minutes"] != nil {
+			log.Println("Blinkit eta", data["eta_in_minutes"])
 			eta := fmt.Sprintf("%s Mins", strconv.Itoa(int(data["eta_in_minutes"].(float64))))
 			result.ETA = eta
 		}
@@ -136,17 +138,14 @@ func FetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, Zepto
 
 	zeptoUrl := "https://api.zeptonow.com/api/v2/get_page?"
 	headers := map[string]string{
-		"accept":                "application/json, text/plain, */*",
-		"accept-language":       "en-US,en;q=0.9",
-		"app_sub_platform":      "WEB",
-		"app_version":           "12.55.3",
-		"appversion":            "12.55.3",
-		"auth_revamp_flow":      "v2",
-		"compatible_components": "CONVENIENCE_FEE,RAIN_FEE,EXTERNAL_COUPONS,STANDSTILL,BUNDLE,MULTI_SELLER_ENABLED,PIP_V1,ROLLUPS,SCHEDULED_DELIVERY,SAMPLING_ENABLED,ETA_NORMAL_WITH_149_DELIVERY,ETA_NORMAL_WITH_199_DELIVERY,HOMEPAGE_V2,NEW_ETA_BANNER,VERTICAL_FEED_PRODUCT_GRID,AUTOSUGGESTION_PAGE_ENABLED,AUTOSUGGESTION_PIP,AUTOSUGGESTION_AD_PIP,BOTTOM_NAV_FULL_ICON,COUPON_WIDGET_CART_REVAMP,DELIVERY_UPSELLING_WIDGET,MARKETPLACE_CATEGORY_GRID,NO_PLATFORM_CHECK_ENABLED_V2,SUPER_SAVER:1,SUPERSTORE_V1,PROMO_CASH:0,24X7_ENABLED_V1,TABBED_CAROUSEL_V2,HP_V4_FEED,NEW_ROLLUPS_ENABLED,RERANKING_QCL_RELATED_PRODUCTS,PLP_ON_SEARCH,PAAN_BANNER_WIDGETIZED,ROLLUPS_UOM,DYNAMIC_FILTERS,PHARMA_ENABLED,AUTOSUGGESTION_RECIPE_PIP,SEARCH_FILTERS_V1,QUERY_DESCRIPTION_WIDGET,MEDS_WITH_SIMILAR_SALT_WIDGET,NEW_FEE_STRUCTURE,NEW_BILL_INFO,RE_PROMISE_ETA_ORDER_SCREEN_ENABLED,SUPERSTORE_V1,MANUALLY_APPLIED_DELIVERY_FEE_RECEIVABLE,MARKETPLACE_REPLACEMENT,ZEPTO_PASS,ZEPTO_PASS:1,ZEPTO_PASS:2,ZEPTO_PASS_RENEWAL,CART_REDESIGN_ENABLED,SHIPMENT_WIDGETIZATION_ENABLED,TABBED_CAROUSEL_V2,24X7_ENABLED_V1,PROMO_CASH:0,HOMEPAGE_V2,SUPER_SAVER:1,NO_PLATFORM_CHECK_ENABLED_V2",
-		"content-type":          "application/json",
-		"marketplace_type":      "ZEPTO_NOW",
-		"platform":              "WEB",
-		"user-agent":            "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
+		"accept":           "application/json, text/plain, */*",
+		"accept-language":  "en-US,en;q=0.9",
+		"app_sub_platform": "WEB",
+		"app_version":      "12.63.1",
+		"appversion":       "12.63.1",
+		"content-type":     "application/json",
+		"platform":         "WEB",
+		"user-agent":       "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
 	}
 
 	zeptoQueryParams := map[string]string{
@@ -187,14 +186,14 @@ func FetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, Zepto
 	}
 	defer resp.Body.Close()
 
-	log.Printf("Zepto Response Status: %s", resp.Status)
-	log.Printf("Zepto Response Headers: %v", resp.Header)
+	// log.Printf("Zepto Response Status: %s", resp.Status)
+	// log.Printf("Zepto Response Headers: %v", resp.Header)
 
 	bytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return ZeptoStoreAttributes{}, ZeptoAuthData{}, err
 	}
-	log.Printf("Zepto Raw Response Body: %s", string(bytes))
+	// log.Printf("Zepto Raw Response Body: %s", string(bytes))
 
 	var result map[string]interface{}
 	if err := json.Unmarshal(bytes, &result); err != nil {
@@ -276,7 +275,7 @@ func FetchZeptoStoreDetails(lat string, lng string) (ZeptoStoreAttributes, Zepto
 		XSRFToken: xsrfToken,
 		SessionID: sessionID,
 	}
-	log.Printf("Captured Zepto auth data - Cookie: %s, XSRFToken: %s, SessionID: %s", authData.Cookie, authData.XSRFToken, authData.SessionID)
+	// log.Printf("Captured Zepto auth data - Cookie: %s, XSRFToken: %s, SessionID: %s", authData.Cookie, authData.XSRFToken, authData.SessionID)
 
 	return storeAttrs, authData, nil
 }
@@ -302,9 +301,9 @@ func fetchZeptoInitialCookies() (string, string, error) {
 	cookieStr := strings.Join(cookies, "; ")
 	xsrfToken := resp.Header.Get("x-xsrf-token")
 
-	log.Printf("Initial Zepto Response Status: %s", resp.Status)
-	log.Printf("Initial Zepto Cookies: %s", cookieStr)
-	log.Printf("Initial Zepto XSRF-Token: %s", xsrfToken)
+	// log.Printf("Initial Zepto Response Status: %s", resp.Status)
+	// log.Printf("Initial Zepto Cookies: %s", cookieStr)
+	// log.Printf("Initial Zepto XSRF-Token: %s", xsrfToken)
 
 	return cookieStr, xsrfToken, nil
 }
@@ -415,7 +414,7 @@ func SaveSession(ctx context.Context, appState config.AppState, sess *Session) e
 		return fmt.Errorf("failed to set session in Redis: %v", err)
 	}
 
-	log.Printf("Session saved successfully: %+v", sess)
+	//log.Printf("Session saved successfully: %+v", sess)
 	return nil
 }
 
