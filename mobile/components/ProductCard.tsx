@@ -92,7 +92,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
             {priceOption.platform === 'blinkit' && (
               <Image
                 source={require('@/assets/images/blinkit.png')}
-                style={styles.platformImage}
+                style={styles.platformImageBlinkit}
               />
             )}
             {priceOption.platform === 'instamart' && (
@@ -226,6 +226,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 13,
     resizeMode: 'contain',
+  },
+  platformImageBlinkit: {
+    width: 32,
+    height: 13,
+    resizeMode: 'cover',
   },
   deliveryContainer: {
     flexDirection: 'row',

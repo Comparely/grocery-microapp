@@ -23,8 +23,8 @@ import { Session } from '@/types/Session';
 import { fetchHomePageData } from '@/api/common';
 import { Product } from '@/types/Product';
 import { Ionicons } from '@expo/vector-icons';
+import { LoadingProgress } from '@/components/Loaders';
 
-const { width } = Dimensions.get('window');
 const AARAV_NUMBER = '+918076078942';
 
 const HomeScreen = () => {
@@ -80,6 +80,7 @@ const HomeScreen = () => {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
+              setLocationDenied(false);
               setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
               initiateSessionForUser(position.coords.latitude, position.coords.longitude)
                 .then((val) => {
@@ -109,6 +110,7 @@ const HomeScreen = () => {
 
         try {
           let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+          setLocationDenied(false);
           setLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
           initiateSessionForUser(location.coords.latitude, location.coords.longitude)
             .then((val) => {
@@ -133,6 +135,7 @@ const HomeScreen = () => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
+            setLocationDenied(false);
             setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
             initiateSessionForUser(position.coords.latitude, position.coords.longitude)
               .then((val) => {
@@ -157,6 +160,7 @@ const HomeScreen = () => {
 
       try {
         let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+        setLocationDenied(false);
         setLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
         initiateSessionForUser(location.coords.latitude, location.coords.longitude)
           .then((val) => {
@@ -168,10 +172,6 @@ const HomeScreen = () => {
         setLocationDenied(true);
       }
     }
-  };
-
-  const handleSearch = () => {
-    router.push('/search');
   };
 
   const handleWhatsappRedirect = async () => {
@@ -215,7 +215,7 @@ const HomeScreen = () => {
   if (!pageReady) {
     return (
       <View style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Loading Comparely...</Text>
+        <LoadingProgress />
       </View>
     );
   }
