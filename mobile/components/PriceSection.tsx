@@ -112,7 +112,6 @@ const styles = StyleSheet.create({
     left: 0,
     zIndex: 1,
     padding: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 20,
   },
   arrowRight: {
@@ -120,7 +119,6 @@ const styles = StyleSheet.create({
     right: 0,
     zIndex: 1,
     padding: 10,
-    backgroundColor: 'rgba(255, 255, 255, 0.7)',
     borderRadius: 20,
   },
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, View, ScrollView, FlatList, Text, TouchableOpacity, Keyboard } from 'react-native';
+import { StyleSheet, View, ScrollView, Text, Keyboard } from 'react-native';
 import { SearchBar } from '../components/SearchBar';
 import { ProductList } from '../components/ProductList';
 import { Product } from '../types/Product';
@@ -14,10 +14,10 @@ export const GroceryComparisonScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  // const [suggestions, setSuggestions] = useState<string[]>([]);
   const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
   const [session, setSession] = useState<Session | undefined>();
-  const suggestionSelectedRef = useRef<boolean>(false);
+  // const suggestionSelectedRef = useRef<boolean>(false);
 
   const debounce = useCallback((func: (...args: any[]) => void, delay: number) => {
     let timeoutId: NodeJS.Timeout;
@@ -59,30 +59,30 @@ export const GroceryComparisonScreen: React.FC = () => {
     }
   }, []);
 
-  const fetchSuggestions = useCallback(
-    async (query: string) => {
-      if (!query.trim() || suggestionSelectedRef.current) {
-        setSuggestions([]);
-        return;
-      }
-      try {
-        const suggestionResponse = await fetch('https://grocery-api.comparely.co.in/suggestions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query,
-            deviceID: session?.deviceID?.replace(/"/g, '') || '',
-          }),
-        });
-        const suggestionData = await suggestionResponse.json();
-        console.log('Suggestions Response:', suggestionData);
-        setSuggestions(suggestionData.suggestions || []);
-      } catch (error) {
-        console.error('Error fetching suggestions:', error);
-      }
-    },
-    [session]
-  );
+  // const fetchSuggestions = useCallback(
+  //   async (query: string) => {
+  //     if (!query.trim() || suggestionSelectedRef.current) {
+  //       setSuggestions([]);
+  //       return;
+  //     }
+  //     try {
+  //       const suggestionResponse = await fetch('https://grocery-api.comparely.co.in/suggestions', {
+  //         method: 'POST',
+  //         headers: { 'Content-Type': 'application/json' },
+  //         body: JSON.stringify({
+  //           query,
+  //           deviceID: session?.deviceID?.replace(/"/g, '') || '',
+  //         }),
+  //       });
+  //       const suggestionData = await suggestionResponse.json();
+  //       console.log('Suggestions Response:', suggestionData);
+  //       setSuggestions(suggestionData.suggestions || []);
+  //     } catch (error) {
+  //       console.error('Error fetching suggestions:', error);
+  //     }
+  //   },
+  //   [session]
+  // );
 
   const fetchProducts = useCallback(
     async (query: string) => {
@@ -104,38 +104,38 @@ export const GroceryComparisonScreen: React.FC = () => {
     [location]
   );
 
-  const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 300), [fetchSuggestions]);
+  // const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 300), [fetchSuggestions]);
   const debouncedFetchProducts = useCallback(debounce(fetchProducts, 300), [fetchProducts]);
 
   useEffect(() => {
-    if (searchQuery && !suggestionSelectedRef.current) {
-      debouncedFetchSuggestions(searchQuery);
+    if (searchQuery /* && !suggestionSelectedRef.current */) {
+      // debouncedFetchSuggestions(searchQuery);
       debouncedFetchProducts(searchQuery);
     }
-  }, [searchQuery, debouncedFetchSuggestions, debouncedFetchProducts]);
+  }, [searchQuery, /* debouncedFetchSuggestions, */ debouncedFetchProducts]);
 
   const handleSearch = (text: string) => {
-    suggestionSelectedRef.current = false;
+    // suggestionSelectedRef.current = false;
     setSearchQuery(text);
   };
 
-  const handleSuggestionSelect = (suggestion: string) => {
-    suggestionSelectedRef.current = true;
-    debouncedFetchSuggestions.cancel();
-    setSearchQuery(suggestion);
-    setSuggestions([]); // Clear suggestions when a suggestion is selected
-    fetchProducts(suggestion);
-  };
+  // const handleSuggestionSelect = (suggestion: string) => {
+  //   suggestionSelectedRef.current = true;
+  //   debouncedFetchSuggestions.cancel();
+  //   setSearchQuery(suggestion);
+  //   setSuggestions([]);
+  //   fetchProducts(suggestion);
+  // };
 
   // Handle search submission (e.g., pressing Enter or the keyboard's search button)
   const handleSubmit = () => {
-    setSuggestions([]); // Clear suggestions on submit
+    // setSuggestions([]);
     fetchProducts(searchQuery); // Fetch products immediately
   };
 
   // Handle when the search input loses focus
   const handleBlur = () => {
-    setSuggestions([]); // Clear suggestions when focus is lost
+    // setSuggestions([]); // No need to clear suggestions since they’re commented out
   };
 
   return (
@@ -148,10 +148,10 @@ export const GroceryComparisonScreen: React.FC = () => {
           onChangeText={handleSearch}
           placeholder="Search for groceries..."
           editable={true}
-          onSubmitEditing={handleSubmit} // Add submit handler
-          onBlur={handleBlur} // Add blur handler
+          onSubmitEditing={handleSubmit}
+          onBlur={handleBlur}
         />
-        {suggestions.length > 0 && (
+        {/* {suggestions.length > 0 && (
           <FlatList
             data={suggestions}
             keyExtractor={(item) => item}
@@ -165,13 +165,14 @@ export const GroceryComparisonScreen: React.FC = () => {
             )}
             style={styles.suggestionList}
           />
-        )}
+        )} */}
       </View>
       <ScrollView
-        onTouchStart={()=>Keyboard.dismiss()}
+        onTouchStart={() => Keyboard.dismiss()}
         onScroll={handleBlur}
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollViewContent}>
+        contentContainerStyle={styles.scrollViewContent}
+      >
         <ProductList products={products} isLoading={isLoading} session={session!} />
       </ScrollView>
     </View>
@@ -198,30 +199,30 @@ const styles = StyleSheet.create({
   scrollViewContent: {
     paddingBottom: 0,
   },
-  suggestionList: {
-    position: 'absolute',
-    top: 60,
-    left: 16,
-    right: 16,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    maxHeight: 200,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    zIndex: 2500,
-  },
-  suggestionItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  suggestionText: {
-    fontSize: 16,
-    color: '#181b19',
-  },
+  // suggestionList: {
+  //   position: 'absolute',
+  //   top: 60,
+  //   left: 16,
+  //   right: 16,
+  //   backgroundColor: '#fff',
+  //   borderRadius: 10,
+  //   maxHeight: 200,
+  //   shadowColor: '#000',
+  //   shadowOffset: { width: 0, height: 2 },
+  //   shadowOpacity: 0.25,
+  //   shadowRadius: 3.84,
+  //   elevation: 5,
+  //   zIndex: 2500,
+  // },
+  // suggestionItem: {
+  //   padding: 10,
+  //   borderBottomWidth: 1,
+  //   borderBottomColor: '#eee',
+  // },
+  // suggestionText: {
+  //   fontSize: 16,
+  //   color: '#181b19',
+  // },
 });
 
 export default GroceryComparisonScreen;

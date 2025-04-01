@@ -45,8 +45,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
         {product.priceOptions.map((priceOption) => (
           <PriceOptionSingle
             session={session}
-            key={priceOption.id}
+            key={priceOption.id || `${priceOption.platform}-${priceOption.price}`} // Fallback key for safety
             priceOption={priceOption}
+            productWeight={product.weight} // Pass product.weight as productWeight
             label=""
           />
         ))}
@@ -58,10 +59,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
 interface PriceOptionSingleProps {
   session: Session;
   priceOption: PriceOption;
+  productWeight?: string; // Optional product-level weight
   label: string;
 }
 
-const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOption, label }) => {
+const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOption, productWeight, label }) => {
   const handleDeepLink = async (url: string) => {
     const supported = await Linking.canOpenURL(url);
     if (supported) {
@@ -77,6 +79,9 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
     instamart: session.marketplaceAttributes?.instamartStoreAttributes?.eta || 'N/A',
   }[priceOption.platform] || 'N/A';
 
+  // Determine which weight to display: prioritize priceOption.weight, fallback to productWeight
+  const displayWeight = priceOption.weight || productWeight || 'N/A';
+
   return (
     <TouchableOpacity
       onPress={() => handleDeepLink(priceOption.deeplink)}
@@ -91,7 +96,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
             )}
             {priceOption.platform === 'blinkit' && (
               <Image
-                source={require('@/assets/images/blinkit.png')}
+                source={require('@/assets/images/blinkit.png')} // Retained PNG version
                 style={styles.platformImageBlinkit}
               />
             )}
@@ -102,7 +107,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({ session, priceOpt
               />
             )}
             <View style={styles.tagSmall}>
-              <Text style={styles.tagTextSmall}>{priceOption.weight}</Text>
+              <Text style={styles.tagTextSmall}>{displayWeight}</Text> {/* Updated to use displayWeight */}
             </View>
           </View>
         </View>
@@ -230,7 +235,7 @@ const styles = StyleSheet.create({
   platformImageBlinkit: {
     width: 32,
     height: 13,
-    resizeMode: 'cover',
+    resizeMode: 'cover', // Retained from original PNG version
   },
   deliveryContainer: {
     flexDirection: 'row',

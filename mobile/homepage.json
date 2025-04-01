@@ -17,6 +17,11 @@
           "platform": "blinkit",
           "price": 89,
           "deeplink": "https://blinkit.com/prn/daawat-rozana-super-basmati-rice-1-kg/prid/60660"
+        },
+        {
+          "platform": "instamart",
+          "price": 81,
+          "deeplink": "https://www.swiggy.com/instamart/item/6ALQEHJPGO?storeId=1399346"
         }
       ]
     },
@@ -28,16 +33,13 @@
       "name": "Whole Farm Premium Parmal Rice",
       "mrp": 120,
       "priceOptions": [
-        {
-          "platform": "zepto",
-          "price": 62,
-          "deeplink": "https://www.zeptonow.com/pn/whole-farm-premium-parmal-rice/pvid/528010"
-        },
+        
         {
           "platform": "blinkit",
           "price": 89,
           "deeplink": "https://blinkit.com/prn/whole-farm-premium-parmal-rice/prid/528010"
         }
+      
       ]
     },
     {
@@ -57,6 +59,11 @@
           "platform": "blinkit",
           "price": 480,
           "deeplink": "https://blinkit.com/prn/fortune-chakki-fresh-100-atta-0-maida-atta-10-kg/prid/380157"
+        },
+        {
+          "platform": "instamart",
+          "price": 401,
+          "deeplink": "https://www.swiggy.com/instamart/item/8MU2RANAER?storeId=1399346"
         }
       ]
     },
@@ -77,13 +84,18 @@
           "platform": "blinkit",
           "price": 19,
           "deeplink": "https://blinkit.com/prn/kurkure-masala-munch-crisps/prid/67372"
+        },
+        {
+          "platform": "instamart",
+          "price": 20,
+          "deeplink": "https://www.swiggy.com/instamart/item/F75TJ44CBD?storeId=1399346"
         }
       ]
     },
     {
       "id": 5,
       "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=480,h=480/da/cms-assets/cms/product/ead1bbae-ef23-4f85-b971-c849710b8a9a.jpg?ts=1735215741",
-      "weight": "1 kg",
+      "weight": "1.5 kg",
       "brand": "Surf Excel",
       "name": "Surf Excel Easy Wash Detergent Powder",
       "mrp": 250,
@@ -97,7 +109,12 @@
           "platform": "blinkit",
           "price": 235,
           "deeplink": "https://blinkit.com/prn/x/prid/18555"
+        }, {
+          "platform": "instamart",
+          "price": 221,
+          "deeplink": "https://www.swiggy.com/instamart/item/7LP5ECILDU"
         }
+
       ]
     },
     {
@@ -117,6 +134,10 @@
           "platform": "blinkit",
           "price": 87,
           "deeplink": "https://blinkit.com/prn/pepsi-soft-drink-2.25-l/prid/77493"
+        }, {
+          "platform": "instamart",
+          "price": 94,
+          "deeplink": "https://www.swiggy.com/instamart/item/16YVBQZTK6?storeId=1399346"
         }
       ]
     }
