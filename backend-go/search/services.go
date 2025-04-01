@@ -541,13 +541,13 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 
 	// Check errors (you could choose to ignore some errors if desired).
 	if errBlinkit != nil {
-		return nil, errBlinkit
+		log.Println("Blinkit error", errBlinkit)
 	}
 	if errInstamart != nil {
-		return nil, errInstamart
+		log.Println("Instamart error", errInstamart)
 	}
 	if errZepto != nil {
-		return nil, errZepto
+		log.Println("Zepto error", errZepto)
 	}
 
 	log.Printf("blinkit: %d, instamart: %d, zepto: %d", len(blinkitProducts), len(instamartProducts), len(zeptoProducts))
