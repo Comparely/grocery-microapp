@@ -67,9 +67,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fffaf0",
     borderRadius: 24,
     padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    margin: 16,
     justifyContent: "center",
     alignItems: "center",
-    minHeight: 200,
+    minHeight: 700,
   },
   emptyText: {
     fontSize: 16,
