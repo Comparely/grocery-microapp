@@ -377,18 +377,18 @@ func SaveSession(ctx context.Context, appState config.AppState, sess *Session) e
 
 	wg.Wait()
 
-	if instamartErr != nil {
-		return fmt.Errorf("failed to fetch Instamart store details: %v", instamartErr)
-	}
-	if zeptoErr != nil {
-		return fmt.Errorf("failed to fetch Zepto store details: %v", zeptoErr)
-	}
-	if blinkitErr != nil {
-		return fmt.Errorf("failed to fetch Blinkit store details: %v", blinkitErr)
-	}
-	if addressErr != nil {
-		return fmt.Errorf("failed to fetch address: %v", addressErr)
-	}
+	// if instamartErr != nil {
+	// 	return fmt.Errorf("failed to fetch Instamart store details: %v", instamartErr)
+	// }
+	// if zeptoErr != nil {
+	// 	return fmt.Errorf("failed to fetch Zepto store details: %v", zeptoErr)
+	// }
+	// if blinkitErr != nil {
+	// 	return fmt.Errorf("failed to fetch Blinkit store details: %v", blinkitErr)
+	// }
+	// if addressErr != nil {
+	// 	return fmt.Errorf("failed to fetch address: %v", addressErr)
+	// }
 
 	// Upsert into MongoDB
 	sessionCollection := appState.MongoClient.Database("comparelySBX").Collection("UserSessions")
