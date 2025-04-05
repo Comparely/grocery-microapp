@@ -1,143 +1,153 @@
 {
   "featuredProducts": [
+  
     {
       "id": 1,
-      "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/image%205.png",
-      "weight": "1 kg",
-      "brand": "Daawat",
-      "name": "Daawat Basmati Rice - Rozana Super",
-      "mrp": 100,
+      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg",
+      "weight": "1 L",
+      "brand": "Amul",
+      "name": "Amul Taaza Homogenised Toned Milk",
+      "mrp": 74,
       "priceOptions": [
         {
           "platform": "zepto",
-          "price": 82,
-          "deeplink": "https://www.zeptonow.com/pn/daawat-rozana-super-basmati-rice-medium-grain/pvid/6b78d070-ba4c-459c-9d4d-fe058f71d5cf"
-        },
-        {
-          "platform": "blinkit",
-          "price": 89,
-          "deeplink": "https://blinkit.com/prn/daawat-rozana-super-basmati-rice-1-kg/prid/60660"
+          "price": 74,
+          "deeplink": "https://www.zeptonow.com/pn/amul-taaza-homogenised-toned-milk-tetra-pack/pvid/84eae511-5edb-4a22-875e-5aa94976c2d6"
         },
         {
           "platform": "instamart",
-          "price": 81,
-          "deeplink": "https://www.swiggy.com/instamart/item/6ALQEHJPGO?storeId=1399346"
+          "price": 74,
+          "deeplink": "https://www.swiggy.com/instamart/item/BQ5YQH8TEN?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 71,
+          "deeplink": "https://blinkit.com/prn/amul-taaza-homogenised-toned-milk/prid/176"
         }
       ]
     },
     {
       "id": 2,
-      "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/image.png",
-      "weight": "1 kg",
-      "brand": "Whole Farm",
-      "name": "Whole Farm Premium Parmal Rice",
-      "mrp": 120,
+      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1280,ar-5000-5000,pr-true,f-auto,q-80/cms/product_variant/51678793-6737-4149-b12e-fceb8c95f049/Kwality-Wall-s-Magnum-Chocolate-Truffle-ice-Cream-Stick.jpeg",
+      "weight": "80 g",
+      "brand": "Kwality Wall's",
+      "name": "Magnum Chocolate Truffle Ice Cream Stick",
+      "mrp": 70,
       "priceOptions": [
-        
+        {
+          "platform": "zepto",
+          "price": 70,
+          "deeplink": "https://www.zeptonow.com/pn/kwality-walls-magnum-chocolate-truffle-ice-cream-stick/pvid/928db2ba-5ef4-4575-9e87-213eb991f985"
+        },
+        {
+          "platform": "instamart",
+          "price": 70,
+          "deeplink": "https://www.swiggy.com/instamart/item/DGIAPDCF0W?storeId=1399346"
+        },
         {
           "platform": "blinkit",
-          "price": 89,
-          "deeplink": "https://blinkit.com/prn/whole-farm-premium-parmal-rice/prid/528010"
+          "price": 70,
+          "deeplink": "https://blinkit.com/prn/kwality-walls-magnum-almond-ice-cream-stick/prid/611585"
         }
-      
       ]
     },
     {
       "id": 3,
-      "imageUrl": "https://comparely-static-data.storage.googleapis.com/DEMOPRODUCTS/a821b7c3800da72ef25240841c39b5b5.webp",
-      "weight": "10 kg",
-      "brand": "Chakki",
-      "name": "Chakki Atta",
-      "mrp": 485,
+      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1000,ar-1000-1000,pr-true,f-auto,q-80/cms/product_variant/eec88f34-2f46-4a39-af79-d8a852f31b33/Mango-Safeda.jpg",
+      "weight": "1 kg",
+      "brand": "Generic",
+      "name": "Mango Safeda",
+      "mrp": 150,
       "priceOptions": [
         {
           "platform": "zepto",
-          "price": 480,
-          "deeplink": "https://www.zeptonow.com/pn/fortune-chakki-fresh-atta/pvid/09100e95-eb80-4089-8f4a-7cad4fc65be7"
-        },
-        {
-          "platform": "blinkit",
-          "price": 480,
-          "deeplink": "https://blinkit.com/prn/fortune-chakki-fresh-100-atta-0-maida-atta-10-kg/prid/380157"
+          "price": 120,
+          "deeplink": "https://www.zeptonow.com/pn/mango-safeda/pvid/4a0c0c8e-a9f4-4336-a1c6-a4c1371f9eba"
         },
         {
           "platform": "instamart",
-          "price": 401,
-          "deeplink": "https://www.swiggy.com/instamart/item/8MU2RANAER?storeId=1399346"
+          "price": 130,
+          "deeplink": "https://www.swiggy.com/instamart/item/QNQWDL065Q?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 125,
+          "deeplink": "https://blinkit.com/prn/safeda-banganapalli-mango-safeda-aam/prid/15619"
         }
       ]
     },
     {
       "id": 4,
-      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-640,ar-1000-1000,pr-true,f-auto,q-80/cms/product_variant/4f6192ae-7806-4f43-b148-a44169cf2b0e/Kurkure-Masala-Munch.jpeg",
-      "weight": "100 g",
-      "brand": "Kurkure",
-      "name": "Kurkure Masala Munch",
-      "mrp": 20,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/app/assets/products/sliding_images/jpeg/34a57eca-4bda-47c3-838b-5fe0d348db35.jpg?ts=1724241358",
+      "weight": "350 g",
+      "brand": "The Health Factory",
+      "name": "Zero Maida Bread - 100% Whole Wheat",
+      "mrp": 75,
       "priceOptions": [
         {
           "platform": "zepto",
-          "price": 18,
-          "deeplink": "https://www.zeptonow.com/pn/kurkure-masala-munch/pvid/c32d9425-0bdb-4d31-bb21-47630f1811f9"
-        },
-        {
-          "platform": "blinkit",
-          "price": 19,
-          "deeplink": "https://blinkit.com/prn/kurkure-masala-munch-crisps/prid/67372"
+          "price": 58,
+          "deeplink": "https://www.zeptonow.com/pn/the-health-factory-zero-maida-bread-100-whole-wheat/pvid/58bd25ce-8f73-4031-96ed-7a1278834d2b"
         },
         {
           "platform": "instamart",
-          "price": 20,
-          "deeplink": "https://www.swiggy.com/instamart/item/F75TJ44CBD?storeId=1399346"
+          "price": 58,
+          "deeplink": "https://www.swiggy.com/instamart/item/UZ3C4E0RVS?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 75,
+          "deeplink": "https://blinkit.com/prn/the-health-factory-zero-maida-multigrain-bread/prid/564615"
         }
       ]
     },
     {
       "id": 5,
-      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=480,h=480/da/cms-assets/cms/product/ead1bbae-ef23-4f85-b971-c849710b8a9a.jpg?ts=1735215741",
-      "weight": "1.5 kg",
-      "brand": "Surf Excel",
-      "name": "Surf Excel Easy Wash Detergent Powder",
-      "mrp": 250,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/app/assets/products/sliding_images/jpeg/6ae62ec2-3b13-4fff-b052-2ff3d4ef2d16.jpg?ts=1726473593",
+      "weight": "400 g",
+      "brand": "Amul",
+      "name": "Amul Curd",
+      "mrp": 35,
       "priceOptions": [
         {
           "platform": "zepto",
-          "price": 230,
-          "deeplink": "https://www.zeptonow.com/pn/surf-excel-easy-wash-detergent-powder/pvid/4c2fc8ec-dfde-49db-9031-8f8795898919"
+          "price": 32,
+          "deeplink": "https://www.zeptonow.com/pn/amul-masti-dahi-pouch/pvid/c50ac90e-6abb-4bc9-9aa0-34feacb95e24"
+        },
+        {
+          "platform": "instamart",
+          "price": 35,
+          "deeplink": "https://www.swiggy.com/instamart/item/JGHN8V065D?storeId=1399346"
         },
         {
           "platform": "blinkit",
-          "price": 235,
-          "deeplink": "https://blinkit.com/prn/x/prid/18555"
-        }, {
-          "platform": "instamart",
-          "price": 221,
-          "deeplink": "https://www.swiggy.com/instamart/item/7LP5ECILDU"
+          "price": 35,
+          "deeplink": "https://blinkit.com/prn/amul-masti-pouch-curd/prid/45533"
         }
-
       ]
     },
     {
       "id": 6,
-      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/54085ed6-6982-45ca-a8f1-5e864e3a7ae6/Pepsi-Soft-Drink.jpeg",
-      "weight": "2.25 L",
-      "brand": "Pepsi",
-      "name": "Pepsi Soft Drink",
-      "mrp": 90,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/da/cms-assets/cms/product/d478ee1d-78f0-444b-b7a4-f53fdedecff9.jpg?ts=1737973320",
+      "weight": "100 g",
+      "brand": "Hide & Seek",
+      "name": "Hide & Seek Chocolate Cookies",
+      "mrp": 30,
       "priceOptions": [
         {
           "platform": "zepto",
-          "price": 85,
-          "deeplink": "https://www.zeptonow.com/pn/pepsi-soft-drink/pvid/82675cec-f35e-4f33-86c9-39d6b0b94f39"
+          "price": 30,
+          "deeplink": "https://www.zeptonow.com/pn/parle-hide-seek-chocolate-biscuits/pvid/efd2cdcb-00e4-4dd7-b2c4-6634af3bf529"
+        },
+        {
+          "platform": "instamart",
+          "price": 28,
+          "deeplink": "https://www.swiggy.com/instamart/item/8RWTUPOJ9U?storeId=1399346"
         },
         {
           "platform": "blinkit",
-          "price": 87,
-          "deeplink": "https://blinkit.com/prn/pepsi-soft-drink-2.25-l/prid/77493"
-        }, {
-          "platform": "instamart",
-          "price": 94,
-          "deeplink": "https://www.swiggy.com/instamart/item/16YVBQZTK6?storeId=1399346"
+          "price": 30,
+          "deeplink": "https://blinkit.com/prn/hide-seek-chocolate-chip-cookies-100-g/prid/11102"
         }
       ]
     }

@@ -33,23 +33,23 @@ export default function Root({ children }: PropsWithChildren) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-        <title>Comparely - Compare Food Prices Across Platforms</title>
-        <meta name="description" content="Compare food prices across Zomato, Swiggy, and Magicpin with Comparely. Find the best deals and save money on every order."/>
-        <meta name="keywords" content="food price comparison, Zomato, Swiggy, Magicpin, best deals, food orders"/>
+        <title>Comparely - Compare Grocery Prices Across Platforms</title>
+        <meta name="description" content="Compare grocery prices across Blinkit, Instamart and Zepto with Comparely. Find the best deals and save money on every order."/>
+        <meta name="keywords" content="food price comparison, grocery price comparison, price comparison, grocery orders, order grocery, Zomato, Swiggy, Magicpin, Zepto, Instamart, Blinkit, best deals, food orders"/>
         {/* <meta name="viewport" content="width=768, initial-scale=1, maximum-scale=1, user-scalable=no" /> */}
         <meta name="robots" content="index, follow"/>
         <link rel="canonical" href="https://comparely.co.in/"/>
 
-        <meta property="og:title" content="Comparely - Compare Food Prices Across Platforms"/>
-        <meta property="og:description" content="Compare food prices across Zomato, Swiggy, and Magicpin with Comparely. Find the best deals and save money on every order."/>
+        <meta property="og:title" content="Comparely - Compare Grocery Prices Across Platforms"/>
+        <meta property="og:description" content="Compare grocery prices across Blinkit, Instamart and Zepto with Comparely. Find the best deals and save money on every order."/>
         <meta property="og:type" content="website"/>
         <meta property="og:url" content="https://comparely.co.in/"/>
-        <meta property="og:image" content="https://comparely.co.in/screenshots.png"/>
+        <meta property="og:image" content="/assets/assets/images/1.png"/>
 
         <meta name="twitter:card" content="summary_large_image"/>
-        <meta name="twitter:title" content="Comparely - Compare Food Prices Across Platforms"/>
-        <meta name="twitter:description" content="Compare food prices across Zomato, Swiggy, and Magicpin with Comparely. Find the best deals and save money on every order."/>
-        <meta name="twitter:image" content="https://comparely.co.in/screenshots.png"/>
+        <meta name="twitter:title" content="Comparely - Compare Grocery Prices Across Platforms"/>
+        <meta name="twitter:description" content="Compare grocery prices across Blinkit, Instamart and Zepto with Comparely. Find the best deals and save money on every order."/>
+        <meta name="twitter:image" content="/assets/assets/images/1.png"/>
 
         {/*
           Disable body scrolling on web. This makes ScrollView components work closer to how they do on native.
