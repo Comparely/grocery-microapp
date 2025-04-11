@@ -26,6 +26,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { LoadingProgress } from '@/components/Loaders';
 
 const AARAV_NUMBER = '+918076078942';
+// Gurugram coordinates
+const GURUGRAM_COORDS = { lat: 28.4595, lng: 77.0266 };
+const isWeb = Platform.OS === 'web';
 
 const HomeScreen = () => {
   const [pageReady, setPageReady] = useState<boolean>(false);
@@ -76,52 +79,66 @@ const HomeScreen = () => {
       .catch((err) => console.log('Could not find session:', err));
 
     const initGeolocation = async () => {
+      // Gurugram fallback function
+      const fallbackToGurugram = () => {
+        console.log("Falling back to Gurugram location");
+        setLocationDenied(true);
+        setLocation({ lat: GURUGRAM_COORDS.lat, lng: GURUGRAM_COORDS.lng });
+        initiateSessionForUser(GURUGRAM_COORDS.lat, GURUGRAM_COORDS.lng)
+          .then((val) => {
+            setSession(val);
+            setPageReady(true);
+            console.log('Session initiated with fallback to Gurugram:', val);
+          })
+          .catch((err) => console.log('Session initiation error (fallback):', err));
+      };
+
+      // Handle successful location retrieval
+      const handleLocationSuccess = (latitude: number, longitude: number) => {
+        setLocationDenied(false);
+        setLocation({ lat: latitude, lng: longitude });
+        initiateSessionForUser(latitude, longitude)
+          .then((val) => {
+            setSession(val);
+            setPageReady(true);
+            console.log('Session initiated:', val);
+          })
+          .catch((err) => {
+            console.log('Session initiation error:', err);
+            fallbackToGurugram();
+          });
+      };
+
       if (Platform.OS === 'web') {
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             (position) => {
-              setLocationDenied(false);
-              setLocation({ lat: position.coords.latitude, lng: position.coords.longitude });
-              initiateSessionForUser(position.coords.latitude, position.coords.longitude)
-                .then((val) => {
-                  setSession(val);
-                  setPageReady(true);
-                  console.log('Session initiated:', val);
-                })
-                .catch((err) => console.log('Session initiation error:', err));
+              handleLocationSuccess(position.coords.latitude, position.coords.longitude);
             },
             (error) => {
               console.error('Web geolocation error:', error);
-              setLocationDenied(true);
+              fallbackToGurugram();
             },
             { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
           );
         } else {
           console.error('Geolocation not supported on web');
-          setLocationDenied(true);
+          fallbackToGurugram();
         }
       } else {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           console.log('Permission to access location was denied');
-          setLocationDenied(true);
+          fallbackToGurugram();
           return;
         }
 
         try {
           let location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-          setLocationDenied(false);
-          setLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
-          initiateSessionForUser(location.coords.latitude, location.coords.longitude)
-            .then((val) => {
-              setSession(val);
-              setPageReady(true);
-              console.log('Session initiated:', val);
-            })
-            .catch((err) => console.log('Session initiation error:', err));
+          handleLocationSuccess(location.coords.latitude, location.coords.longitude);
         } catch (error) {
           console.error('Error getting location:', error);
-          setLocationDenied(true);
+          fallbackToGurugram();
         }
       }
     };
@@ -130,7 +147,20 @@ const HomeScreen = () => {
   }, [wiggleAnim]);
 
   const requestLocationPermission = async () => {
-    setLocationDenied(false);
+    // Gurugram fallback function
+    const fallbackToGurugram = () => {
+      console.log("Falling back to Gurugram location on retry");
+      setLocationDenied(false); // We don't show the permission screen anymore since we're using fallback
+      setLocation({ lat: GURUGRAM_COORDS.lat, lng: GURUGRAM_COORDS.lng });
+      initiateSessionForUser(GURUGRAM_COORDS.lat, GURUGRAM_COORDS.lng)
+        .then((val) => {
+          setSession(val);
+          setPageReady(true);
+          console.log('Session initiated with fallback on retry:', val);
+        })
+        .catch((err) => console.log('Session initiation error (fallback on retry):', err));
+    };
+
     if (Platform.OS === 'web') {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -141,20 +171,24 @@ const HomeScreen = () => {
               .then((val) => {
                 setSession(val);
                 setPageReady(true);
+              })
+              .catch((err) => {
+                console.log('Session initiation error on retry:', err);
+                fallbackToGurugram();
               });
           },
           (error) => {
             console.error('Web geolocation retry error:', error);
-            setLocationDenied(true);
+            fallbackToGurugram();
           }
         );
       } else {
-        setLocationDenied(true);
+        fallbackToGurugram();
       }
     } else {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        setLocationDenied(true);
+        fallbackToGurugram();
         return;
       }
 
@@ -166,25 +200,41 @@ const HomeScreen = () => {
           .then((val) => {
             setSession(val);
             setPageReady(true);
+          })
+          .catch((err) => {
+            console.log('Session initiation error on retry:', err);
+            fallbackToGurugram();
           });
       } catch (error) {
         console.error('Error retrying location:', error);
-        setLocationDenied(true);
+        fallbackToGurugram();
       }
     }
   };
 
-  const handleWhatsappRedirect = async () => {
-    const url = `whatsapp://send?phone=${AARAV_NUMBER}`;
-    try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        alert("WhatsApp is not installed on your device.");
+  //  -------------------------------------------------WHATSAPP FIX------------------------------------------------------------
+  const handleWhatsappRedirect = () => {
+    const AARAV_NUMBER = '918076078942';
+    const message = encodeURIComponent("Hi, I'm interested in Comparely!");
+
+    const webUrl = `https://api.whatsapp.com/send?phone=${AARAV_NUMBER}&text=${message}`;
+
+    if (Platform.OS === 'web') {
+      try {
+        window.open(webUrl, '_blank');
+      } catch (error) {
+        console.error("Error opening WhatsApp in web browser:", error);
+        Alert.alert("Error", "Could not open WhatsApp. Please try again later.");
       }
-    } catch (error) {
-      console.error("Error opening WhatsApp:", error);
+    } else {
+      Linking.openURL(webUrl)
+        .catch(error => {
+          console.error("Error opening WhatsApp:", error);
+          Alert.alert(
+            "Cannot Open WhatsApp",
+            "Please make sure WhatsApp is installed or try again later."
+          );
+        });
     }
   };
 
@@ -198,6 +248,42 @@ const HomeScreen = () => {
     setEmail('');
   };
 
+  //------------------------------------Handel social media---------------------------------
+  const handleSocialMediaRedirect = (platform: 'instagram' | 'twitter' | 'facebook' | 'linkedin') => {
+    // Define your social media URLs
+    const socialMediaUrls: Record<string, string> = {
+      instagram: 'https://www.instagram.com/comparelyy?igsh=Y2d5ODRkN2Y4MTh5&utm_source=qr',
+      twitter: 'https://twitter.com',
+      facebook: 'https://www.facebook.com',
+      linkedin: 'https://www.linkedin.com'
+    };
+
+    // Validate platform before using it
+    if (!socialMediaUrls[platform]) {
+      console.error(`Invalid platform: ${platform}`);
+      Alert.alert("Error", `Invalid platform selected: ${platform}.`);
+      return;
+    }
+
+    const url = socialMediaUrls[platform];
+
+    if (Platform.OS === 'web') {
+      try {
+        window.open(url, '_blank');
+      } catch (error) {
+        console.error(`Error opening ${platform}:`, error);
+        Alert.alert("Error", `Could not open ${platform}. Please try again later.`);
+      }
+    } else {
+      Linking.openURL(url).catch(error => {
+        console.error(`Error opening ${platform}:`, error);
+        Alert.alert("Cannot Open Link", `Please try opening ${platform} manually or try again later.`);
+      });
+    }
+  };
+
+  //----------------------------------------------------------------------------------------
+
   if (locationDenied) {
     return (
       <View style={styles.deniedContainer}>
@@ -207,6 +293,12 @@ const HomeScreen = () => {
         </Text>
         <TouchableOpacity style={styles.retryButton} onPress={requestLocationPermission}>
           <Text style={styles.retryButtonText}>Grant Permission</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.retryButton, styles.secondaryButton]}
+          onPress={() => requestLocationPermission()}
+        >
+          <Text style={styles.secondaryButtonText}>Continue with default location</Text>
         </TouchableOpacity>
       </View>
     );
@@ -267,18 +359,60 @@ const HomeScreen = () => {
           <TouchableOpacity style={styles.waitlistSubmitButton} onPress={handleWaitlistSubmit}>
             <Text style={styles.waitlistSubmitButtonText}>Submit</Text>
           </TouchableOpacity>
-          <Text style={styles.appComingSoonText}>
+
+          {/* <Text style={styles.appComingSoonText}>
             Our app is coming soon!
-          </Text>
-          <View style={styles.storeIconsContainer}>
-            <View style={styles.storeIconWrapper}>
-              <Ionicons name="logo-google-playstore" size={40} color="#9d9d9d" />
-            </View>
-            <View style={styles.storeIconWrapper}>
-              <Ionicons name="logo-apple-appstore" size={40} color="#9d9d9d" />
+
+            </Text>
+            <View style={styles.storeIconsContainer}>
+              <View style={styles.storeIconWrapper}>
+                <Ionicons name="logo-google-playstore" size={40} color="#9d9d9d" />
+              </View>
+              <View style={styles.storeIconWrapper}>
+                <Ionicons name="logo-apple-appstore" size={40} color="#9d9d9d" />
+              </View>
+            </View> */}
+            
+        </View>
+
+        {/* -----------------------------app coming soon----------------------------------------------- */}
+        
+        {isWeb && (
+          <View style={styles.appComingSoonContainer}>
+            <Text style={styles.appComingSoonHeader}>
+              App Coming Soon
+            </Text>
+            
+            <View style={styles.appComingSoonContent}>
+              <Text style={styles.appComingSoonDescription}>
+                We're working hard to bring you the complete Comparely experience on mobile. Stay tuned for our app launch!
+              </Text>
+              
+              <Text style={styles.followSocialsText}>
+                Till then, follow our socials:
+              </Text>
+              
+              <View style={styles.socialsContainer}>
+                <TouchableOpacity style={styles.socialButton} onPress={() => handleSocialMediaRedirect('instagram')}>
+                  <Ionicons name="logo-instagram" size={30} color="#004738" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.socialButton} onPress={() => handleSocialMediaRedirect('twitter')}>
+                  <Ionicons name="logo-twitter" size={30} color="#004738" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.socialButton} onPress={() => handleSocialMediaRedirect('facebook')}>
+                  <Ionicons name="logo-facebook" size={30} color="#004738" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={styles.socialButton} onPress={() => handleSocialMediaRedirect('linkedin')}>
+                  <Ionicons name="logo-linkedin" size={30} color="#004738" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
+        )}
+
       </ScrollView>
 
       <Animated.View style={[styles.floatingWhatsapp, { transform: [{ rotate }] }]}>
@@ -290,7 +424,63 @@ const HomeScreen = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
+  // -------------------------------------------APP COMMING SOON STYLE---------------------------------------------------
+  appComingSoonContainer: {
+    marginHorizontal: 20,
+    marginBottom: 30,
+    backgroundColor: '#fff',
+    borderRadius: 15,
+    overflow: 'hidden',
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+  appComingSoonHeader: {
+    backgroundColor: '#004738',
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    paddingVertical: 12,
+  },
+  appComingSoonContent: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  appComingSoonDescription: {
+    fontSize: 16,
+    color: '#444',
+    textAlign: 'center',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  followSocialsText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#004738',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  socialsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  socialButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 10,
+  },
+  // --------------------------------------------------------------------------------------------------------------------
   container: {
     flex: 1,
     backgroundColor: '#004738',
@@ -323,9 +513,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 10,
+    marginBottom: 15,
   },
   retryButtonText: {
     color: '#181b19',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  secondaryButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#cbd402',
+  },
+  secondaryButtonText: {
+    color: '#cbd402',
     fontSize: 16,
     fontWeight: '600',
   },
