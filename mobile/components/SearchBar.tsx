@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, TextInput, View, TouchableOpacity, Platform } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
@@ -6,10 +6,10 @@ interface SearchBarProps {
   value: string;
   onChangeText: (text: string) => void;
   placeholder?: string;
-  onClick?: () => void; // Optional: for navigation
-  editable?: boolean;  // Control editability
-  onSubmitEditing?: () => void; // New: Handle submission (e.g., Enter key)
-  onBlur?: () => void; // New: Handle loss of focus
+  onClick?: () => void;
+  editable?: boolean;
+  onSubmitEditing?: () => void;
+  onBlur?: () => void;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -17,25 +17,34 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onChangeText,
   placeholder = 'Search',
   onClick,
-  editable = Platform.OS === 'web', // Default: editable on web, not on mobile
-  onSubmitEditing, // Pass through to TextInput
-  onBlur, // Pass through to TextInput
+  editable = Platform.OS === 'web',
+  onSubmitEditing,
+  onBlur,
 }) => {
+  const inputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (editable && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editable]);
+
   const handlePress = () => {
     if (onClick && !editable) {
-      onClick(); // Trigger navigation only if not editable
+      onClick();
     }
   };
 
   return (
     <TouchableOpacity
-      onPress={editable ? undefined : handlePress} // Only make it tappable if not editable
+      onPress={editable ? undefined : handlePress}
       style={styles.touchableContainer}
-      activeOpacity={editable ? 1 : 0.7} // No opacity change if editable
+      activeOpacity={editable ? 1 : 0.7}
     >
       <View style={styles.container} pointerEvents={editable ? 'auto' : 'none'}>
         <Feather name="search" size={20} color="#181b19" style={styles.icon} />
         <TextInput
+          ref={inputRef}
           style={styles.input}
           value={value}
           onChangeText={onChangeText}
@@ -44,9 +53,10 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           autoCapitalize="none"
           autoCorrect={false}
           editable={editable}
-          onFocus={editable ? undefined : handlePress} // Fallback for navigation
-          onSubmitEditing={onSubmitEditing} // Pass through to parent
-          onBlur={onBlur} // Pass through to parent
+          onFocus={editable ? undefined : handlePress}
+          onSubmitEditing={onSubmitEditing}
+          onBlur={onBlur}
+          
         />
         {value.length > 0 && editable && (
           <TouchableOpacity onPress={() => onChangeText('')}>
@@ -69,6 +79,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
+    
   },
   icon: {
     marginRight: 8,
@@ -78,5 +89,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#181b19',
     fontWeight: '500',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
   },
 });
+
+export default SearchBar;
