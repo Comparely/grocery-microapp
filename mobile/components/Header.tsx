@@ -52,7 +52,6 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
         <Ionicons name="location" size={24} color="#cbd402" />
         <TouchableOpacity style={styles.locationSelector}>
           <Text style={styles.locationText}>Address</Text>
-          <Ionicons name="chevron-down" size={20} color="#ffffff" />
         </TouchableOpacity>
       </View>
 
