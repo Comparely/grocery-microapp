@@ -258,6 +258,7 @@ const HomeScreen = () => {
     );
 };
 
+
 const styles = StyleSheet.create({
     scrollContent: {
         paddingBottom: 0, // ✅ Removed extra padding at the bottom
