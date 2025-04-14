@@ -111,14 +111,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     zIndex: 1,
-    padding: 10,
+    padding:0,
+    height:6,
     borderRadius: 20,
   },
   arrowRight: {
     position: 'absolute',
     right: 0,
     zIndex: 1,
-    padding: 10,
+    padding: 0,
+    height:6,
     borderRadius: 20,
   },
 });
