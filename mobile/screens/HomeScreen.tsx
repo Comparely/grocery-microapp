@@ -257,6 +257,7 @@ const HomeScreen = () => {
     );
 };
 
+
 const styles = StyleSheet.create({
     // -------------------------------------------APP COMMING SOON STYLE---------------------------------------------------
     appComingSoonContainer: {
