@@ -417,7 +417,7 @@ const HomeScreen = () => {
 
       <Animated.View style={[styles.floatingWhatsapp, { transform: [{ rotate }] }]}>
         <TouchableOpacity onPress={handleWhatsappRedirect}>
-          <Ionicons name="logo-whatsapp" size={40} color="#fff" />
+          <Ionicons name="logo-whatsapp" size={28} color="#fff" />
         </TouchableOpacity>
       </Animated.View>
     </View>
