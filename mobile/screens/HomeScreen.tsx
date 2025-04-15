@@ -220,15 +220,7 @@ const HomeScreen = () => {
     }
   };
 
-  const handleWaitlistSubmit = () => {
-    const emailRegex = /\S+@\S+\.\S+/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("Invalid Email", "Please enter a valid email address.");
-      return;
-    }
-    Alert.alert("Thank you!", "You've been added to our waitlist.");
-    setEmail('');
-  };
+  
 
   //------------------------------------Handel social media---------------------------------
   const handleSocialMediaRedirect = (platform: 'instagram' | 'twitter' | 'facebook' | 'linkedin') => {
@@ -317,41 +309,6 @@ const HomeScreen = () => {
             <Text style={styles.emptyText}>No categories available.</Text>
           </View>
         )}
-
-        <View style={styles.waitlistContainer}>
-          <Text style={styles.waitlistHeader}>
-            We're Launching Soon!
-          </Text>
-          <Text style={styles.waitlistSubText}>
-            Enter your email below to join our waitlist and get early access.
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Your email address"
-            placeholderTextColor="#aaa"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-          />
-          <TouchableOpacity style={styles.waitlistSubmitButton} onPress={handleWaitlistSubmit}>
-            <Text style={styles.waitlistSubmitButtonText}>Submit</Text>
-          </TouchableOpacity>
-
-          {/* <Text style={styles.appComingSoonText}>
-            Our app is coming soon!
-
-            </Text>
-            <View style={styles.storeIconsContainer}>
-              <View style={styles.storeIconWrapper}>
-                <Ionicons name="logo-google-playstore" size={40} color="#9d9d9d" />
-              </View>
-              <View style={styles.storeIconWrapper}>
-                <Ionicons name="logo-apple-appstore" size={40} color="#9d9d9d" />
-              </View>
-            </View> */}
-            
-        </View>
 
         {/* -----------------------------app coming soon----------------------------------------------- */}
         
@@ -528,27 +485,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-  waitlistContainer: {
-    marginHorizontal: 20,
-    marginBottom: 30,
-    padding: 20,
-    backgroundColor: '#fffaf0',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  waitlistHeader: {
-    fontSize: 24,
-    color: '#004738',
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  waitlistSubText: {
-    fontSize: 16,
-    color: '#555',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
+  
   input: {
     width: '100%',
     height: 50,
@@ -560,20 +497,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: '#333',
   },
-  waitlistSubmitButton: {
-    backgroundColor: '#cbd402',
-    paddingVertical: 15,
-    paddingHorizontal: 25,
-    borderRadius: 8,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  waitlistSubmitButtonText: {
-    color: '#181b19',
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  
   appComingSoonText: {
     fontSize: 16,
     color: '#555',
