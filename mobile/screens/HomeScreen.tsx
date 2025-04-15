@@ -40,28 +40,10 @@ const HomeScreen = () => {
   const [email, setEmail] = useState<string>('');
   const router = useRouter();
 
-  const wiggleAnim = useRef(new Animated.Value(0)).current;
+  
 
   useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(wiggleAnim, {
-          toValue: 1,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-        Animated.timing(wiggleAnim, {
-          toValue: -1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(wiggleAnim, {
-          toValue: 0,
-          duration: 100,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
+    
 
     fetchHomePageData()
       .then((val) => {
@@ -144,7 +126,7 @@ const HomeScreen = () => {
     };
 
     initGeolocation();
-  }, [wiggleAnim]);
+  }, []);
 
   const requestLocationPermission = async () => {
     // Gurugram fallback function
@@ -312,10 +294,6 @@ const HomeScreen = () => {
     );
   }
 
-  const rotate = wiggleAnim.interpolate({
-    inputRange: [-1, 1],
-    outputRange: ['-10deg', '10deg'],
-  });
 
   return (
     <View style={styles.container}>
@@ -415,11 +393,11 @@ const HomeScreen = () => {
 
       </ScrollView>
 
-      <Animated.View style={[styles.floatingWhatsapp, { transform: [{ rotate }] }]}>
+      <View style={[styles.floatingWhatsapp]}>
         <TouchableOpacity onPress={handleWhatsappRedirect}>
           <Ionicons name="logo-whatsapp" size={28} color="#fff" />
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     </View>
   );
 };
