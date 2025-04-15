@@ -53,9 +53,6 @@ const PriceSection: React.FC<PriceSectionParams> = ({ session, products }) => {
       <Text style={styles.title}>Lowest Prices</Text>
       <Text style={styles.subtitle}>Best prices across all platforms</Text>
       <View style={styles.listContainer}>
-        <TouchableOpacity style={styles.arrowLeft} onPress={scrollLeft}>
-          <Ionicons name="chevron-back" size={30} color="#004738" />
-        </TouchableOpacity>
         <FlatList
           ref={flatListRef}
           data={products}
@@ -71,9 +68,7 @@ const PriceSection: React.FC<PriceSectionParams> = ({ session, products }) => {
           onScroll={handleScroll}
           scrollEventThrottle={16}
         />
-        <TouchableOpacity style={styles.arrowRight} onPress={scrollRight}>
-          <Ionicons name="chevron-forward" size={30} color="#004738" />
-        </TouchableOpacity>
+       
       </View>
     </View>
   );
@@ -107,22 +102,7 @@ const styles = StyleSheet.create({
   productList: {
     paddingHorizontal: 15,
   },
-  arrowLeft: {
-    position: 'absolute',
-    left: 0,
-    zIndex: 1,
-    padding:0,
-    height:6,
-    borderRadius: 20,
-  },
-  arrowRight: {
-    position: 'absolute',
-    right: 0,
-    zIndex: 1,
-    padding: 0,
-    height:6,
-    borderRadius: 20,
-  },
+  
 });
 
 export default PriceSection;
