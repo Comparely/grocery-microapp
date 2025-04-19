@@ -12,7 +12,7 @@ import (
 
 func GetCorsConfig() cors.Config {
 	return cors.Config{
-		AllowOrigins:     []string{"https://app.comparely.co.in", "http://localhost:8081"},
+		AllowOrigins:     []string{"https://app.comparely.co.in", "http://localhost:8081", "http://localhost:3039"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders:     []string{"Origin", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -21,7 +21,7 @@ func GetCorsConfig() cors.Config {
 }
 
 func InitRedis() (*redis.Client, error) {
-	url := "redis://34.118.230.24:6379/" //34.118.230.24
+	url := "redis://localhost:6379/"
 	opts, err := redis.ParseURL(url)
 
 	if err != nil {
