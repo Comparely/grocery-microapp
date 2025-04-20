@@ -583,13 +583,12 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 		}
 	}
 
-	// Queue unmapped products in Redis and trigger Flask API
+	// Queue unmapped products in Redis and trigger Ginger API
 	if len(unmapped) > 0 {
 		unmappedJSON, err := json.Marshal(unmapped)
 		if err != nil {
 			log.Printf("Failed to marshal unmapped products for query '%s': %v", query, err)
 		} else {
-			processID := uuid.NewString()
 			redisKey := "unmapped:" + query
 			ctx := context.Background()
 			err = appState.RedisClient.Set(ctx, redisKey, unmappedJSON, 24*time.Hour).Err()
@@ -598,13 +597,13 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 			} else {
 				log.Printf("Queued %d unmapped products for query '%s' in Redis", len(unmapped), query)
 				go func() {
-					payload := fmt.Sprintf(`{"query": "%s", "process_id": "%s"}`, query, processID)
-					resp, err := http.Post("http://127.0.0.1:5000/process-unmapped", "application/json", bytes.NewBuffer([]byte(payload)))
+					payload := fmt.Sprintf(`{"type": "search-intelligence", "data": {"query": "%s"}}`, query)
+					resp, err := http.Post("http://127.0.0.1:5000/spawn", "application/json", bytes.NewBuffer([]byte(payload)))
 					if err != nil {
-						log.Printf("Failed to trigger Flask API for query '%s' (process_id: %s): %v", query, processID, err)
+						log.Printf("Failed to trigger Flask API for query '%s': %v", query, err)
 					} else {
 						defer resp.Body.Close()
-						log.Printf("Triggered Flask API for query '%s' (process_id: %s), status: %s", query, processID, resp.Status)
+						log.Printf("Triggered Flask API for query '%s', status: %s", query, resp.Status)
 					}
 				}()
 			}
