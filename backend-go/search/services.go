@@ -750,25 +750,6 @@ func mergeProducts(productArrays [][]Product, appState config.AppState, query st
 		finalArray = append(finalArray, prod)
 	}
 
-	finalArray = applyPendingMappings(finalArray, appState, query)
-
-	unique := make(map[string]Product, len(finalArray))
-	for _, prod := range finalArray {
-		name := prod.Name
-		if existing, ok := unique[name]; ok {
-			if countUniqueSources(prod.Prices) > countUniqueSources(existing.Prices) {
-				unique[name] = prod
-			}
-		} else {
-			unique[name] = prod
-		}
-	}
-
-	finalArray = make([]Product, 0, len(unique))
-	for _, prod := range unique {
-		finalArray = append(finalArray, prod)
-	}
-
 	sort.Slice(finalArray, func(i, j int) bool {
 		return countUniqueSources(finalArray[i].Prices) > countUniqueSources(finalArray[j].Prices)
 	})
@@ -1079,8 +1060,8 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	if errInstamart == nil {
 		availableProducts = append(availableProducts, instamartProducts)
 	}
-	if errZepto == nil {
-		availableProducts = append(availableProducts, zeptoProducts)
+	if errZepto != nil {
+		log.Println("Zepto error", errZepto)
 	}
 	if errBigbasket == nil {
 		availableProducts = append(availableProducts, bigbasketProducts)
@@ -1136,7 +1117,9 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	} else {
 		log.Printf("No unmapped products found for query '%s'", query)
 	}
+	log.Printf("blinkit: %d, instamart: %d, zepto: %d", len(blinkitProducts), len(instamartProducts), len(zeptoProducts))
 
+	mergedProducts := mergeProducts([][]Product{blinkitProducts, instamartProducts, zeptoProducts})
 	return mergedProducts, nil
 }
 
