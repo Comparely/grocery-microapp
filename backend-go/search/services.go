@@ -1067,56 +1067,6 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 		availableProducts = append(availableProducts, bigbasketProducts)
 	}
 
-	// If no products are available, return an empty result with a warning
-	if len(availableProducts) == 0 {
-		log.Printf("No products available for query '%s' due to all sources failing", query)
-		return []Product{}, nil
-	}
-	// startTime := time.Now()
-	// mergedProducts := mergeProducts(availableProducts, appState, query)
-	// endTime := time.Now()
-	// log.Printf("mergeProductsV2 took %v", endTime.Sub(startTime))
-	// mergedProducts := mergeProducts(availableProducts, appState, query)
-	mergedProducts := mergeProductsV2(availableProducts, appState, query)
-	// log.Println(mergedProducts)
-	// log.Println(mergedProductsV2)
-
-	// Identify unmapped products (those with only one source)
-	unmapped := []Product{}
-	for _, prod := range mergedProducts {
-		if len(prod.Prices) == 1 {
-			unmapped = append(unmapped, prod)
-		}
-	}
-
-	// Queue unmapped products in Redis and trigger Ginger API
-	if len(unmapped) > 0 {
-		unmappedJSON, err := json.Marshal(unmapped)
-		if err != nil {
-			log.Printf("Failed to marshal unmapped products for query '%s': %v", query, err)
-		} else {
-			redisKey := "unmapped:" + query
-			ctx := context.Background()
-			err = appState.RedisClient.Set(ctx, redisKey, unmappedJSON, 24*time.Hour).Err()
-			if err != nil {
-				log.Printf("Failed to store unmapped products in Redis for query '%s': %v", query, err)
-			} else {
-				log.Printf("Queued %d unmapped products for query '%s' in Redis", len(unmapped), query)
-				go func() {
-					payload := fmt.Sprintf(`{"type": "search-intelligence", "data": {"query": "%s"}}`, query)
-					resp, err := http.Post(config.GetGingerURL("spawn"), "application/json", bytes.NewBuffer([]byte(payload)))
-					if err != nil {
-						log.Printf("Failed to trigger Flask API for query '%s': %v at %s %s", query, err, config.GetGingerURL("spawn"), config.GetGingerURL(""))
-					} else {
-						defer resp.Body.Close()
-						log.Printf("Triggered Flask API for query '%s', status: %s", query, resp.Status)
-					}
-				}()
-			}
-		}
-	} else {
-		log.Printf("No unmapped products found for query '%s'", query)
-	}
 	log.Printf("blinkit: %d, instamart: %d, zepto: %d", len(blinkitProducts), len(instamartProducts), len(zeptoProducts))
 
 	mergedProducts := mergeProducts([][]Product{blinkitProducts, instamartProducts, zeptoProducts})
