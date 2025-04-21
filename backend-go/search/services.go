@@ -748,25 +748,6 @@ func mergeProducts(productArrays [][]Product, appState config.AppState, query st
 		finalArray = append(finalArray, prod)
 	}
 
-	finalArray = applyPendingMappings(finalArray, appState, query)
-
-	unique := make(map[string]Product, len(finalArray))
-	for _, prod := range finalArray {
-		name := prod.Name
-		if existing, ok := unique[name]; ok {
-			if countUniqueSources(prod.Prices) > countUniqueSources(existing.Prices) {
-				unique[name] = prod
-			}
-		} else {
-			unique[name] = prod
-		}
-	}
-
-	finalArray = make([]Product, 0, len(unique))
-	for _, prod := range unique {
-		finalArray = append(finalArray, prod)
-	}
-
 	sort.Slice(finalArray, func(i, j int) bool {
 		return countUniqueSources(finalArray[i].Prices) > countUniqueSources(finalArray[j].Prices)
 	})
@@ -884,58 +865,16 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	if errInstamart == nil {
 		availableProducts = append(availableProducts, instamartProducts)
 	}
-	if errZepto == nil {
-		availableProducts = append(availableProducts, zeptoProducts)
+	if errZepto != nil {
+		log.Println("Zepto error", errZepto)
 	}
 	if errBigbasket == nil {
 		availableProducts = append(availableProducts, bigbasketProducts)
 	}
 
-	// If no products are available, return an empty result with a warning
-	if len(availableProducts) == 0 {
-		log.Printf("No products available for query '%s' due to all sources failing", query)
-		return []Product{}, nil
-	}
+	log.Printf("blinkit: %d, instamart: %d, zepto: %d", len(blinkitProducts), len(instamartProducts), len(zeptoProducts))
 
-	mergedProducts := mergeProducts(availableProducts, appState, query)
-
-	// Identify unmapped products (those with only one source)
-	unmapped := []Product{}
-	for _, prod := range mergedProducts {
-		if len(prod.Prices) == 1 {
-			unmapped = append(unmapped, prod)
-		}
-	}
-
-	// Queue unmapped products in Redis and trigger Ginger API
-	if len(unmapped) > 0 {
-		unmappedJSON, err := json.Marshal(unmapped)
-		if err != nil {
-			log.Printf("Failed to marshal unmapped products for query '%s': %v", query, err)
-		} else {
-			redisKey := "unmapped:" + query
-			ctx := context.Background()
-			err = appState.RedisClient.Set(ctx, redisKey, unmappedJSON, 24*time.Hour).Err()
-			if err != nil {
-				log.Printf("Failed to store unmapped products in Redis for query '%s': %v", query, err)
-			} else {
-				log.Printf("Queued %d unmapped products for query '%s' in Redis", len(unmapped), query)
-				go func() {
-					payload := fmt.Sprintf(`{"type": "search-intelligence", "data": {"query": "%s"}}`, query)
-					resp, err := http.Post(config.GetGingerURL("spawn"), "application/json", bytes.NewBuffer([]byte(payload)))
-					if err != nil {
-						log.Printf("Failed to trigger Flask API for query '%s': %v at %s %s", query, err, config.GetGingerURL("spawn"), config.GetGingerURL(""))
-					} else {
-						defer resp.Body.Close()
-						log.Printf("Triggered Flask API for query '%s', status: %s", query, resp.Status)
-					}
-				}()
-			}
-		}
-	} else {
-		log.Printf("No unmapped products found for query '%s'", query)
-	}
-
+	mergedProducts := mergeProducts([][]Product{blinkitProducts, instamartProducts, zeptoProducts})
 	return mergedProducts, nil
 }
 func contains(slice []string, item string) bool {
@@ -1148,81 +1087,4 @@ func fetchJSON(url string, method string, headers map[string]string, body string
 	}
 
 	return result, nil
-}
-
-func applyPendingMappings(
-	products []Product,
-	appState config.AppState,
-	query string,
-) []Product {
-	ctx := context.Background()
-	key := fmt.Sprintf("pending_mappings:%s", query)
-	raw, err := appState.RedisClient.Get(ctx, key).Result()
-	if err != nil {
-		if err != redis.Nil {
-			log.Printf("error fetching %s: %v", key, err)
-		}
-		return products
-	}
-
-	var pm PendingMappings
-	if err := json.Unmarshal([]byte(raw), &pm); err != nil {
-		log.Printf("error unmarshalling %s: %v", key, err)
-		return products
-	}
-
-	// For each suggestion, find the Product by name and merge in the "match" variant
-	for _, m := range pm.Mappings {
-		for i := range products {
-			if products[i].Name == m.Source.Name {
-				match := m.Match
-				matchIdxinProducts := slices.IndexFunc(products, func(p Product) bool {
-					return p.Name == match.Name && slices.ContainsFunc(p.Prices, func(price PriceOption) bool {
-						return price.Source == match.Source
-					})
-				})
-				if matchIdxinProducts != -1 {
-					match.Mrp = products[matchIdxinProducts].Prices[0].Variants[0].DiscountedPrice
-					match.Weight = products[matchIdxinProducts].Prices[0].Variants[0].Weight
-					products[i] = mergeOneMapping(products[i], match)
-					break
-				}
-			}
-		}
-	}
-
-	return products
-}
-
-// mergeOneMapping adds the new variant from PendingMappingItem into prod.Prices,
-// creating a new PriceOption if needed, and deduplicating by Deeplink.
-func mergeOneMapping(prod Product, item PendingMappingItem) Product {
-	v := Variant{
-		OriginalPrice:   item.Mrp,
-		DiscountedPrice: item.Mrp,
-		Deeplink:        item.Deeplink,
-		ImageURL:        item.ImageURL,
-		Weight:          item.Weight,
-	}
-
-	// look for an existing PriceOption on item.Source
-	for pi, po := range prod.Prices {
-		if po.Source == item.Source {
-			// dedupe by Deeplink
-			for _, existing := range po.Variants {
-				if existing.Deeplink == v.Deeplink {
-					return prod
-				}
-			}
-			prod.Prices[pi].Variants = append(prod.Prices[pi].Variants, v)
-			return prod
-		}
-	}
-
-	// not found, so add a brand new PriceOption
-	prod.Prices = append(prod.Prices, PriceOption{
-		Source:   item.Source,
-		Variants: []Variant{v},
-	})
-	return prod
 }
