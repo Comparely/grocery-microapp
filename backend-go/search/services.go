@@ -1,6 +1,7 @@
 package search
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/comparely/comparely-grocery-backend/config"
 	"github.com/comparely/comparely-grocery-backend/sessions"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 )
 
@@ -428,7 +430,7 @@ func fetchZeptoProducts(query string, storeId string, deviceID string) (map[stri
 
 // -----------------------
 // Merge products from different sources by name, remove duplicate variants.
-func mergeProducts(productArrays [][]Product) []Product {
+func mergeProducts(productArrays [][]Product, appState config.AppState, query string) []Product {
 	merged := make(map[string]Product)
 	for _, products := range productArrays {
 		for _, prod := range products {
@@ -459,6 +461,8 @@ func mergeProducts(productArrays [][]Product) []Product {
 		finalArray = append(finalArray, prod)
 	}
 
+	finalArray = applyPendingMappings(finalArray, appState, query)
+
 	sort.Slice(finalArray, func(i, j int) bool {
 		return countUniqueSources(finalArray[i].Prices) > countUniqueSources(finalArray[j].Prices)
 	})
@@ -471,13 +475,15 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 		blinkitProducts   []Product
 		instamartProducts []Product
 		zeptoProducts     []Product
-
-		errBlinkit, errInstamart, errZepto error
+		errBlinkit        error
+		errInstamart      error
+		errZepto          error
 	)
 	var lat, lng string
 	var zeptoStoreId string
 	var instamartStoreId string
 
+	// Fetch session data if deviceID is provided
 	if deviceID != "" {
 		ctx := context.Background()
 		sess, err := sessions.GetSession(ctx, appState, deviceID)
@@ -490,6 +496,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 			log.Printf("Session not found for deviceID %s: %v", deviceID, err)
 		}
 	}
+	// Fallback to default coordinates and store IDs if not set
 	if lat == "" && lng == "" {
 		lat = "12.975060"
 		lng = "77.604691"
@@ -500,38 +507,42 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	if instamartStoreId == "" {
 		instamartStoreId = "1402463"
 	}
+
+	// Use WaitGroup to handle concurrent fetches
 	var wg sync.WaitGroup
 	wg.Add(3)
 
-	// Blinkit
+	// Fetch from Blinkit
 	go func() {
 		defer wg.Done()
 		blinkitRaw, err := fetchBlinkitProducts(url.QueryEscape(query), lat, lng)
 		if err != nil {
 			errBlinkit = err
+			log.Printf("Blinkit fetch failed for query '%s': %v", query, err)
 			return
 		}
 		blinkitProducts = mapBlinkit(map[string]interface{}{"products": blinkitRaw})
 	}()
 
-	// Instamart
+	// Fetch from Instamart
 	go func() {
 		defer wg.Done()
 		instaRaw, err := fetchInstamartProducts(url.QueryEscape(query), instamartStoreId)
 		if err != nil {
 			errInstamart = err
+			log.Printf("Instamart fetch failed for query '%s': %v", query, err)
 			return
 		}
 		instamartProducts = mapInstamart(instaRaw)
 	}()
 
-	// Zepto
+	// Fetch from Zepto
 	go func() {
 		defer wg.Done()
 		zeptoRaw, err := fetchZeptoProducts(url.QueryEscape(query), zeptoStoreId, deviceID)
 		if err != nil {
-			log.Println("zepto err", err)
 			errZepto = err
+			log.Printf("Zepto fetch failed for query '%s': %v", query, err)
 			return
 		}
 		zeptoProducts = mapZepto(zeptoRaw)
@@ -539,23 +550,73 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 
 	wg.Wait()
 
-	// Check errors (you could choose to ignore some errors if desired).
-	if errBlinkit != nil {
-		log.Println("Blinkit error", errBlinkit)
-	}
-	if errInstamart != nil {
-		log.Println("Instamart error", errInstamart)
-	}
-	if errZepto != nil {
-		log.Println("Zepto error", errZepto)
-	}
-
+	// Log the number of products fetched from each source
 	log.Printf("blinkit: %d, instamart: %d, zepto: %d", len(blinkitProducts), len(instamartProducts), len(zeptoProducts))
 
-	mergedProducts := mergeProducts([][]Product{blinkitProducts, instamartProducts, zeptoProducts})
+	// Check if all sources failed
+	if errBlinkit != nil && errInstamart != nil && errZepto != nil {
+		return nil, fmt.Errorf("all sources failed: Blinkit (%v), Instamart (%v), Zepto (%v)", errBlinkit, errInstamart, errZepto)
+	}
+
+	// Merge products from available sources
+	availableProducts := [][]Product{}
+	if errBlinkit == nil {
+		availableProducts = append(availableProducts, blinkitProducts)
+	}
+	if errInstamart == nil {
+		availableProducts = append(availableProducts, instamartProducts)
+	}
+	if errZepto == nil {
+		availableProducts = append(availableProducts, zeptoProducts)
+	}
+
+	// If no products are available, return an empty result with a warning
+	if len(availableProducts) == 0 {
+		log.Printf("No products available for query '%s' due to all sources failing", query)
+		return []Product{}, nil
+	}
+
+	mergedProducts := mergeProducts(availableProducts, appState, query)
+
+	// Identify unmapped products (those with only one source)
+	unmapped := []Product{}
+	for _, prod := range mergedProducts {
+		if len(prod.Prices) == 1 {
+			unmapped = append(unmapped, prod)
+		}
+	}
+
+	// Queue unmapped products in Redis and trigger Ginger API
+	if len(unmapped) > 0 {
+		unmappedJSON, err := json.Marshal(unmapped)
+		if err != nil {
+			log.Printf("Failed to marshal unmapped products for query '%s': %v", query, err)
+		} else {
+			redisKey := "unmapped:" + query
+			ctx := context.Background()
+			err = appState.RedisClient.Set(ctx, redisKey, unmappedJSON, 24*time.Hour).Err()
+			if err != nil {
+				log.Printf("Failed to store unmapped products in Redis for query '%s': %v", query, err)
+			} else {
+				log.Printf("Queued %d unmapped products for query '%s' in Redis", len(unmapped), query)
+				go func() {
+					payload := fmt.Sprintf(`{"type": "search-intelligence", "data": {"query": "%s"}}`, query)
+					resp, err := http.Post("http://127.0.0.1:5000/spawn", "application/json", bytes.NewBuffer([]byte(payload)))
+					if err != nil {
+						log.Printf("Failed to trigger Flask API for query '%s': %v", query, err)
+					} else {
+						defer resp.Body.Close()
+						log.Printf("Triggered Flask API for query '%s', status: %s", query, resp.Status)
+					}
+				}()
+			}
+		}
+	} else {
+		log.Printf("No unmapped products found for query '%s'", query)
+	}
+
 	return mergedProducts, nil
 }
-
 func contains(slice []string, item string) bool {
 	for _, s := range slice {
 		if s == item {
@@ -766,4 +827,71 @@ func fetchJSON(url string, method string, headers map[string]string, body string
 	}
 
 	return result, nil
+}
+
+func applyPendingMappings(
+	products []Product,
+	appState config.AppState,
+	query string,
+) []Product {
+	ctx := context.Background()
+	key := fmt.Sprintf("pending_mappings:%s", query)
+	raw, err := appState.RedisClient.Get(ctx, key).Result()
+	if err != nil {
+		if err != redis.Nil {
+			log.Printf("error fetching %s: %v", key, err)
+		}
+		return products
+	}
+
+	var pm PendingMappings
+	if err := json.Unmarshal([]byte(raw), &pm); err != nil {
+		log.Printf("error unmarshalling %s: %v", key, err)
+		return products
+	}
+
+	// For each suggestion, find the Product by name and merge in the "match" variant
+	for _, m := range pm.Mappings {
+		for i := range products {
+			if products[i].Name == m.Source.Name {
+				products[i] = mergeOneMapping(products[i], m.Match)
+				break
+			}
+		}
+	}
+
+	return products
+}
+
+// mergeOneMapping adds the new variant from PendingMappingItem into prod.Prices,
+// creating a new PriceOption if needed, and deduplicating by Deeplink.
+func mergeOneMapping(prod Product, item PendingMappingItem) Product {
+	v := Variant{
+		OriginalPrice:   item.Mrp,
+		DiscountedPrice: item.Mrp,
+		Deeplink:        item.Deeplink,
+		ImageURL:        item.ImageURL,
+		Weight:          item.Weight,
+	}
+
+	// look for an existing PriceOption on item.Source
+	for pi, po := range prod.Prices {
+		if po.Source == item.Source {
+			// dedupe by Deeplink
+			for _, existing := range po.Variants {
+				if existing.Deeplink == v.Deeplink {
+					return prod
+				}
+			}
+			prod.Prices[pi].Variants = append(prod.Prices[pi].Variants, v)
+			return prod
+		}
+	}
+
+	// not found, so add a brand new PriceOption
+	prod.Prices = append(prod.Prices, PriceOption{
+		Source:   item.Source,
+		Variants: []Variant{v},
+	})
+	return prod
 }

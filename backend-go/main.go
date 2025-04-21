@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/comparely/comparely-grocery-backend/config"
@@ -56,7 +58,6 @@ func main() {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		//log.Printf("Session saved successfully: %+v", sess)
 		c.JSON(http.StatusOK, sess)
 	})
 
@@ -76,7 +77,6 @@ func main() {
 		c.JSON(http.StatusOK, products)
 	})
 
-	// Add the suggestions endpoint
 	router.POST("/suggestions", func(c *gin.Context) {
 		var input struct {
 			Query    string `json:"query"`
@@ -97,6 +97,65 @@ func main() {
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{"suggestions": suggestions})
+	})
+
+	// Endpoint: Fetch all queries with pending mappings
+	router.GET("/admin/pending-queries", func(c *gin.Context) {
+		ctx := context.Background()
+		keys, err := appState.RedisClient.Keys(ctx, "pending_mappings:*").Result()
+		if err != nil {
+			log.Printf("Failed to fetch pending mappings keys: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch queries"})
+			return
+		}
+		queries := []string{}
+		seen := make(map[string]bool)
+		for _, key := range keys {
+			// Extract just the query part (before the first colon after prefix)
+			parts := strings.SplitN(strings.TrimPrefix(key, "pending_mappings:"), ":", 2)
+			query := parts[0]
+			if !seen[query] {
+				queries = append(queries, query)
+				seen[query] = true
+			}
+		}
+		c.JSON(http.StatusOK, gin.H{"queries": queries})
+	})
+
+	// Endpoint: Fetch pending mappings for a specific query
+	router.GET("/admin/pending-mappings", func(c *gin.Context) {
+		query := c.Query("q")
+		if query == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Query parameter q is required"})
+			return
+		}
+		ctx := context.Background()
+		pattern := "pending_mappings:" + query + ":*"
+		keys, err := appState.RedisClient.Keys(ctx, pattern).Result()
+		if err != nil {
+			log.Printf("Failed to fetch pending mappings keys: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch mappings"})
+			return
+		}
+		if len(keys) == 0 {
+			c.JSON(http.StatusOK, gin.H{"query": query, "mappings": []interface{}{}})
+			return
+		}
+		// Return the latest process_id
+		latestKey := keys[len(keys)-1]
+		mappingsJSON, err := appState.RedisClient.Get(ctx, latestKey).Result()
+		if err != nil {
+			log.Printf("Failed to fetch mappings for key '%s': %v", latestKey, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch mappings"})
+			return
+		}
+		var mappingsData map[string]interface{}
+		if err := json.Unmarshal([]byte(mappingsJSON), &mappingsData); err != nil {
+			log.Printf("Failed to unmarshal mappings JSON for key '%s': %v", latestKey, err)
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid mappings data"})
+			return
+		}
+		c.JSON(http.StatusOK, mappingsData)
 	})
 
 	router.Run(fmt.Sprintf(":%d", PORT))

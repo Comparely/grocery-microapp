@@ -22,3 +22,23 @@ type Product struct {
 	ImageURL string        `json:"image_url"`
 	Prices   []PriceOption `json:"prices"`
 }
+
+type PendingMappingItem struct {
+	ID       string  `json:"id"`
+	Name     string  `json:"name"`
+	Brand    string  `json:"brand"`
+	Mrp      float64 `json:"mrp"`
+	Source   string  `json:"source"`
+	Weight   string  `json:"weight"`
+	Deeplink string  `json:"deeplink"`
+	ImageURL string  `json:"image_url"`
+}
+
+type PendingMappings struct {
+	Query    string `json:"query"`
+	Mappings []struct {
+		Source     PendingMappingItem `json:"source"`
+		Match      PendingMappingItem `json:"match"`
+		Similarity float64            `json:"similarity"`
+	} `json:"mappings"`
+}
