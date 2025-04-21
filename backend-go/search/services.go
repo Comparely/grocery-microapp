@@ -17,6 +17,7 @@ import (
 
 	"github.com/comparely/comparely-grocery-backend/config"
 	"github.com/comparely/comparely-grocery-backend/sessions"
+	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 )
 
@@ -429,7 +430,7 @@ func fetchZeptoProducts(query string, storeId string, deviceID string) (map[stri
 
 // -----------------------
 // Merge products from different sources by name, remove duplicate variants.
-func mergeProducts(productArrays [][]Product) []Product {
+func mergeProducts(productArrays [][]Product, appState config.AppState, query string) []Product {
 	merged := make(map[string]Product)
 	for _, products := range productArrays {
 		for _, prod := range products {
@@ -459,6 +460,8 @@ func mergeProducts(productArrays [][]Product) []Product {
 		prod.Prices = mergedPrices
 		finalArray = append(finalArray, prod)
 	}
+
+	finalArray = applyPendingMappings(finalArray, appState, query)
 
 	sort.Slice(finalArray, func(i, j int) bool {
 		return countUniqueSources(finalArray[i].Prices) > countUniqueSources(finalArray[j].Prices)
@@ -573,7 +576,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 		return []Product{}, nil
 	}
 
-	mergedProducts := mergeProducts(availableProducts)
+	mergedProducts := mergeProducts(availableProducts, appState, query)
 
 	// Identify unmapped products (those with only one source)
 	unmapped := []Product{}
@@ -824,4 +827,71 @@ func fetchJSON(url string, method string, headers map[string]string, body string
 	}
 
 	return result, nil
+}
+
+func applyPendingMappings(
+	products []Product,
+	appState config.AppState,
+	query string,
+) []Product {
+	ctx := context.Background()
+	key := fmt.Sprintf("pending_mappings:%s", query)
+	raw, err := appState.RedisClient.Get(ctx, key).Result()
+	if err != nil {
+		if err != redis.Nil {
+			log.Printf("error fetching %s: %v", key, err)
+		}
+		return products
+	}
+
+	var pm PendingMappings
+	if err := json.Unmarshal([]byte(raw), &pm); err != nil {
+		log.Printf("error unmarshalling %s: %v", key, err)
+		return products
+	}
+
+	// For each suggestion, find the Product by name and merge in the "match" variant
+	for _, m := range pm.Mappings {
+		for i := range products {
+			if products[i].Name == m.Source.Name {
+				products[i] = mergeOneMapping(products[i], m.Match)
+				break
+			}
+		}
+	}
+
+	return products
+}
+
+// mergeOneMapping adds the new variant from PendingMappingItem into prod.Prices,
+// creating a new PriceOption if needed, and deduplicating by Deeplink.
+func mergeOneMapping(prod Product, item PendingMappingItem) Product {
+	v := Variant{
+		OriginalPrice:   item.Mrp,
+		DiscountedPrice: item.Mrp,
+		Deeplink:        item.Deeplink,
+		ImageURL:        item.ImageURL,
+		Weight:          item.Weight,
+	}
+
+	// look for an existing PriceOption on item.Source
+	for pi, po := range prod.Prices {
+		if po.Source == item.Source {
+			// dedupe by Deeplink
+			for _, existing := range po.Variants {
+				if existing.Deeplink == v.Deeplink {
+					return prod
+				}
+			}
+			prod.Prices[pi].Variants = append(prod.Prices[pi].Variants, v)
+			return prod
+		}
+	}
+
+	// not found, so add a brand new PriceOption
+	prod.Prices = append(prod.Prices, PriceOption{
+		Source:   item.Source,
+		Variants: []Variant{v},
+	})
+	return prod
 }
