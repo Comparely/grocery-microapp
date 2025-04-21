@@ -76,6 +76,16 @@ steps:
     id: 'Docker Push Backend'
     args: ['push', 'gcr.io/$PROJECT_ID/backend-go:latest']
 
+  # ginger
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Docker Build Ginger'
+    dir: 'ginger'
+    args: ['build', '--no-cache', '-t', 'gcr.io/$PROJECT_ID/ginger:latest', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Docker Push Ginger'
+    args: ['push', 'gcr.io/$PROJECT_ID/ginger:latest']
+
   # Frontend: Install, build assets, and build Docker image
   - name: 'node:20'
     id: 'Frontend - Install & Build'
