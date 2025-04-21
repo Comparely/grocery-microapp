@@ -21,7 +21,7 @@ func GetCorsConfig() cors.Config {
 }
 
 func InitRedis() (*redis.Client, error) {
-	url := "redis://localhost:6379/"
+	url := "redis://0.0.0.0:6379/"
 	opts, err := redis.ParseURL(url)
 
 	if err != nil {

@@ -19,18 +19,18 @@ class SearchIntelligence:
             decode_responses=True,
         )
     # ---------------------- Text Normalization & Cleaning ---------------------- #
-    def normalize_text(text):
+    def normalize_text(self, text):
         """Lowercase and remove punctuation and extra spaces."""
         translator = str.maketrans('', '', string.punctuation)
         return text.lower().translate(translator).strip()
 
-    def remove_quantity_info(text):
+    def remove_quantity_info(self, text):
         """Remove quantity/unit information like '1 ltr', '500 ml', 'pack of 3', etc."""
         text = re.sub(r'\d+\s*(ltr|ml|g|kg|litre|milliliter|pieces|piece|x\s*\d+)', '', text)
         text = re.sub(r'\b\d+\b', '', text)
         return text
 
-    def synonym_replace(text):
+    def synonym_replace(self, text):
         """Replace or remove domain-specific synonyms and filler words."""
         remove_terms = [
             "homogenised", "homogenized", "pasteurised", "pasteurized",
@@ -41,20 +41,20 @@ class SearchIntelligence:
             text = re.sub(r'\b' + re.escape(term) + r'\b', '', text)
         return text
 
-    def clean_product_name(name):
+    def clean_product_name(self, name):
         """Cleans a product name by normalizing text, removing quantity/unit info, and applying synonym replacement."""
-        name = normalize_text(name)
-        name = remove_quantity_info(name)
-        name = synonym_replace(name)
+        name = self.normalize_text(name)
+        name = self.remove_quantity_info(name)
+        name = self.synonym_replace(name)
         return re.sub(r'\s+', ' ', name).strip()
 
-    def composite_text(product):
+    def composite_text(self, product):
         """Build composite text for matching by combining the cleaned product name and its MRP."""
-        cleaned_name = clean_product_name(product['name'])
+        cleaned_name = self.clean_product_name(product['name'])
         return f"{cleaned_name} {product['mrp']}"
 
     # ------------------------- Matching Helpers ------------------------- #
-    def mrp_match(a, b, error=4):
+    def mrp_match(self, a, b, error=4):
         """Check if two MRPs are within a small tolerance or an integer multiple."""
         if abs(a - b) <= error:
             return True
@@ -67,20 +67,20 @@ class SearchIntelligence:
             return True
         return False
 
-    def fuzzy_brand_match(brand1, brand2, threshold=70):
+    def fuzzy_brand_match(self, brand1, brand2, threshold=70):
         """Returns True if fuzzy matching score between two brand names is at least 'threshold'."""
         score = fuzz.token_set_ratio(brand1, brand2)
         return score >= threshold
 
     # ------------------------- Semantic Matching ------------------------- #
-    def map_unmapped_products(unmapped_products, similarity_threshold=0.75):
+    def map_unmapped_products(self, unmapped_products, similarity_threshold=0.75):
         """Match unmapped products against each other using semantic similarity."""
         if len(unmapped_products) < 2:
             print("Not enough unmapped products to match (need at least 2).")
             return []
 
         model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
-        unmapped_texts = [composite_text(prod) for prod in unmapped_products]
+        unmapped_texts = [self.composite_text(prod) for prod in unmapped_products]
         embeddings = model.encode(unmapped_texts, convert_to_tensor=True)
 
         mappings = []
@@ -89,7 +89,7 @@ class SearchIntelligence:
                 if prod1['prices'][0]['source'] == prod2['prices'][0]['source']:
                     continue
 
-                if not fuzzy_brand_match(prod1['brand'], prod2['brand']) or not mrp_match(prod1['mrp'], prod2['mrp']):
+                if not self.fuzzy_brand_match(prod1['brand'], prod2['brand']) or not self.mrp_match(prod1['mrp'], prod2['mrp']):
                     continue
 
                 embedding1 = embeddings[i:i+1]
@@ -128,7 +128,7 @@ class SearchIntelligence:
         return mappings
 
     # ------------------------- Worker Logic ------------------------- #
-    def process_unmapped_from_redis(input_query):
+    def process_unmapped_from_redis(self, input_query):
 
         # Process each Redis key matching 'unmapped:*'
         for key in self.redis.keys("unmapped:*"):
@@ -145,7 +145,7 @@ class SearchIntelligence:
             print(f"Processing {len(unmapped_products)} unmapped products for query '{query}'")
 
             # Run semantic matching on unmapped products
-            mappings = map_unmapped_products(unmapped_products)
+            mappings = self.map_unmapped_products(unmapped_products)
 
             if mappings:
                 # Wrap mappings in a top-level structure with query
