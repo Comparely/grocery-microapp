@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: ginger
-          image: gcr.io/$PROJECT_ID/ginger:latest
+          image: gcr.io/cosmic-bonus/ginger:latest
           ports:
             - containerPort: 5000
           env:
