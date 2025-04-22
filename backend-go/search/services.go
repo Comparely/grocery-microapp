@@ -601,7 +601,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 				log.Printf("Queued %d unmapped products for query '%s' in Redis", len(unmapped), query)
 				go func() {
 					payload := fmt.Sprintf(`{"type": "search-intelligence", "data": {"query": "%s"}}`, query)
-					resp, err := http.Post("http://ginger:5000/spawn", "application/json", bytes.NewBuffer([]byte(payload)))
+					resp, err := http.Post(config.GINGER_SPAWN_URL, "application/json", bytes.NewBuffer([]byte(payload)))
 					if err != nil {
 						log.Printf("Failed to trigger Flask API for query '%s': %v", query, err)
 					} else {

@@ -66,7 +66,7 @@ export const GroceryComparisonScreen: React.FC = () => {
   //       return;
   //     }
   //     try {
-  //       const suggestionResponse = await fetch('https://grocery-api.comparely.co.in/suggestions', {
+  //       const suggestionResponse = await fetch(`${process.env.EXPO_PUBLIC_API_URL}suggestions`, {
   //         method: 'POST',
   //         headers: { 'Content-Type': 'application/json' },
   //         body: JSON.stringify({

@@ -37,7 +37,7 @@ export async function searchProducts(
 ): Promise<Product[]> {
   try {
     const locParams = lat && lng ? `&lat=${lat}&lng=${lng}` : "";
-    const url = `https://grocery-api.comparely.co.in/search?q=${encodeURIComponent(query)}${locParams}`;
+    const url = `${process.env.EXPO_PUBLIC_API_URL}search?q=${encodeURIComponent(query)}${locParams}`;
     const response = await fetch(url);
     const data = await response.json();
 
