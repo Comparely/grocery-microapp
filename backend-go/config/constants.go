@@ -5,6 +5,16 @@ import (
 	"os"
 )
 
-var GINGER_URL string = os.Getenv("GINGER_URL")
+func GetGingerURL(path string) string {
+	var gingerURL string = os.Getenv("GINGER_URL")
 
-var GINGER_SPAWN_URL string = fmt.Sprintf("%sspawn", GINGER_URL)
+	switch path {
+	case "":
+		return gingerURL
+
+	case "spawn":
+		return fmt.Sprintf("%sspawn", gingerURL)
+	}
+
+	return gingerURL
+}
