@@ -15,6 +15,7 @@ import (
 	"github.com/comparely/comparely-grocery-backend/sessions"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 const PORT = 4500
@@ -23,6 +24,11 @@ var appState config.AppState = config.AppState{}
 
 func main() {
 	var err error
+	err = godotenv.Load(".env")
+	if err != nil {
+		log.Println("Error loading .env file: %s", err)
+	}
+
 	if appState.RedisClient, err = config.InitRedis(); err != nil {
 		log.Println("could not connect to redis", err)
 		os.Exit(1)

@@ -1,4 +1,3 @@
-# Use a lightweight Go image (adjust version as needed)
 FROM golang:1.24-alpine
 
 WORKDIR /app

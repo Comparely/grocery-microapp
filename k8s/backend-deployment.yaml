@@ -15,9 +15,16 @@ spec:
         app: backend
     spec:
       containers:
-      - name: backend
-        image: gcr.io/cosmic-bonus/backend:latest
-        imagePullPolicy: Always
-        ports:
-        - containerPort: 3000
-        command: ["node", "index.js"]
+        - name: backend
+          image: gcr.io/cosmic-bonus/backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          env:
+            - name: REDIS_URL
+              value: "redis://34.118.230.24:6379/"
+            - name: GINGER_URL
+              value: "http://ginger:5000/"
+            - name: MONGO_URL
+              value: "mongodb+srv://comparably-sbx:comparely-sbx-001@cluster-sandbox0.xnku9.mongodb.net/?retryWrites=true&w=majority&appName=Cluster-Sandbox0"
+          command: ["node", "index.js"]
