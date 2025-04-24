@@ -9,6 +9,8 @@ import { fetchAndConvertProducts } from '../api/searchProducts';
 import Navbar from '@/components/Navbar';
 import { useSession } from '@/context/SessionContext';
 
+import * as Location from 'expo-location';
+
 export const GroceryComparisonScreen: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
