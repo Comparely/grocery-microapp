@@ -12,6 +12,8 @@ import { FlatList } from 'react-native-gesture-handler';
 import { AntDesign } from '@expo/vector-icons';
 import FeaturedProductsSection from '@/components/FeatureProducts';
 
+import * as Location from 'expo-location';
+
 export const GroceryComparisonScreen: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);

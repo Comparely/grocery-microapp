@@ -9,14 +9,19 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "in.comparely.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/app-icons/android-adaptive-icon.png",
         "backgroundColor": "#004738"
       },
-      "package": "in.comparely.app"
+      "package": "in.comparely.app",
+      "permissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
