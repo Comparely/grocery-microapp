@@ -1,0 +1,9 @@
+{
+    // make ESLint run in the mobile/ subfolder
+    "eslint.workingDirectories": [
+      {
+        "directory": "./mobile",
+        "changeProcessCWD": true
+      }
+    ],
+}
