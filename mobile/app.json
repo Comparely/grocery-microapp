@@ -22,6 +22,9 @@
       "output": "static",
       "favicon": "./assets/images/app-icons/ios-light.png"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "plugins": [
       "expo-router",
       [
@@ -31,6 +34,22 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#004738"
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/Sora/static/Sora-Regular.ttf",
+            "./assets/fonts/Sora/static/Sora-Bold.ttf",
+            "./assets/fonts/Sora/static/Sora-ExtraBold.ttf",
+            "./assets/fonts/Sora/static/Sora-Light.ttf",
+            "./assets/fonts/Sora/static/Sora-ExtraLight.ttf",
+            "./assets/fonts/Sora/static/Sora-Medium.ttf",
+            "./assets/fonts/Sora/static/Sora-SemiBold.ttf",
+            "./assets/fonts/Sora/static/Sora-Thin.ttf",
+            "./assets/fonts/Sora/Sora.ttf"
+          ]
         }
       ]
     ],

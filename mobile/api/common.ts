@@ -10,15 +10,21 @@
 // }
 
 // @/api/common.ts
-import homepageData from '../homepage.json'; 
+import homepageData from '../homepage.json';
 
-export const fetchHomePageData = async () => {
-  try {
-    // Use the local JSON data directly
-    console.log("Using local homepage data:", homepageData);
-    return [homepageData.featuredProducts, homepageData.categories];
-  } catch (error) {
-    console.error("Error loading local homepage data:", error);
-    return [[], []]; // Fallback to empty arrays in case of error
-  }
+export const fetchHomePageData = () => {
+    try {
+        // Use the local JSON data directly
+        console.log('Using local homepage data:', homepageData);
+        return {
+            featuredProducts: homepageData.featuredProducts,
+            featuredCategories: homepageData.categories,
+        };
+    } catch (error) {
+        console.error('Error loading local homepage data:', error);
+        return {
+            featuredProducts: [],
+            featuredCategories: [],
+        };
+    }
 };
