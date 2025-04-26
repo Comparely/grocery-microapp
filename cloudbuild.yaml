@@ -49,6 +49,7 @@ steps:
     id: 'Frontend - Build Docker Image'
     env:
       - EXPO_PUBLIC_API_URL="https://grocery-api.comparely.co.in/"
+      - EXPO_PUBLIC_SUPPORT_WA_NUMBER="918076078942"
     args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/mobile:latest', './mobile' ]
 
   - name: 'gcr.io/cloud-builders/docker'
