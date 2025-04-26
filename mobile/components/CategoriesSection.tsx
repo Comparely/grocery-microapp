@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
+import { Text } from '@/ui/Text';
 
 interface CategoryCardProps {
   category: {

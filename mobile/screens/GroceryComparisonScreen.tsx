@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { StyleSheet, View, ScrollView, Text, Keyboard } from 'react-native';
+import { StyleSheet, View, ScrollView, Keyboard } from 'react-native';
 import { SearchBar } from '../components/SearchBar';
 import { ProductList } from '../components/ProductList';
 import { Product } from '../types/Product';

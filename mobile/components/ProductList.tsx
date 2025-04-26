@@ -1,9 +1,10 @@
 import type React from "react";
-import { StyleSheet, View, Text, FlatList } from "react-native";
+import { StyleSheet, View, FlatList } from "react-native";
 import { ProductCard } from "./ProductCard";
 import { ProductCardShimmer } from "./ProductCardShimmer";
 import type { Product } from "../types/Product";
 import { Session } from "@/types/Session";
+import { Text } from '@/ui/Text';
 
 interface ProductListProps {
   session: Session;

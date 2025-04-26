@@ -1,9 +1,10 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, FlatList, Dimensions, TouchableOpacity } from 'react-native';
 import { ProductCard } from './ProductCard';
 import { Product } from '@/types/Product';
 import { Session } from '@/types/Session';
 import { Ionicons } from '@expo/vector-icons';
+import { Text } from '@/ui/Text';
 
 const { width } = Dimensions.get('window');
 

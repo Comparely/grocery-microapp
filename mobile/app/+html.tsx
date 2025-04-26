@@ -33,7 +33,7 @@ export default function Root({ children }: PropsWithChildren) {
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-        <title>Comparely - Compare Grocery Prices Across Platforms</title>
+        <title>Comparely - Compare Grocery Prices Across Zepto, Blinkit, Instamart</title>
         <meta name="description" content="Compare grocery prices across Blinkit, Instamart and Zepto with Comparely. Find the best deals and save money on every order."/>
         <meta name="keywords" content="food price comparison, grocery price comparison, price comparison, grocery orders, order grocery, Zomato, Swiggy, Magicpin, Zepto, Instamart, Blinkit, best deals, food orders"/>
         {/* <meta name="viewport" content="width=768, initial-scale=1, maximum-scale=1, user-scalable=no" /> */}

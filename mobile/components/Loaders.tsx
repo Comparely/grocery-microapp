@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Animated, View, Text, StyleSheet } from "react-native";
+import { Animated, View, StyleSheet } from "react-native";
+import { Text } from '@/ui/Text';
 
 export const LoadingProgress = () => {
     const progress = useRef(new Animated.Value(0)).current;

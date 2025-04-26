@@ -1,21 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { SearchBar } from './SearchBar';
 import { Session } from '@/types/Session';
+import { Text } from '@/ui/Text';
 
 interface HeaderProps {
-  session: Session;
+  session: Session | undefined;
 }
 
 const Header: React.FC<HeaderProps> = ({ session }) => {
   const router = useRouter();
 
   const findLeastTimeStore = () => {
-    const blinkitETA = parseFloat(session.marketplaceAttributes.blinkitStoreAttributes.eta);
-    const zeptoETA = parseFloat(session.marketplaceAttributes.zeptoStoreAttributes.eta);
-    const instamartETA = parseFloat(session.marketplaceAttributes.instamartStoreAttributes.eta);
+    const blinkitETA = parseFloat(session?.marketplaceAttributes.blinkitStoreAttributes.eta ?? "");
+    const zeptoETA = parseFloat(session?.marketplaceAttributes.zeptoStoreAttributes.eta ?? "");
+    const instamartETA = parseFloat(session?.marketplaceAttributes.instamartStoreAttributes.eta ?? "");
 
     const validNumbers = [blinkitETA, zeptoETA, instamartETA].filter((num) => !Number.isNaN(num));
     const least = validNumbers.length ? Math.min(...validNumbers) : NaN;
@@ -50,45 +51,44 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
     <View style={styles.container}>
       <View style={styles.locationContainer}>
         <Ionicons name="location" size={24} color="#cbd402" />
-        <TouchableOpacity style={styles.locationSelector}>
-          <Text style={styles.locationText}>Address</Text>
-        </TouchableOpacity>
+        <Text style={styles.locationText}>Address</Text>
       </View>
 
-      <Text style={styles.addressText}>{trimIfNeeded(session.address)}</Text>
+      <Text style={styles.addressText}>{trimIfNeeded(session?.address ?? "No address found")}</Text>
 
-      <View style={styles.rightContainer}>
-        <View
-          style={[
-            styles.timeContainer,
-            { backgroundColor: findBgColor(String(findLeastTimeStore()[1])) },
-          ]}
-        >
-          <Ionicons name="flash" size={18} color="#000000" />
-          <Text style={styles.timeText}>{findLeastTimeStore()[0]} mins</Text>
-          <View style={styles.blinkitBadge}>
-            {findLeastTimeStore()[1] === 'blinkit' && (
-              <Image
-                style={{ width: 28, height: 28 }}
-                source={require('@/assets/images/blinkit.png')}
-              />
-            )}
-            {findLeastTimeStore()[1] === 'zepto' && (
-              <Image
-                style={{ height: 28, width: 42 }}
-                source={require('@/assets/images/zepto.png')}
-              />
-            )}
-            {findLeastTimeStore()[1] === 'instamart' && (
-              <Image
-                style={{ width: 72, height: 28 }}
-                source={require('@/assets/images/swiggy_instamart.webp')}
-              />
-            )}
+      {session && (
+        <View style={styles.rightContainer}>
+          <View
+            style={[
+              styles.timeContainer,
+              { backgroundColor: findBgColor(String(findLeastTimeStore()[1])) },
+            ]}
+          >
+            <Ionicons name="flash" size={18} color="#000000" />
+            <Text style={styles.timeText}>{findLeastTimeStore()[0]} mins</Text>
+            <View style={styles.blinkitBadge}>
+              {findLeastTimeStore()[1] === 'blinkit' && (
+                <Image
+                  style={{ width: 28, height: 28 }}
+                  source={require('@/assets/images/blinkit.png')}
+                />
+              )}
+              {findLeastTimeStore()[1] === 'zepto' && (
+                <Image
+                  style={{ height: 28, width: 42 }}
+                  source={require('@/assets/images/zepto.png')}
+                />
+              )}
+              {findLeastTimeStore()[1] === 'instamart' && (
+                <Image
+                  style={{ width: 72, height: 28 }}
+                  source={require('@/assets/images/swiggy_instamart.webp')}
+                />
+              )}
+            </View>
           </View>
         </View>
-      </View>
-
+      )}
       <View style={styles.searchContainer}>
         <SearchBar
           onClick={handleSearchPress}

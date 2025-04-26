@@ -1,10 +1,14 @@
 import { GroceryComparisonScreen } from "@/screens/GroceryComparisonScreen"
+import Head from "expo-router/head"
 import { SafeAreaView, StatusBar, StyleSheet } from "react-native"
 
 const App = () => {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#004738" />
+      <Head>
+        <title>Search - Comparely</title>
+      </Head>
       <GroceryComparisonScreen />
     </SafeAreaView>
   )

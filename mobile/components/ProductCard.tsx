@@ -1,7 +1,8 @@
 import React from 'react';
-import { StyleSheet, View, Text, Image, Linking, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, Image, Linking, TouchableOpacity, Dimensions } from 'react-native';
 import type { Product, PriceOption } from '../types/Product';
 import { Session } from '@/types/Session';
+import { Text } from '@/ui/Text';
 
 const { width } = Dimensions.get('window'); // For responsive design
 

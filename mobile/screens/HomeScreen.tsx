@@ -3,10 +3,8 @@ import {
   ScrollView,
   StyleSheet,
   View,
-  Text,
   TouchableOpacity,
   Platform,
-  Dimensions,
   Linking,
   TextInput,
   Alert,
@@ -24,8 +22,8 @@ import { fetchHomePageData } from '@/api/common';
 import { Product } from '@/types/Product';
 import { Ionicons } from '@expo/vector-icons';
 import { LoadingProgress } from '@/components/Loaders';
+import { Text } from '@/ui/Text';
 
-const AARAV_NUMBER = '+918076078942';
 // Gurugram coordinates
 const GURUGRAM_COORDS = { lat: 28.4595, lng: 77.0266 };
 const isWeb = Platform.OS === 'web';
@@ -214,10 +212,9 @@ const HomeScreen = () => {
 
   //  -------------------------------------------------WHATSAPP FIX------------------------------------------------------------
   const handleWhatsappRedirect = () => {
-    const AARAV_NUMBER = '918076078942';
     const message = encodeURIComponent("Hi, I'm interested in Comparely!");
 
-    const webUrl = `https://api.whatsapp.com/send?phone=${AARAV_NUMBER}&text=${message}`;
+    const webUrl = `https://api.whatsapp.com/send?phone=${process.env.EXPO_PUBLIC_SUPPORT_WA_NUMBER}&text=${message}`;
 
     if (Platform.OS === 'web') {
       try {
