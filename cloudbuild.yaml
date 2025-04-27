@@ -45,6 +45,16 @@ steps:
       - |
         cd mobile && npm install && npm run build-web
 
+  - id: Write frontend .env
+    name: gcr.io/cloud-builders/gcloud
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        cat <<EOF > frontend/.env
+        EXPO_PUBLIC_API_URL=${_EXPO_PUBLIC_API_URL}
+        EXPO_PUBLIC_SUPPORT_WA_NUMBER=${_EXPO_PUBLIC_SUPPORT_WA_NUMBER}
+        EOF
   - name: 'gcr.io/cloud-builders/docker'
     id: 'Frontend - Build Docker Image'
     env:
@@ -66,7 +76,11 @@ steps:
       - 'apply'
       - '-f'
       - 'k8s'
-      
+
+substitutions:
+  _EXPO_PUBLIC_API_URL: "https://grocery-api.comparely.co.in/"
+  _EXPO_PUBLIC_SUPPORT_WA_NUMBER: "918076078942"
+
 images:
   - 'gcr.io/$PROJECT_ID/backend-go:latest'
   - 'gcr.io/$PROJECT_ID/mobile:latest'
