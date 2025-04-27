@@ -23,205 +23,34 @@ import { Ionicons } from '@expo/vector-icons';
 import { LoadingProgress } from '@/components/Loaders';
 import { Text } from '@/ui/Text';
 import { Category } from '@/types/Category';
+import { useSession } from '@/context/SessionContext';
 
-// Gurugram coordinates
-const GURUGRAM_COORDS = { lat: 28.4595, lng: 77.0266 };
 const isWeb = Platform.OS === 'web';
 
 const HomeScreen = () => {
-    const [pageReady, setPageReady] = useState<boolean>(false);
-    const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({
-        lat: null,
-        lng: null,
-    });
-    const [session, setSession] = useState<Session | undefined>();
+    const { session, location } = useSession();
     const [categories, setCategories] = useState<Category[]>([]);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
-    const [locationDenied, setLocationDenied] = useState<boolean>(false);
     const [email, setEmail] = useState<string>('');
 
     const wiggleAnim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
+        // wiggle animation
         Animated.loop(
             Animated.sequence([
-                Animated.timing(wiggleAnim, {
-                    toValue: 1,
-                    duration: 100,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(wiggleAnim, {
-                    toValue: -1,
-                    duration: 200,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(wiggleAnim, {
-                    toValue: 0,
-                    duration: 100,
-                    useNativeDriver: true,
-                }),
+                Animated.timing(wiggleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
+                Animated.timing(wiggleAnim, { toValue: -1, duration: 200, useNativeDriver: true }),
+                Animated.timing(wiggleAnim, { toValue: 0, duration: 100, useNativeDriver: true }),
             ]),
         ).start();
 
+        // fetch featured data
         const { featuredProducts, featuredCategories } = fetchHomePageData();
         setFeaturedProducts(featuredProducts);
         setCategories(featuredCategories);
-
-        getItem('session')
-            .then((val: Session) => {
-                if (val) setSession(val);
-            })
-            .catch((err) => console.log('Could not find session:', err));
-
-        const initGeolocation = async () => {
-            // Gurugram fallback function
-            const fallbackToGurugram = () => {
-                console.log('Falling back to Gurugram location');
-                setLocationDenied(true);
-                setLocation({ lat: GURUGRAM_COORDS.lat, lng: GURUGRAM_COORDS.lng });
-                initiateSessionForUser(GURUGRAM_COORDS.lat, GURUGRAM_COORDS.lng)
-                    .then((val) => {
-                        setSession(val);
-                        setPageReady(true);
-                        console.log('Session initiated with fallback to Gurugram:', val);
-                    })
-                    .catch((err) => console.log('Session initiation error (fallback):', err));
-            };
-
-            // Handle successful location retrieval
-            const handleLocationSuccess = (latitude: number, longitude: number) => {
-                setLocationDenied(false);
-                setLocation({ lat: latitude, lng: longitude });
-                initiateSessionForUser(latitude, longitude)
-                    .then((val) => {
-                        setSession(val);
-                        setPageReady(true);
-                        console.log('Session initiated:', val);
-                    })
-                    .catch((err) => {
-                        console.log('Session initiation error:', err);
-                        fallbackToGurugram();
-                    });
-            };
-
-            if (Platform.OS === 'web') {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            handleLocationSuccess(
-                                position.coords.latitude,
-                                position.coords.longitude,
-                            );
-                        },
-                        (error) => {
-                            console.error('Web geolocation error:', error);
-                            fallbackToGurugram();
-                        },
-                        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
-                    );
-                } else {
-                    console.error('Geolocation not supported on web');
-                    fallbackToGurugram();
-                }
-            } else {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    console.log('Permission to access location was denied');
-                    fallbackToGurugram();
-                    return;
-                }
-
-                try {
-                    const location = await Location.getCurrentPositionAsync({
-                        accuracy: Location.Accuracy.High,
-                    });
-                    handleLocationSuccess(location.coords.latitude, location.coords.longitude);
-                } catch (error) {
-                    console.error('Error getting location:', error);
-                    fallbackToGurugram();
-                }
-            }
-        };
-
-        initGeolocation().catch((err) => {
-            console.log(err);
-        });
     }, [wiggleAnim]);
 
-    const requestLocationPermission = () => {
-        // Gurugram fallback function
-        const fallbackToGurugram = () => {
-            console.log('Falling back to Gurugram location on retry');
-            setLocationDenied(false); // We don't show the permission screen anymore since we're using fallback
-            setLocation({ lat: GURUGRAM_COORDS.lat, lng: GURUGRAM_COORDS.lng });
-            initiateSessionForUser(GURUGRAM_COORDS.lat, GURUGRAM_COORDS.lng)
-                .then((val) => {
-                    setSession(val);
-                    setPageReady(true);
-                    console.log('Session initiated with fallback on retry:', val);
-                })
-                .catch((err) => console.log('Session initiation error (fallback on retry):', err));
-        };
-
-        if (Platform.OS === 'web') {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        setLocationDenied(false);
-                        setLocation({
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        });
-                        initiateSessionForUser(position.coords.latitude, position.coords.longitude)
-                            .then((val) => {
-                                setSession(val);
-                                setPageReady(true);
-                            })
-                            .catch((err) => {
-                                console.log('Session initiation error on retry:', err);
-                                fallbackToGurugram();
-                            });
-                    },
-                    (error) => {
-                        console.error('Web geolocation retry error:', error);
-                        fallbackToGurugram();
-                    },
-                );
-            } else {
-                fallbackToGurugram();
-            }
-        } else {
-            (async () => {
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    fallbackToGurugram();
-                    return;
-                }
-
-                try {
-                    const location = await Location.getCurrentPositionAsync({
-                        accuracy: Location.Accuracy.High,
-                    });
-                    setLocationDenied(false);
-                    setLocation({ lat: location.coords.latitude, lng: location.coords.longitude });
-                    initiateSessionForUser(location.coords.latitude, location.coords.longitude)
-                        .then((val) => {
-                            setSession(val);
-                            setPageReady(true);
-                        })
-                        .catch((err) => {
-                            console.log('Session initiation error on retry:', err);
-                            fallbackToGurugram();
-                        });
-                } catch (error) {
-                    console.error('Error retrying location:', error);
-                    fallbackToGurugram();
-                }
-            })().catch((err) => console.log(err));
-        }
-    };
-
-    //  -------------------------------------------------WHATSAPP FIX------------------------------------------------------------
     const handleWhatsappRedirect = () => {
         const message = encodeURIComponent("Hi, I'm interested in Comparely!");
 
@@ -255,13 +84,12 @@ const HomeScreen = () => {
         setEmail('');
     };
 
-    //------------------------------------Handel social media---------------------------------
     const handleSocialMediaRedirect = (
         platform: 'instagram' | 'twitter' | 'facebook' | 'linkedin',
     ) => {
         // Define your social media URLs
         const socialMediaUrls: Record<string, string> = {
-            instagram: 'https://www.instagram.com/comparelyy?igsh=Y2d5ODRkN2Y4MTh5&utm_source=qr',
+            instagram: 'https://www.instagram.com/comparelyy',
             twitter: 'https://twitter.com',
             facebook: 'https://www.facebook.com',
             linkedin: 'https://www.linkedin.com',
@@ -293,35 +121,6 @@ const HomeScreen = () => {
             });
         }
     };
-
-    //----------------------------------------------------------------------------------------
-
-    if (locationDenied) {
-        return (
-            <View style={styles.deniedContainer}>
-                <Ionicons name="location-outline" size={50} color="#fff" />
-                <Text style={styles.deniedText}>
-                    Comparely needs access to your location to work properly.
-                </Text>
-                <TouchableOpacity style={styles.retryButton} onPress={requestLocationPermission}>
-                    <Text style={styles.retryButtonText}>Grant Permission</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.retryButton, styles.secondaryButton]}
-                    onPress={requestLocationPermission}>
-                    <Text style={styles.secondaryButtonText}>Continue with default location</Text>
-                </TouchableOpacity>
-            </View>
-        );
-    }
-
-    if (!pageReady) {
-        return (
-            <View style={styles.loadingContainer}>
-                <LoadingProgress />
-            </View>
-        );
-    }
 
     const rotate = wiggleAnim.interpolate({
         inputRange: [-1, 1],

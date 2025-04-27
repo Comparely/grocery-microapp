@@ -9,7 +9,10 @@ const Navbar: React.FC = () => {
 
     return (
         <View style={styles.navbar}>
-            <TouchableOpacity onPress={() => router.push('/')}>
+            <TouchableOpacity
+                onPress={() => {
+                    void (router.canGoBack() ? router.back() : router.push('/'));
+                }}>
                 <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.title}>Comparely</Text>
