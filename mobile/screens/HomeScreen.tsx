@@ -10,25 +10,20 @@ import {
     Alert,
     Animated,
 } from 'react-native';
-import * as Location from 'expo-location';
 import Header from '../components/Header';
 import PriceSection from '../components/PriceSection';
-import CategoriesSection from '../components/CategoriesSection';
-import { initiateSessionForUser } from '@/api/searchProducts';
-import { getItem } from '@/api/localStorage';
-import { Session } from '@/types/Session';
 import { fetchHomePageData } from '@/api/common';
 import { Product } from '@/types/Product';
 import { Ionicons } from '@expo/vector-icons';
-import { LoadingProgress } from '@/components/Loaders';
 import { Text } from '@/ui/Text';
 import { Category } from '@/types/Category';
 import { useSession } from '@/context/SessionContext';
 
 const isWeb = Platform.OS === 'web';
+const isIos = Platform.OS === 'ios';
 
 const HomeScreen = () => {
-    const { session, location } = useSession();
+    const { session, location, locationDenied, requestLocationPermission } = useSession();
     const [categories, setCategories] = useState<Category[]>([]);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
     const [email, setEmail] = useState<string>('');
@@ -127,6 +122,25 @@ const HomeScreen = () => {
         outputRange: ['-10deg', '10deg'],
     });
 
+    if (locationDenied && !isIos) {
+        return (
+            <View style={styles.deniedContainer}>
+                <Ionicons name="location-outline" size={50} color="#fff" />
+                <Text style={styles.deniedText}>
+                    Comparely needs access to your location to work properly.
+                </Text>
+                <TouchableOpacity style={styles.retryButton} onPress={requestLocationPermission}>
+                    <Text style={styles.retryButtonText}>Grant Permission</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.retryButton, styles.secondaryButton]}
+                    onPress={requestLocationPermission}>
+                    <Text style={styles.secondaryButtonText}>Continue with default location</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <Header session={session} />
@@ -141,35 +155,36 @@ const HomeScreen = () => {
                         <Text style={styles.emptyText}>No featured products available.</Text>
                     </View>
                 )}
-                {categories.length > 0 ? (
+                {/* {categories.length > 0 ? (
                     <CategoriesSection categories={categories} />
                 ) : (
                     <View style={styles.emptySection}>
                         <Text style={styles.emptyText}>No categories available.</Text>
                     </View>
-                )}
+                )} */}
 
-                <View style={styles.waitlistContainer}>
-                    <Text style={styles.waitlistHeader}>We're Launching Soon!</Text>
-                    <Text style={styles.waitlistSubText}>
-                        Enter your email below to join our waitlist and get early access.
-                    </Text>
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Your email address"
-                        placeholderTextColor="#aaa"
-                        keyboardType="email-address"
-                        value={email}
-                        onChangeText={setEmail}
-                        autoCapitalize="none"
-                    />
-                    <TouchableOpacity
-                        style={styles.waitlistSubmitButton}
-                        onPress={handleWaitlistSubmit}>
-                        <Text style={styles.waitlistSubmitButtonText}>Submit</Text>
-                    </TouchableOpacity>
+                {isWeb && (
+                    <View style={styles.waitlistContainer}>
+                        <Text style={styles.waitlistHeader}>We're Launching Soon!</Text>
+                        <Text style={styles.waitlistSubText}>
+                            Enter your email below to join our waitlist and get early access.
+                        </Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Your email address"
+                            placeholderTextColor="#aaa"
+                            keyboardType="email-address"
+                            value={email}
+                            onChangeText={setEmail}
+                            autoCapitalize="none"
+                        />
+                        <TouchableOpacity
+                            style={styles.waitlistSubmitButton}
+                            onPress={handleWaitlistSubmit}>
+                            <Text style={styles.waitlistSubmitButtonText}>Submit</Text>
+                        </TouchableOpacity>
 
-                    {/* <Text style={styles.appComingSoonText}>
+                        {/* <Text style={styles.appComingSoonText}>
             Our app is coming soon!
 
             </Text>
@@ -181,11 +196,12 @@ const HomeScreen = () => {
                 <Ionicons name="logo-apple-appstore" size={40} color="#9d9d9d" />
               </View>
             </View> */}
-                </View>
+                    </View>
+                )}
 
                 {/* -----------------------------app coming soon----------------------------------------------- */}
 
-                {isWeb && (
+                {isWeb && false && (
                     <View style={styles.appComingSoonContainer}>
                         <Text style={styles.appComingSoonHeader}>App Coming Soon</Text>
 
@@ -366,6 +382,7 @@ const styles = StyleSheet.create({
     waitlistContainer: {
         marginHorizontal: 20,
         marginBottom: 30,
+        marginTop: 10,
         padding: 20,
         backgroundColor: '#fffaf0',
         borderRadius: 10,

@@ -1,5 +1,5 @@
 import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
-import HomeScreen from '@/screens/HomeScreen1';
+import HomeScreen from '@/screens/HomeScreen';
 import '@/global.css';
 import Head from 'expo-router/head';
 
