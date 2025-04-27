@@ -51,7 +51,7 @@ steps:
     args:
       - -c
       - |
-        cat <<EOF > frontend/.env
+        cat <<EOF > mobile/.env
         EXPO_PUBLIC_API_URL=${_EXPO_PUBLIC_API_URL}
         EXPO_PUBLIC_SUPPORT_WA_NUMBER=${_EXPO_PUBLIC_SUPPORT_WA_NUMBER}
         EOF
