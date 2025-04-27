@@ -1,5 +1,27 @@
+import React from 'react';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
+import { SessionProvider, useSession } from '@/context/SessionContext';
+import { LoadingScreen } from '@/screens/LoadingScreen';
+
+function AppContent() {
+    const { loading, error, locationDenied, requestLocationPermission } = useSession();
+
+    if (loading) {
+        return <LoadingScreen showRetry={locationDenied} onRetry={requestLocationPermission} />;
+    }
+
+    // if (error) {
+    //     return (
+    //         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+    //             <Text style={{ color: 'red' }}>Error: {error}</Text>
+    //         </View>
+    //     );
+    // }
+
+    // When everything is ready, render your navigator
+    return <Stack screenOptions={{ headerShown: false }} />;
+}
 
 export default function RootLayout() {
     const [fontsLoaded, fontError] = useFonts({
@@ -14,9 +36,14 @@ export default function RootLayout() {
         'Sora-Light': require('@/assets/fonts/Sora/static/Sora-Light.ttf'),
     });
 
+    // Wait for fonts to load or error out
     if (!fontsLoaded && !fontError) {
-        return null;
+        console.log('could not load fonts');
     }
 
-    return <Stack screenOptions={{ headerShown: false }} />;
+    return (
+        <SessionProvider>
+            <AppContent />
+        </SessionProvider>
+    );
 }

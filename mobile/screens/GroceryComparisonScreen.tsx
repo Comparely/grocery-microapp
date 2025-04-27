@@ -1,25 +1,20 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { StyleSheet, View, ScrollView, Keyboard } from 'react-native';
 import { SearchBar } from '../components/SearchBar';
 import { ProductList } from '../components/ProductList';
 import { Product } from '../types/Product';
-import { fetchAndConvertProducts, initiateSessionForUser } from '../api/searchProducts';
-import { getItem } from '@/api/localStorage';
-import { Session } from '@/types/Session';
+import { fetchAndConvertProducts } from '../api/searchProducts';
 import Navbar from '@/components/Navbar';
+import { useSession } from '@/context/SessionContext';
 
 export const GroceryComparisonScreen: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [products, setProducts] = useState<Product[]>([]);
     // const [suggestions, setSuggestions] = useState<string[]>([]);
-    const [location, setLocation] = useState<{ lat: number | null; lng: number | null }>({
-        lat: null,
-        lng: null,
-    });
-    const [session, setSession] = useState<Session | undefined>();
+    const { session, location } = useSession();
     // const suggestionSelectedRef = useRef<boolean>(false);
 
     const debounce = useCallback((func: (...args: any[]) => void, delay: number) => {
@@ -31,36 +26,6 @@ export const GroceryComparisonScreen: React.FC = () => {
         };
         debounced.cancel = () => clearTimeout(timeoutId);
         return debounced;
-    }, []);
-
-    useEffect(() => {
-        getItem('session')
-            .then((val: Session) => {
-                if (val) {
-                    console.log('Local Storage Session:', val);
-                    setSession(val);
-                }
-            })
-            .catch((err) => console.log('Could not find session', err));
-
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const { latitude, longitude } = position.coords;
-                    setLocation({ lat: latitude, lng: longitude });
-                    initiateSessionForUser(latitude, longitude)
-                        .then((val: Session) => {
-                            setSession(val);
-                            console.log('Remote Session:', val);
-                        })
-                        .catch((err) => console.log('Session Error:', err));
-                },
-                (error) => console.error('Error obtaining location:', error),
-                { enableHighAccuracy: true, timeout: 5000 },
-            );
-        } else {
-            console.error('Geolocation not supported.');
-        }
     }, []);
 
     // const fetchSuggestions = useCallback(

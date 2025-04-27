@@ -1,64 +1,109 @@
 import React, { createContext, useState, useEffect, ReactNode, useContext } from 'react';
 import * as Location from 'expo-location';
-
-type Session = {
-    id: string;
-    createdAt: string;
-    // …any other session fields
-};
+import { Session } from '@/types/Session';
+import { initiateSessionForUser } from '@/api/searchProducts';
+import { Platform } from 'react-native';
 
 interface SessionContextData {
-    location: Location.LocationObject | null;
-    session: Session | null;
+    location: { lat: number; lng: number };
+    session: Session | undefined;
     loading: boolean;
     error: string | null;
+    locationDenied: boolean;
+    requestLocationPermission: () => void;
 }
+
+const FALLBACK_COORDS = { lat: 28.4595, lng: 77.0266 }; // Gurugram
 
 const SessionContext = createContext<SessionContextData | undefined>(undefined);
 
 export const SessionProvider = ({ children }: { children: ReactNode }) => {
-    const [location, setLocation] = useState<Location.LocationObject | null>(null);
-    const [session, setSession] = useState<Session | null>(null);
+    const [location, setLocation] = useState<{ lat: number; lng: number }>(FALLBACK_COORDS);
+    const [session, setSession] = useState<Session | undefined>(undefined);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [locationDenied, setLocationDenied] = useState(false);
+
+    // common fallback
+    const fallback = () => {
+        setLocationDenied(true);
+        initiateSessionForUser(FALLBACK_COORDS.lat, FALLBACK_COORDS.lng)
+            .then((sess: Session) => {
+                setSession(sess);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.log('Sess Err', err);
+                setError('Sess Err' + err);
+            });
+    };
+
+    // initial geolocation + session
+    const initGeolocation = async () => {
+        try {
+            if (Platform.OS === 'web') {
+                if (!navigator.geolocation) throw new Error('No geolocation');
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        setLocationDenied(false);
+                        const { latitude, longitude } = pos.coords;
+                        setLocation({ lat: latitude, lng: longitude });
+                        initiateSessionForUser(latitude, longitude)
+                            .then((sess: Session) => {
+                                setSession(sess);
+                                setLoading(false);
+                            })
+                            .catch((err) => {
+                                console.log('Sess Err', err);
+                                setError('Sess Err' + err);
+                            });
+                    },
+                    (_) => fallback(),
+                    { enableHighAccuracy: true, timeout: 10000 },
+                );
+            } else {
+                const { status } = await Location.requestForegroundPermissionsAsync();
+                if (status !== 'granted') throw new Error('Permission denied');
+                const loc = await Location.getCurrentPositionAsync({
+                    accuracy: Location.Accuracy.High,
+                });
+                setLocationDenied(false);
+                setLocation({ lat: loc.coords.latitude, lng: loc.coords.longitude });
+                initiateSessionForUser(loc.coords.latitude, loc.coords.longitude)
+                    .then((sess: Session) => {
+                        setSession(sess);
+                        setLoading(false);
+                    })
+                    .catch((err) => {
+                        console.log('Sess Err', err);
+                        setError('Sess Err' + err);
+                    });
+            }
+        } catch {
+            fallback();
+        }
+    };
 
     useEffect(() => {
-        (async () => {
-            try {
-                // 1) ask permission
-                const { status } = await Location.requestForegroundPermissionsAsync();
-                if (status !== 'granted') {
-                    throw new Error('Location permission denied');
-                }
-
-                // 2) get the current position
-                const loc = await Location.getCurrentPositionAsync();
-                setLocation(loc);
-
-                // 3) create a session on your server
-                const resp = await fetch('https://your.api/sessions', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        latitude: loc.coords.latitude,
-                        longitude: loc.coords.longitude,
-                    }),
-                });
-                if (!resp.ok) {
-                    throw new Error(`Server error: ${resp.status}`);
-                }
-                const sessionData: Session = await resp.json();
-                setSession(sessionData);
-            } catch (err) {
-                setError(String(err));
-            } finally {
-                setLoading(false);
-            }
-        })().catch((_) => {});
+        void initGeolocation();
     }, []);
 
+    // exposed to let the user retry
+    const requestLocationPermission = () => {
+        setLoading(true);
+        void initGeolocation();
+    };
+
     return (
-        <SessionContext.Provider value={{ location, session, loading, error }}>
+        <SessionContext.Provider
+            value={{
+                location,
+                session,
+                loading,
+                error,
+                locationDenied,
+                requestLocationPermission,
+            }}>
             {children}
         </SessionContext.Provider>
     );
