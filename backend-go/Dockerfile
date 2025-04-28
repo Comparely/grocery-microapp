@@ -10,6 +10,10 @@ RUN go mod download
 COPY . .
 RUN go build -o server .
 
+FROM chromedp/headless-shell:latest
+RUN apt-get update; apt install dumb-init -y
+ENTRYPOINT ["dumb-init", "--"]
+
 # Expose the port where Gin listens
 EXPOSE 4500
 

@@ -450,7 +450,7 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 	allocCtx, cancelAlloc := chromedp.NewExecAllocator(
 		context.Background(),
 		chromedp.UserDataDir(absProf),
-		chromedp.Flag("headless", false),
+		chromedp.Flag("headless", true),
 		chromedp.Flag("disable-gpu", true),
 		chromedp.Flag("no-sandbox", true),
 	)
