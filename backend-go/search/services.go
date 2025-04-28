@@ -284,10 +284,6 @@ func mapZepto(data map[string]interface{}) []Product {
 				},
 			},
 		}
-		if strings.Contains(name, "Amul Gold") {
-			log.Printf("\nMRP: ", mrp)
-			log.Printf("Variant data: ", variantData)
-		}
 		products = append(products, prod)
 	}
 	return products
