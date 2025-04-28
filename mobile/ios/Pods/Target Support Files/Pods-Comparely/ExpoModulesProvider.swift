@@ -8,8 +8,10 @@
 import ExpoModulesCore
 import Expo
 import ExpoAsset
+import EXAV
 import ExpoBlur
 import EXConstants
+import ExpoCrypto
 import ExpoFileSystem
 import ExpoFont
 import ExpoHaptics
@@ -28,8 +30,10 @@ public class ExpoModulesProvider: ModulesProvider {
     return [
       ExpoFetchModule.self,
       AssetModule.self,
+      VideoViewModule.self,
       BlurViewModule.self,
       ConstantsModule.self,
+      CryptoModule.self,
       FileSystemModule.self,
       FileSystemNextModule.self,
       FontLoaderModule.self,
