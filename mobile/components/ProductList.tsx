@@ -31,7 +31,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
     if (products.length === 0) {
         return (
             <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Search for products to see results</Text>
+                <Text style={styles.emptyText}>{'Search for products to see results'}</Text>
             </View>
         );
     }

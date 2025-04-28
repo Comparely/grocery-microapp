@@ -57,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
         <View style={styles.container}>
             <View style={styles.locationContainer}>
                 <Ionicons name="location" size={24} color="#cbd402" />
-                <Text style={styles.locationText}>Address</Text>
+                <Text style={styles.locationText}>{'Address'}</Text>
             </View>
 
             <Text style={styles.addressText}>
@@ -72,7 +72,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                             { backgroundColor: findBgColor(String(findLeastTimeStore()[1])) },
                         ]}>
                         <Ionicons name="flash" size={18} color="#000000" />
-                        <Text style={styles.timeText}>{findLeastTimeStore()[0]} mins</Text>
+                        <Text style={styles.timeText}>{findLeastTimeStore()[0] + ' mins'}</Text>
                         <View style={styles.blinkitBadge}>
                             {findLeastTimeStore()[1] === 'blinkit' && (
                                 <Image

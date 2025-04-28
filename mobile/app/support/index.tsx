@@ -39,25 +39,25 @@ export default function SupportScreen() {
     return (
         <>
             <Head>
-                <title>Support - Comparely</title>
+                <title>{'Support - Comparely'}</title>
             </Head>
             <View style={styles.container}>
                 <Header session={undefined} />
                 <View style={styles.mainContainer}>
-                    <Text style={styles.title}>Support</Text>
+                    <Text style={styles.title}>{'Support'}</Text>
 
-                    <Text style={styles.body}>Need help? We're here for you!</Text>
+                    <Text style={styles.body}>{"Need help? We're here for you!"}</Text>
 
                     <TouchableOpacity style={styles.button} onPress={handleEmail}>
-                        <Text style={styles.buttonText}>Email Support</Text>
+                        <Text style={styles.buttonText}>{'Email Support'}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.button} onPress={handleWhatsappRedirect}>
-                        <Text style={styles.buttonText}>WhatsApp Support</Text>
+                        <Text style={styles.buttonText}>{'WhatsApp Support'}</Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity style={styles.button} onPress={handleBackToHome}>
-                        <Text style={styles.buttonText}>Back to home</Text>
+                        <Text style={styles.buttonText}>{'Back to home'}</Text>
                     </TouchableOpacity>
                 </View>
             </View>

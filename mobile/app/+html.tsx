@@ -38,7 +38,9 @@ export default function Root({ children }: PropsWithChildren) {
                     content="width=device-width, initial-scale=1, shrink-to-fit=no"
                 />
 
-                <title>Comparely - Compare Grocery Prices Across Zepto, Blinkit, Instamart</title>
+                <title>
+                    {'Comparely - Compare Grocery Prices Across Zepto, Blinkit, Instamart'}
+                </title>
                 <meta
                     name="description"
                     content="Compare grocery prices across Blinkit, Instamart and Zepto with Comparely. Find the best deals and save money on every order."

@@ -127,15 +127,17 @@ const HomeScreen = () => {
             <View style={styles.deniedContainer}>
                 <Ionicons name="location-outline" size={50} color="#fff" />
                 <Text style={styles.deniedText}>
-                    Comparely needs access to your location to work properly.
+                    {'Comparely needs access to your location to work properly.'}
                 </Text>
                 <TouchableOpacity style={styles.retryButton} onPress={requestLocationPermission}>
-                    <Text style={styles.retryButtonText}>Grant Permission</Text>
+                    <Text style={styles.retryButtonText}>{'Grant Permission'}</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.retryButton, styles.secondaryButton]}
                     onPress={requestLocationPermission}>
-                    <Text style={styles.secondaryButtonText}>Continue with default location</Text>
+                    <Text style={styles.secondaryButtonText}>
+                        {'Continue with default location'}
+                    </Text>
                 </TouchableOpacity>
             </View>
         );
@@ -152,7 +154,7 @@ const HomeScreen = () => {
                     <PriceSection session={session} products={featuredProducts} />
                 ) : (
                     <View style={styles.emptySection}>
-                        <Text style={styles.emptyText}>No featured products available.</Text>
+                        <Text style={styles.emptyText}>{'No featured products available.'}</Text>
                     </View>
                 )}
                 {/* {categories.length > 0 ? (
@@ -165,9 +167,9 @@ const HomeScreen = () => {
 
                 {isWeb && (
                     <View style={styles.waitlistContainer}>
-                        <Text style={styles.waitlistHeader}>We're Launching Soon!</Text>
+                        <Text style={styles.waitlistHeader}>{"We're Launching Soon!"}</Text>
                         <Text style={styles.waitlistSubText}>
-                            Enter your email below to join our waitlist and get early access.
+                            {'Enter your email below to join our waitlist and get early access.'}
                         </Text>
                         <TextInput
                             style={styles.input}
@@ -181,7 +183,7 @@ const HomeScreen = () => {
                         <TouchableOpacity
                             style={styles.waitlistSubmitButton}
                             onPress={handleWaitlistSubmit}>
-                            <Text style={styles.waitlistSubmitButtonText}>Submit</Text>
+                            <Text style={styles.waitlistSubmitButtonText}>{'Submit'}</Text>
                         </TouchableOpacity>
 
                         {/* <Text style={styles.appComingSoonText}>
@@ -203,16 +205,17 @@ const HomeScreen = () => {
 
                 {isWeb && false && (
                     <View style={styles.appComingSoonContainer}>
-                        <Text style={styles.appComingSoonHeader}>App Coming Soon</Text>
+                        <Text style={styles.appComingSoonHeader}>{'App Coming Soon'}</Text>
 
                         <View style={styles.appComingSoonContent}>
                             <Text style={styles.appComingSoonDescription}>
-                                We're working hard to bring you the complete Comparely experience on
-                                mobile. Stay tuned for our app launch!
+                                {
+                                    "We're working hard to bring you the complete Comparely experience on mobile. Stay tuned for our app launch!"
+                                }
                             </Text>
 
                             <Text style={styles.followSocialsText}>
-                                Till then, follow our socials:
+                                {'Till then, follow our socials:'}
                             </Text>
 
                             <View style={styles.socialsContainer}>

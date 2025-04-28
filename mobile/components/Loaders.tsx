@@ -20,7 +20,7 @@ export const LoadingProgress = () => {
 
     return (
         <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Loading Comparely</Text>
+            <Text style={styles.loadingText}>{'Loading Comparely'}</Text>
             <View style={styles.progressBarBackground}>
                 <Animated.View style={[styles.progressBarFill, { width: widthInterpolated }]} />
             </View>

@@ -7,7 +7,7 @@ const App = () => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#004738" />
             <Head>
-                <title>Search - Comparely</title>
+                <title>{'Search - Comparely'}</title>
             </Head>
             <GroceryComparisonScreen />
         </SafeAreaView>

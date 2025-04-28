@@ -4,17 +4,26 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/chromedp/cdproto/browser"
+	"github.com/chromedp/cdproto/emulation"
+	"github.com/chromedp/cdproto/fetch"
+	"github.com/chromedp/cdproto/network"
+	"github.com/chromedp/chromedp"
 	"github.com/comparely/comparely-grocery-backend/config"
 	"github.com/comparely/comparely-grocery-backend/sessions"
 	"github.com/go-redis/redis/v8"
@@ -232,7 +241,7 @@ func mapZepto(data map[string]interface{}) []Product {
 		brand, _ := productData["brand"].(string)
 		weight, _ := productData["packsize"].(string)
 		mrp, _ := variantData["mrp"].(float64)
-		offerPrice, _ := variantData["offer_price"].(float64)
+		offerPrice, _ := pr["discountedSellingPrice"].(float64)
 		storePrice, _ := variantData["store_price"].(float64)
 		discounted := mrp
 		if offerPrice > 0 {
@@ -274,6 +283,10 @@ func mapZepto(data map[string]interface{}) []Product {
 					Variants: []Variant{variant},
 				},
 			},
+		}
+		if strings.Contains(name, "Amul Gold") {
+			log.Printf("\nMRP: ", mrp)
+			log.Printf("Variant data: ", variantData)
 		}
 		products = append(products, prod)
 	}
@@ -427,6 +440,111 @@ func fetchZeptoProducts(query string, storeId string, deviceID string) (map[stri
 		"layout": aggregatedLayout,
 	}, nil
 }
+func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string]interface{}, error) {
+	prof := filepath.Join("./tmp", uuid.New().String())
+	absProf, err := filepath.Abs(prof)
+	if err != nil {
+		return nil, fmt.Errorf("abs profileDir: %w", err)
+	}
+	if err := os.MkdirAll(absProf, 0700); err != nil {
+		return nil, fmt.Errorf("mkdir profileDir: %w", err)
+	}
+	defer RemoveContents(absProf)
+
+	allocCtx, cancelAlloc := chromedp.NewExecAllocator(
+		context.Background(),
+		chromedp.UserDataDir(absProf),
+		chromedp.Flag("headless", false),
+		chromedp.Flag("disable-gpu", true),
+		chromedp.Flag("no-sandbox", true),
+	)
+	defer cancelAlloc()
+
+	ctxBrowser, cancelBrowser := chromedp.NewContext(allocCtx)
+	defer cancelBrowser()
+
+	ctxRun, cancelRun := context.WithTimeout(ctxBrowser, 16*time.Second)
+	defer cancelRun()
+
+	respCh := make(chan []byte, 1)
+	var requestID network.RequestID
+	chromedp.ListenTarget(ctxBrowser, func(ev interface{}) {
+		switch ev := ev.(type) {
+		case *network.EventResponseReceived:
+			if ev.Type == network.ResourceTypeXHR &&
+				strings.Contains(ev.Response.URL, "/api/v3/search") {
+				log.Printf("Got search \n")
+				requestID = ev.RequestID
+			}
+		case *network.EventLoadingFinished:
+			if ev.RequestID == requestID {
+				log.Printf("Got search finish \n")
+				go func(requestID network.RequestID) {
+					var data []byte
+					if err := chromedp.Run(ctxBrowser, chromedp.ActionFunc(func(ctx1 context.Context) error {
+						var err error
+						data, err = network.GetResponseBody(requestID).Do(ctx1)
+						if err != nil {
+							return err
+						}
+						return nil
+					})); err != nil {
+						log.Printf("could not read response body: %v", data)
+					}
+					if err == nil {
+						select {
+						case respCh <- data:
+						default:
+						}
+					}
+				}(ev.RequestID)
+			}
+
+		}
+	})
+	chromedp.ListenTarget(ctxBrowser, DisableImageLoad(ctxBrowser))
+
+	latF, err := strconv.ParseFloat(lat, 64)
+	if err != nil {
+		return nil, err
+	}
+	lngF, err := strconv.ParseFloat(lng, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	var outBody []byte
+	runErr := chromedp.Run(ctxRun,
+		network.Enable(),
+		fetch.Enable(),
+		browser.GrantPermissions([]browser.PermissionType{browser.PermissionTypeGeolocation}).
+			WithOrigin("https://www.zeptonow.com"),
+		emulation.SetGeolocationOverride().WithAccuracy(100).WithLatitude(latF).WithLongitude(lngF),
+		chromedp.Navigate(fmt.Sprintf("https://www.zeptonow.com/search?query=%s", query)),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			select {
+			case b := <-respCh:
+				outBody = b
+				return nil
+			case <-ctx.Done():
+				return errors.New("timed out waiting for search API response")
+			}
+		}),
+	)
+	if runErr != nil {
+		return nil, runErr
+	}
+
+	var full map[string]interface{}
+	if err := json.Unmarshal(outBody, &full); err != nil {
+		return nil, fmt.Errorf("invalid JSON: %w", err)
+	}
+	var agg []interface{}
+	if layout, ok := full["layout"].([]interface{}); ok {
+		agg = append(agg, layout...)
+	}
+	return map[string]interface{}{"layout": agg}, nil
+}
 
 // -----------------------
 // Merge products from different sources by name, remove duplicate variants.
@@ -462,6 +580,23 @@ func mergeProducts(productArrays [][]Product, appState config.AppState, query st
 	}
 
 	finalArray = applyPendingMappings(finalArray, appState, query)
+
+	unique := make(map[string]Product, len(finalArray))
+	for _, prod := range finalArray {
+		name := prod.Name
+		if existing, ok := unique[name]; ok {
+			if countUniqueSources(prod.Prices) > countUniqueSources(existing.Prices) {
+				unique[name] = prod
+			}
+		} else {
+			unique[name] = prod
+		}
+	}
+
+	finalArray = make([]Product, 0, len(unique))
+	for _, prod := range unique {
+		finalArray = append(finalArray, prod)
+	}
 
 	sort.Slice(finalArray, func(i, j int) bool {
 		return countUniqueSources(finalArray[i].Prices) > countUniqueSources(finalArray[j].Prices)
@@ -539,7 +674,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	// Fetch from Zepto
 	go func() {
 		defer wg.Done()
-		zeptoRaw, err := fetchZeptoProducts(url.QueryEscape(query), zeptoStoreId, deviceID)
+		zeptoRaw, err := fetchZeptoProductsV2(url.QueryEscape(query), zeptoStoreId, deviceID, lat, lng)
 		if err != nil {
 			errZepto = err
 			log.Printf("Zepto fetch failed for query '%s': %v", query, err)
@@ -854,8 +989,18 @@ func applyPendingMappings(
 	for _, m := range pm.Mappings {
 		for i := range products {
 			if products[i].Name == m.Source.Name {
-				products[i] = mergeOneMapping(products[i], m.Match)
-				break
+				match := m.Match
+				matchIdxinProducts := slices.IndexFunc(products, func(p Product) bool {
+					return p.Name == match.Name && slices.ContainsFunc(p.Prices, func(price PriceOption) bool {
+						return price.Source == match.Source
+					})
+				})
+				if matchIdxinProducts != -1 {
+					match.Mrp = products[matchIdxinProducts].Prices[0].Variants[0].DiscountedPrice
+					match.Weight = products[matchIdxinProducts].Prices[0].Variants[0].Weight
+					products[i] = mergeOneMapping(products[i], match)
+					break
+				}
 			}
 		}
 	}

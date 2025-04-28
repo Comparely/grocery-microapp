@@ -19,7 +19,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
             <View style={styles.imageContainer}>
                 {product.isNewPack && (
                     <View style={styles.newPackBadge}>
-                        <Text style={styles.newPackText}>NOW IN NEW PACK</Text>
+                        <Text style={styles.newPackText}>{'NOW IN NEW PACK'}</Text>
                     </View>
                 )}
                 <Image source={{ uri: product.imageUrl }} style={styles.image} />
@@ -35,7 +35,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
                 </View>
 
                 {/* MRP */}
-                <Text style={styles.mrpText}>MRP ₹{product.mrp}</Text>
+                <Text style={styles.mrpText}>{'MRP ₹' + product.mrp}</Text>
 
                 {/* Product Name */}
                 <Text style={styles.nameText} numberOfLines={2}>
@@ -97,7 +97,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
             style={styles.priceOptionContainer}>
             <View style={styles.priceRow}>
                 <View style={styles.priceContainer}>
-                    <Text style={styles.priceText}>₹{priceOption.price}</Text>
+                    <Text style={styles.priceText}>{'₹' + priceOption.price}</Text>
                     <View style={styles.platformBadge}>
                         {priceOption.platform === 'zepto' && (
                             <Image

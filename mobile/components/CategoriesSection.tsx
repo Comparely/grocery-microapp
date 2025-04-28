@@ -31,7 +31,7 @@ const CategoriesSection: React.FC<CategoriesSectionProps> = ({ categories }) => 
     console.log('CategoriesSection received:', categories);
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Popular Categories</Text>
+            <Text style={styles.title}>{'Popular Categories'}</Text>
             <FlatList
                 data={categories}
                 renderItem={({ item }) => <CategoryCard category={item} />}

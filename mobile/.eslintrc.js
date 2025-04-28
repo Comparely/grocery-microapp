@@ -21,8 +21,17 @@ module.exports = {
         '@typescript-eslint/no-unused-vars': 'warn',
         '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/no-unsafe-enum-comparison': 'off',
-        '@typescript-eslint/no-unsafe-assignment': 'off'
+        '@typescript-eslint/no-unsafe-assignment': 'off',
+        'react/jsx-no-literals': ['error', { 'noStrings': true, 'allowedStrings': [] }]
     },
+    "overrides": [
+        {
+            "files": ["*.js","*.jsx","*.tsx"],
+            "rules": {
+                "react/jsx-no-literals": ["error", { "ignoreProps": true, "allowedStrings": [""] }]
+            }
+        }
+    ],
     settings: {
         react: { version: 'detect' },
         'import/resolver': {

@@ -8,7 +8,9 @@ const App = () => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#004738" />
             <Head>
-                <title>Comparely - Compare Grocery Prices Across Zepto, Blinkit, Instamart</title>
+                <title>
+                    {'Comparely - Compare Grocery Prices Across Zepto, Blinkit, Instamart'}
+                </title>
             </Head>
             <HomeScreen />
         </SafeAreaView>
