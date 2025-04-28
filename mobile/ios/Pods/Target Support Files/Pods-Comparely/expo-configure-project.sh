@@ -48,4 +48,4 @@ with_node \
   --target "/Users/yuvraj.singh/comparely-app/grocery-microapp/mobile/ios/Pods/Target Support Files/Pods-Comparely/ExpoModulesProvider.swift" \
   --entitlement "/Users/yuvraj.singh/comparely-app/grocery-microapp/mobile/ios/Comparely/Comparely.entitlements" \
   --platform "apple" \
-  --packages "expo" "expo-asset" "expo-blur" "expo-constants" "expo-file-system" "expo-font" "expo-haptics" "expo-keep-awake" "expo-linking" "expo-location" "expo-router" "expo-splash-screen" "expo-symbols" "expo-system-ui" "expo-web-browser"
+  --packages "expo" "expo-asset" "expo-av" "expo-blur" "expo-constants" "expo-crypto" "expo-file-system" "expo-font" "expo-haptics" "expo-keep-awake" "expo-linking" "expo-location" "expo-router" "expo-splash-screen" "expo-symbols" "expo-system-ui" "expo-web-browser"
