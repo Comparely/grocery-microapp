@@ -1,21 +1,35 @@
-FROM golang:1.24-alpine
+#── Build stage ──────────────────────────────────────────────────────────
+FROM golang:1.24-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependency manifests and download dependencies
+# Install git if you need cgo-free modules; otherwise disable cgo.
+RUN apk add --no-cache git
+
+# Fetch modules
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the source code and build the binary
+# Build a static, cgo-free binary
 COPY . .
-RUN go build -o server .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 
+#── Runtime stage ────────────────────────────────────────────────────────
 FROM chromedp/headless-shell:latest
-RUN apt-get update; apt install dumb-init -y
+
+# Create an app directory and copy the binary in
+WORKDIR /app
+COPY --from=builder /app/server .
+
+# Install dumb-init for proper signal handling
+USER root
+RUN apt-get update && apt-get install -y --no-install-recommends dumb-init \
+ && rm -rf /var/lib/apt/lists/*
+
 ENTRYPOINT ["dumb-init", "--"]
 
-# Expose the port where Gin listens
+# Expose the port your Gin app listens on
 EXPOSE 4500
 
-# Run the server
+# Launch your server
 CMD ["./server"]
