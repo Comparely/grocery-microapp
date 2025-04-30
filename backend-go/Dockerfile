@@ -18,7 +18,11 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server .
 FROM chromedp/headless-shell:latest
 
 # Install dumb-init for proper signal handling
-RUN apt-get update && apt-get install -y --no-install-recommends dumb-init \
+USER root
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      dumb-init \
+      ca-certificates \
  && rm -rf /var/lib/apt/lists/*
 
 ENTRYPOINT ["dumb-init", "--"]
