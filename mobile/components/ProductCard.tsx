@@ -135,15 +135,87 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
 };
 
 const styles = StyleSheet.create({
+    priceOptionContainer: {
+        marginBottom: 7,
+    },
+
+    cardContent: {
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+    },
+
+    priceRow: {
+        flexDirection: 'row',
+        justifyContent: 'flex-start',  
+        alignItems: 'center',
+        marginBottom: 2,  
+    },
+
+    priceContainer: {
+        marginRight: 5, 
+    },
+
+    priceText: {
+        fontSize: width > 768 ? 16 : 14,
+        fontWeight: 'bold',
+        color: '#181b19',
+    },
+
+    platformBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+    },
+
+    platformImage: {
+        width: 42,
+        height: 20,
+        resizeMode: 'contain',
+    },
+
+    platformImageBlinkit: {
+        width: 42,
+        height: 15,
+        resizeMode: 'cover',
+    },
+
+    tagSmall: {
+        backgroundColor: '#fde5b6',
+        borderRadius: 50,
+        paddingHorizontal: 4,
+        paddingVertical: 3,
+        marginLeft: 2,
+    },
+
+    tagTextSmall: {
+        color: '#181b19',
+        fontSize: 9,
+        fontWeight: '500',
+    },
+
+    deliveryContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 2,  
+    },
+
+    deliveryText: {
+        fontSize: 12,
+        color: '#181b19',
+        marginLeft: 8,  
+    },
+
     container: {
-        width: '48%', // Responsive width for grid layout
+        width: '48%', 
         marginBottom: 16,
-        marginHorizontal: 4, // Adds spacing between cards
+        marginHorizontal: 7,
     },
+
     fullWidthContainer: {
-        width: 234, // Fixed width for horizontal scroll scenarios
-        marginRight: 10,
+        width: 234, 
+        marginRight: 15,
     },
+
     imageContainer: {
         backgroundColor: 'white',
         borderRadius: 12,
@@ -154,6 +226,7 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         position: 'relative',
     },
+
     newPackBadge: {
         position: 'absolute',
         top: 0,
@@ -164,23 +237,28 @@ const styles = StyleSheet.create({
         paddingHorizontal: 6,
         paddingVertical: 2,
     },
+
     newPackText: {
         color: 'white',
         fontSize: 8,
         fontWeight: 'bold',
     },
+
     image: {
         width: '80%',
         height: '80%',
         resizeMode: 'contain',
     },
+
     detailsContainer: {
         paddingHorizontal: 4,
     },
+
     tagsContainer: {
         flexDirection: 'row',
         marginBottom: 6,
     },
+
     tag: {
         backgroundColor: '#fde5b6',
         borderRadius: 50,
@@ -188,28 +266,19 @@ const styles = StyleSheet.create({
         paddingVertical: 4,
         marginRight: 8,
     },
-    tagSmall: {
-        backgroundColor: '#fde5b6',
-        borderRadius: 50,
-        paddingHorizontal: 6,
-        paddingVertical: 2,
-        marginLeft: 4,
-    },
+
     tagText: {
         color: '#181b19',
         fontSize: 12,
         fontWeight: '500',
     },
-    tagTextSmall: {
-        color: '#181b19',
-        fontSize: 10,
-        fontWeight: '500',
-    },
+
     mrpText: {
         color: '#9d9d9d',
         fontSize: 12,
         marginBottom: 4,
     },
+
     nameText: {
         color: '#181b19',
         fontSize: width > 768 ? 16 : 14,
@@ -217,42 +286,16 @@ const styles = StyleSheet.create({
         marginBottom: 8,
         lineHeight: 20,
     },
-    priceOptionContainer: {
-        marginBottom: 8,
-    },
-    priceRow: {
+
+    priceOptionsContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        justifyContent: 'space-between', 
     },
-    priceContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+
+    columnContainer: {
+        width: '48%', 
     },
-    priceText: {
-        fontSize: width > 768 ? 16 : 14,
-        fontWeight: 'bold',
-        color: '#181b19',
-        marginRight: 8,
-    },
-    platformBadge: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    platformImage: {
-        width: 32,
-        height: 13,
-        resizeMode: 'contain',
-    },
-    platformImageBlinkit: {
-        width: 32,
-        height: 13,
-        resizeMode: 'cover', // Retained from original PNG version
-    },
-    deliveryContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
+
     deliveryDot: {
         width: 12,
         height: 12,
@@ -262,15 +305,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 4,
     },
+
     deliveryDotInner: {
         width: 3,
         height: 3,
         borderRadius: 1.5,
         backgroundColor: '#ffa000',
-    },
-    deliveryText: {
-        fontSize: 12,
-        color: '#181b19',
     },
 });
 
