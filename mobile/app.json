@@ -10,7 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "in.comparely.app"
+      "bundleIdentifier": "in.comparely.app",
+      "associatedDomains": [
+        "applinks:app.comparely.co.in",
+        "activitycontinuation:app.comparely.co.in",
+        "webcredentials:app.comparely.co.in"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -38,7 +43,12 @@
           "locationAlwaysAndWhenInUsePermission": "Allow Comparely to use your location."
         }
       ],
-      "expo-router",
+      [
+        "expo-router",
+        {
+          "headOrigin": "https://app.comparely.co.in"
+        }
+      ],
       [
         "expo-splash-screen",
         {

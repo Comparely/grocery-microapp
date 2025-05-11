@@ -7,6 +7,7 @@ const App = () => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#004738" />
             <Head>
+                <meta property='expo:handoff' content='true' />
                 <title>{'Search - Comparely'}</title>
             </Head>
             <GroceryComparisonScreen />
