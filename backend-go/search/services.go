@@ -455,17 +455,18 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 		chromedp.Flag("no-sandbox", true),
 		chromedp.Flag("ignore-certificate-errors", true),
 		chromedp.Flag("allow-insecure-localhost", true),
+		chromedp.ProxyServer("https://customer-comparely_HRKie-cc-in-sessid-0070112169-sesstime-10:NVhSbo23A=3KR@pr.oxylabs.io:7777"),
 	)
 	defer cancelAlloc()
 
 	ctxBrowser, cancelBrowser := chromedp.NewContext(allocCtx)
 	defer cancelBrowser()
 
-	ctxRun, cancelRun := context.WithTimeout(ctxBrowser, 16*time.Second)
+	ctxRun, cancelRun := context.WithTimeout(ctxBrowser, 6*time.Second)
 	defer cancelRun()
 
 	respCh := make(chan []byte, 1)
-	//var requestID network.RequestID
+	var requestID network.RequestID
 	chromedp.ListenTarget(ctxBrowser, func(ev interface{}) {
 		switch ev := ev.(type) {
 		case *network.EventResponseReceived:
@@ -473,10 +474,10 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 			if ev.Type == network.ResourceTypeXHR &&
 				strings.Contains(ev.Response.URL, "/api/v3/search") {
 				log.Printf("Got search \n")
-				//requestID = ev.RequestID
+				requestID = ev.RequestID
 			}
 		case *network.EventLoadingFinished:
-			if true {
+			if ev.RequestID == requestID {
 				log.Printf("Got search finish \n")
 				go func(requestID network.RequestID) {
 					var data []byte
@@ -491,12 +492,12 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 					})); err != nil {
 						log.Printf("could not read response body: %v", data)
 					}
-					// if err == nil {
-					// 	select {
-					// 	case respCh <- data:
-					// 	default:
-					// 	}
-					// }
+					if err == nil {
+						select {
+						case respCh <- data:
+						default:
+						}
+					}
 				}(ev.RequestID)
 			}
 
@@ -681,13 +682,13 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	// Fetch from Zepto
 	go func() {
 		defer wg.Done()
-		// zeptoRaw, err := fetchZeptoProductsV2(url.QueryEscape(query), zeptoStoreId, deviceID, lat, lng)
-		// if err != nil {
-		// 	errZepto = err
-		// 	log.Printf("Zepto fetch failed for query '%s': %v", query, err)
-		// 	return
-		// }
-		// zeptoProducts = mapZepto(zeptoRaw)
+		zeptoRaw, err := fetchZeptoProductsV2(url.QueryEscape(query), zeptoStoreId, deviceID, lat, lng)
+		if err != nil {
+			errZepto = err
+			log.Printf("Zepto fetch failed for query '%s': %v", query, err)
+			return
+		}
+		zeptoProducts = mapZepto(zeptoRaw)
 	}()
 
 	wg.Wait()
