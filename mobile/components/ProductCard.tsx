@@ -20,11 +20,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
   const zeptoAndBlinkitOptions = product.priceOptions.filter(
     (option) => option.platform === 'zepto' || option.platform === 'blinkit'
   );
-  const instamartOptions = product.priceOptions.filter(
-    (option) => option.platform === 'instamart'
+  const instamartAndBigbasketOptions = product.priceOptions.filter(
+    (option) => option.platform === 'instamart' || option.platform === 'bigbasket'
   );
 
-  const sortedPriceOptions = [...zeptoAndBlinkitOptions, ...instamartOptions].sort(
+  const sortedPriceOptions = [...zeptoAndBlinkitOptions, ...instamartAndBigbasketOptions].sort(
     (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)
   );
 
@@ -107,6 +107,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
       zepto: session.marketplaceAttributes?.zeptoStoreAttributes?.eta || 'N/A',
       blinkit: session.marketplaceAttributes?.blinkitStoreAttributes?.eta || '15 mins',
       instamart: session.marketplaceAttributes?.instamartStoreAttributes?.eta || '10 mins',
+      bigbasket: session.marketplaceAttributes?.bigbasketStoreAttributes?.eta || '10 mins',
     }[priceOption.platform ?? ''] || 'N/A';
 
   const displayWeight = priceOption.weight || productWeight || 'N/A';
@@ -135,6 +136,12 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
           {priceOption.platform === 'instamart' && (
             <Image
               source={require('@/assets/images/swiggy_instamart.webp')}
+              style={styles.platformImage}
+            />
+          )}
+          {priceOption.platform === 'bigbasket' && (
+            <Image
+              source={require('@/assets/images/BigBasket.webp')}
               style={styles.platformImage}
             />
           )}

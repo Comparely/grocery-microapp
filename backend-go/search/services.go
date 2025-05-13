@@ -500,12 +500,18 @@ func fetchBigBasketProducts(query string, lat string, lng string) (map[string]an
 		"content-type":    "application/json",
 	}
 
+	log.Printf(fmt.Sprintf("_bb_vid=NzIyNDQ1Mjc5NzE1ODM2OTEw; _is_tobacco_enabled=1; _bb_lat_long=%s;", latLngB64))
+
 	for hasMorePages && count < 5 {
 		url := fmt.Sprintf("%s?type=ps&slug=%s&page=%d",
 			baseUrl, query, pageNumber)
 		res, err := fetchJSON(url, "GET", headers, "")
 		if err != nil {
 			return nil, err
+		}
+
+		if _, hasErrors := res["errors"]; hasErrors {
+			return nil, fmt.Errorf("unservicable area")
 		}
 		if data, ok := res["tabs"].([]any)[0].(map[string]interface{}); ok {
 			if prodInfo, ok := data["product_info"].(map[string]interface{}); ok {
