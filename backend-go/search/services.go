@@ -3,6 +3,7 @@ package search
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -289,11 +290,100 @@ func mapZepto(data map[string]interface{}) []Product {
 	return products
 }
 
-// -----------------------
-// Helper: fetchJSON makes an HTTP request and parses the JSON response.
+func mapBigBasket(data map[string]any) []Product {
+	rawProds, ok := data["data"].(map[string]any)["products"].([]any)
+	if !ok {
+		return nil
+	}
+	log.Printf("Bigbasket prods %d", len(rawProds))
 
-// -----------------------
-// Pagination functions
+	mapped := make([]Product, 0, len(rawProds))
+	for _, item := range rawProds {
+		raw, ok := item.(map[string]any)
+		if !ok {
+			continue
+		}
+		if p, err := mapBBRawProduct(raw); err == nil {
+			mapped = append(mapped, p)
+		}
+	}
+	return mapped
+}
+
+func mapBBRawProduct(raw map[string]interface{}) (Product, error) {
+	id, _ := raw["id"].(string)
+
+	name, _ := raw["desc"].(string)
+
+	brand := ""
+	if b, ok := raw["brand"].(map[string]interface{}); ok {
+		brand, _ = b["name"].(string)
+	}
+
+	weight, _ := raw["w"].(string)
+	if weight == "" {
+		mag := fmt.Sprint(raw["magnitude"])
+		unit := fmt.Sprint(raw["unit"])
+		weight = mag + unit
+	}
+
+	imageURL := ""
+	if imgs, ok := raw["images"].([]interface{}); ok && len(imgs) > 0 {
+		if first, ok := imgs[0].(map[string]interface{}); ok {
+			imageURL, _ = first["l"].(string)
+		}
+	}
+
+	mrp := 0.0
+	if pricing, ok := raw["pricing"].(map[string]interface{}); ok {
+		if discount, ok := pricing["discount"].(map[string]interface{}); ok {
+			if mrpStr, ok := discount["mrp"].(string); ok && mrpStr != "" {
+				if f, err := strconv.ParseFloat(mrpStr, 64); err == nil {
+					mrp = f
+				}
+			}
+		}
+	}
+
+	prices := []PriceOption{}
+	if pricing, ok := raw["pricing"].(map[string]interface{}); ok {
+		if discount, ok := pricing["discount"].(map[string]interface{}); ok {
+			if prim, ok := discount["prim_price"].(map[string]interface{}); ok {
+				sp := 0.0
+				if spStr, ok := prim["sp"].(string); ok && spStr != "" {
+					if f, err := strconv.ParseFloat(spStr, 64); err == nil {
+						sp = f
+					}
+				}
+				deeplink, _ := raw["absolute_url"].(string)
+				deeplink = fmt.Sprintf("https://www.bigbasket.com/%s", deeplink)
+
+				variant := Variant{
+					OriginalPrice:   mrp,
+					DiscountedPrice: sp,
+					Deeplink:        deeplink,
+					ImageURL:        imageURL,
+					Weight:          weight,
+				}
+
+				prices = append(prices, PriceOption{
+					Source:   "bigbasket",
+					Variants: []Variant{variant},
+				})
+			}
+		}
+	}
+
+	return Product{
+		ID:       id,
+		Name:     name,
+		Brand:    brand,
+		Weight:   weight,
+		MRP:      mrp,
+		ImageURL: imageURL,
+		Prices:   prices,
+	}, nil
+}
 
 // fetchBlinkitProducts fetches up to 5 pages from Blinkit.
 func fetchBlinkitProducts(query string, lat string, lng string) ([]interface{}, error) {
@@ -393,6 +483,47 @@ func fetchInstamartProducts(query string, storeId string) (map[string]interface{
 	}, nil
 }
 
+func fetchBigBasketProducts(query string, lat string, lng string) (map[string]any, error) {
+	baseUrl := "https://bbnow.bigbasket.com/listing-svc/v2/products"
+	pageNumber := 1
+	aggregatedProducts := make([]any, 0)
+	count := 0
+	hasMorePages := true
+	latLngB64 := base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s|%s", lat, lng)))
+	headers := map[string]string{
+		"accept":          "*/*",
+		"accept-language": "en-US,en;q=0.9",
+		"cache-control":   "no-cache",
+		"priority":        "u=1, i",
+		"Cookie":          fmt.Sprintf("_bb_vid=NzIyNDQ1Mjc5NzE1ODM2OTEw; _is_tobacco_enabled=1; _bb_lat_long=%s;", latLngB64),
+		"user-agent":      "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
+		"content-type":    "application/json",
+	}
+
+	for hasMorePages && count < 5 {
+		url := fmt.Sprintf("%s?type=ps&slug=%s&page=%d",
+			baseUrl, query, pageNumber)
+		res, err := fetchJSON(url, "GET", headers, "")
+		if err != nil {
+			return nil, err
+		}
+		if data, ok := res["tabs"].([]any)[0].(map[string]interface{}); ok {
+			if prodInfo, ok := data["product_info"].(map[string]interface{}); ok {
+				if products, ok := prodInfo["products"].([]any); ok {
+					aggregatedProducts = append(aggregatedProducts, products...)
+				}
+			}
+		}
+		hasMorePages = false
+	}
+	log.Printf("aggregated_prods %d", len(aggregatedProducts))
+	return map[string]interface{}{
+		"data": map[string]interface{}{
+			"products": aggregatedProducts,
+		},
+	}, nil
+}
+
 // fetchZeptoProducts fetches up to 5 pages from Zepto.
 func fetchZeptoProducts(query string, storeId string, deviceID string) (map[string]interface{}, error) {
 	zeptoUrl := "https://api.zeptonow.com/api/v3/search"
@@ -470,10 +601,10 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 	chromedp.ListenTarget(ctxBrowser, func(ev interface{}) {
 		switch ev := ev.(type) {
 		case *network.EventResponseReceived:
-			log.Printf("\nGot network: %s", ev.Response.URL)
+			//log.Printf("\nGot network: %s", ev.Response.URL)
 			if ev.Type == network.ResourceTypeXHR &&
 				strings.Contains(ev.Response.URL, "/api/v3/search") {
-				log.Printf("Got search \n")
+				//log.Printf("Got search \n")
 				requestID = ev.RequestID
 			}
 		case *network.EventLoadingFinished:
@@ -487,7 +618,7 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 						if err != nil {
 							return err
 						}
-						log.Printf("Got resp", data)
+						//log.Printf("Got resp", data)
 						return nil
 					})); err != nil {
 						log.Printf("could not read response body: %v", data)
@@ -618,9 +749,11 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 		blinkitProducts   []Product
 		instamartProducts []Product
 		zeptoProducts     []Product
+		bigbasketProducts []Product
 		errBlinkit        error
 		errInstamart      error
 		errZepto          error
+		errBigbasket      error
 	)
 	var lat, lng string
 	var zeptoStoreId string
@@ -653,7 +786,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 
 	// Use WaitGroup to handle concurrent fetches
 	var wg sync.WaitGroup
-	wg.Add(3)
+	wg.Add(4)
 
 	// Fetch from Blinkit
 	go func() {
@@ -691,10 +824,22 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 		zeptoProducts = mapZepto(zeptoRaw)
 	}()
 
+	// Fetch from BigBasket
+	go func() {
+		defer wg.Done()
+		bigbasketRaw, err := fetchBigBasketProducts(url.QueryEscape(query), lat, lng)
+		if err != nil {
+			errBigbasket = err
+			log.Printf("BigBasket fetch failed for query '%s': %v", query, err)
+			return
+		}
+		bigbasketProducts = mapBigBasket(bigbasketRaw)
+	}()
+
 	wg.Wait()
 
 	// Log the number of products fetched from each source
-	log.Printf("blinkit: %d, instamart: %d, zepto: %d", len(blinkitProducts), len(instamartProducts), len(zeptoProducts))
+	log.Printf("blinkit: %d, instamart: %d, zepto: %d, bigbasket: %d", len(blinkitProducts), len(instamartProducts), len(zeptoProducts), len(bigbasketProducts))
 
 	// Check if all sources failed
 	if errBlinkit != nil && errInstamart != nil && errZepto != nil {
@@ -711,6 +856,9 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	}
 	if errZepto == nil {
 		availableProducts = append(availableProducts, zeptoProducts)
+	}
+	if errBigbasket == nil {
+		availableProducts = append(availableProducts, bigbasketProducts)
 	}
 
 	// If no products are available, return an empty result with a warning
