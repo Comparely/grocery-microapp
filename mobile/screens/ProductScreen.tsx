@@ -40,6 +40,8 @@ export default function ProductDetailScreen() {
       case 'swiggy':
       case 'instamart':
         return require('@/assets/images/instamart1.png');
+      case 'bigbasket':
+        return require('@/assets/images/bbnow.webp');
       default:
         return null;
     }
