@@ -1,0 +1,21 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["<APPLE_TEAM_ID>.<IOS_BUNDLE_ID>"],
+        "components": [
+          {
+            "/": "*",
+            "comment": "Matches all routes"
+          }
+        ]
+      }
+    ]
+  },
+  "activitycontinuation": {
+    "apps": ["<APPLE_TEAM_ID>.<IOS_BUNDLE_ID>"]
+  },
+  "webcredentials": {
+    "apps": ["<APPLE_TEAM_ID>.<IOS_BUNDLE_ID>"]
+  }
+}

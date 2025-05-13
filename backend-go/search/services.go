@@ -450,19 +450,19 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 	allocCtx, cancelAlloc := chromedp.NewExecAllocator(
 		context.Background(),
 		chromedp.UserDataDir(absProf),
-		chromedp.Flag("headless", true),
+		chromedp.ProxyServer("https://in-pr.oxylabs.io:20001"),
+		chromedp.Flag("headless", false),
 		chromedp.Flag("disable-gpu", true),
 		chromedp.Flag("no-sandbox", true),
 		chromedp.Flag("ignore-certificate-errors", true),
 		chromedp.Flag("allow-insecure-localhost", true),
-		chromedp.ProxyServer("https://customer-comparely_HRKie-cc-in-sessid-0070112169-sesstime-10:NVhSbo23A=3KR@pr.oxylabs.io:7777"),
 	)
 	defer cancelAlloc()
 
 	ctxBrowser, cancelBrowser := chromedp.NewContext(allocCtx)
 	defer cancelBrowser()
 
-	ctxRun, cancelRun := context.WithTimeout(ctxBrowser, 6*time.Second)
+	ctxRun, cancelRun := context.WithTimeout(ctxBrowser, 60*time.Second)
 	defer cancelRun()
 
 	respCh := make(chan []byte, 1)
@@ -520,9 +520,9 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 		network.Enable(),
 		fetch.Enable(),
 		browser.GrantPermissions([]browser.PermissionType{browser.PermissionTypeGeolocation}).
-			WithOrigin("https://www.zeptonow.com"),
+			WithOrigin("https://www.zepto.com"),
 		emulation.SetGeolocationOverride().WithAccuracy(100).WithLatitude(latF).WithLongitude(lngF),
-		chromedp.Navigate(fmt.Sprintf("https://www.zeptonow.com/search?query=%s", query)),
+		chromedp.Navigate(fmt.Sprintf("https://www.zepto.com/search?query=%s", query)),
 		chromedp.Sleep(2*time.Second), // wait for JS
 		chromedp.FullScreenshot(&buf, 90),
 		chromedp.ActionFunc(func(ctx context.Context) error {
