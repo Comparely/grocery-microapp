@@ -141,7 +141,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
           )}
           {priceOption.platform === 'bigbasket' && (
             <Image
-              source={require('@/assets/images/BigBasket.webp')}
+              source={require('@/assets/images/bbnow.webp')}
               style={styles.platformImage}
             />
           )}
