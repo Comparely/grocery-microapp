@@ -36,6 +36,9 @@ func fetchZeptoProductsV2(query, lat, lng string) (map[string]interface{}, error
 	}
 	defer RemoveContents(absProf)
 
+	edgeUA := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+		"(KHTML, like Gecko) Chrome/115.0.5790.102 Safari/537.36 Edg/115.0.5790.102"
+
 	allocCtx, cancelAlloc := chromedp.NewExecAllocator(
 		context.Background(),
 		chromedp.UserDataDir(absProf),
@@ -44,6 +47,7 @@ func fetchZeptoProductsV2(query, lat, lng string) (map[string]interface{}, error
 		chromedp.Flag("no-sandbox", true),
 		chromedp.Flag("ignore-certificate-errors", true),
 		chromedp.Flag("allow-insecure-localhost", true),
+		chromedp.Flag("user-agent", edgeUA),
 	)
 	defer cancelAlloc()
 
@@ -199,6 +203,11 @@ func main() {
 
 		// Return the fetched layout as JSON
 		c.JSON(http.StatusOK, data)
+	})
+
+	router.GET("/health", func(c *gin.Context) {
+		// simple OK response for ALB health checks
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
 
 	router.Run(fmt.Sprintf(":%d", PORT))

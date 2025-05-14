@@ -1,0 +1,90 @@
+PS D:\Comparely\express-test-server\zepto-search> 
+PS D:\Comparely\express-test-server\zepto-search> 
+PS D:\Comparely\express-test-server\zepto-search>
+PS D:\Comparely\express-test-server\zepto-search>
+PS D:\Comparely\express-test-server\zepto-search> aws ec2 describe-vpcs --region ap-south-1 --filters Name=is-default,Values=true --query "Vpcs[0].VpcId" --output text                                                                                         
+vpc-05b78964ebb1fabb4
+                                           
+PS D:\Comparely\express-test-server\zepto-search> aws ec2 describe-subnets --region ap-south-1 --filters Name=vpc-id,Values=vpc-05b78964ebb1fabb4 --query "Subnets[].{ID:SubnetId,AZ:AvailabilityZone}" --output table                                                                              
+---------------------------------------------
+|              DescribeSubnets              |                             
++--------------+----------------------------+
+|      AZ      |            ID              |
++--------------+----------------------------+
+|  ap-south-1b |  subnet-05b43fae39d80204d  |
+|  ap-south-1c |  subnet-0712c58b4504f0615  |
+|  ap-south-1a |  subnet-0f0c8592cb0fa62af  |
++--------------+----------------------------+
+
+PS D:\Comparely\express-test-server\zepto-search> aws ec2 describe-security-groups --region ap-south-1 --filters Name=vpc-id,Values=vpc-05b78964ebb1fabb4 --query "SecurityGroups[].{Name:GroupName,ID:GroupId}" --output table                                                                              
+---------------------------------------------
+|          DescribeSecurityGroups           |                              
++-----------------------+-------------------+
+|          ID           |       Name        |
++-----------------------+-------------------+
+|  sg-0905b4e96a26c98b5 |  launch-wizard-1  |
+|  sg-0f58194abda8befd6 |  default          | - we use this
++-----------------------+-------------------+
+
+PS D:\Comparely\express-test-server\zepto-search> aws ec2 authorize-security-group-ingress --region ap-south-1 --group-id sg-0f58194abda8befd6 --protocol tcp --port 80 --cidr 0.0.0.0/0    
+
+
+{
+    "LoadBalancers": [
+        {
+            "LoadBalancerArn": "arn:aws:elasticloadbalancing:ap-south-1:509399599659:loadbalancer/app/zepto-alb/1bea1a1c37deb771",
+            "DNSName": "zepto-alb-1456687545.ap-south-1.elb.amazonaws.com",
+            "CanonicalHostedZoneId": "ZP97RAFLXTNZK",
+            "CreatedTime": "2025-05-14T12:17:20.410000+00:00",
+            "LoadBalancerName": "zepto-alb",
+            "Scheme": "internet-facing",
+            "VpcId": "vpc-05b78964ebb1fabb4",
+            "State": {
+                "Code": "provisioning"
+            },
+            "Type": "application",
+            "AvailabilityZones": [
+                {
+                    "ZoneName": "ap-south-1b",
+                    "SubnetId": "subnet-05b43fae39d80204d",
+                    "LoadBalancerAddresses": []
+                },
+                {
+                    "ZoneName": "ap-south-1c",
+                    "SubnetId": "subnet-0712c58b4504f0615",
+                    "LoadBalancerAddresses": []
+                }
+            ],
+            "SecurityGroups": [
+                "sg-0f58194abda8befd6"
+            ],
+            "IpAddressType": "ipv4"
+        }
+    ]
+}
+
+{                                                                                                                                                          
+    "TargetGroups": [                                                                                                                         
+        {                                                                                                                         
+            "TargetGroupArn": "arn:aws:elasticloadbalancing:ap-south-1:509399599659:targetgroup/zepto-tg/8e88bc8377317fe9",
+            "TargetGroupName": "zepto-tg",                                        
+            "Protocol": "HTTP",                      
+            "Port": 5500,
+            "VpcId": "vpc-05b78964ebb1fabb4",
+            "HealthCheckProtocol": "HTTP",
+            "HealthCheckPort": "traffic-port",
+            "HealthCheckEnabled": true,
+            "HealthCheckIntervalSeconds": 30,
+            "HealthCheckTimeoutSeconds": 5,
+            "HealthyThresholdCount": 5,
+            "UnhealthyThresholdCount": 2,
+            "HealthCheckPath": "/health",
+            "Matcher": {
+                "HttpCode": "200"
+            },
+            "TargetType": "ip",
+            "ProtocolVersion": "HTTP1",
+            "IpAddressType": "ipv4"
+        }
+    ]
+}

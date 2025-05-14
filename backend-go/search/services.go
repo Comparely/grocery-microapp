@@ -583,6 +583,8 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 		return nil, fmt.Errorf("mkdir profileDir: %w", err)
 	}
 	defer RemoveContents(absProf)
+	edgeUA := "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+		"(KHTML, like Gecko) Chrome/115.0.5790.102 Safari/537.36 Edg/115.0.5790.102"
 
 	allocCtx, cancelAlloc := chromedp.NewExecAllocator(
 		context.Background(),
@@ -592,7 +594,7 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 		chromedp.Flag("no-sandbox", true),
 		chromedp.Flag("ignore-certificate-errors", true),
 		chromedp.Flag("allow-insecure-localhost", true),
-		chromedp.ProxyServer("https://customer-comparely_HRKie-cc-in-sessid-0070112169-sesstime-10:NVhSbo23A=3KR@pr.oxylabs.io:7777"),
+		chromedp.Flag("user-agent", edgeUA),
 	)
 	defer cancelAlloc()
 

@@ -1,0 +1,24 @@
+{
+  "family": "zepto-task",
+  "requiresCompatibilities": ["FARGATE"],
+  "networkMode": "awsvpc",
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::509399599659:role/ecsTaskExecutionRole",
+  "containerDefinitions": [{
+    "name": "zepto-svc",
+    "image": "509399599659.dkr.ecr.ap-south-1.amazonaws.com/zepto-scraper:latest",
+    "portMappings": [{ "containerPort": 5500, "protocol": "tcp" }],
+    "environment": [
+      { "name": "CHROME_PATH", "value": "/opt/chrome/chrome" }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/zepto-svc",
+        "awslogs-region": "ap-south-1",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  }]
+}
