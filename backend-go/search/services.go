@@ -693,6 +693,28 @@ func fetchZeptoProductsV2(query, storeID, deviceID, lat, lng string) (map[string
 	return map[string]interface{}{"layout": agg}, nil
 }
 
+func fetchZeptoProductsV3(query string, lat, lng string) (map[string]interface{}, error) {
+	zeptoUrl := "http://zepto-alb-1456687545.ap-south-1.elb.amazonaws.com/zepto"
+	headers := map[string]string{
+		"accept":       "application/json, text/plain, */*",
+		"content-type": "application/json",
+		"Cookie":       "latitude=some; longitude=some; __SW=9QmfCnSQcvpkyIwI-6umQ18QRNdGE9sc; _cid=MTA2ODg4NDU5; _device_id=846a4f24-003f-b080-2d71-53faeaf6141e; _session_tid=585d1f947945ddfe9d2fa8633361264a1c2ace308d38f5be3ba5e3e958dfc362d690f000d6276eb14a9c155d9492dfc42cb984676e49b219e0dfcaf1f14d8e69253138148da9e3a46a701912480bdcd83341b2e4375a2d1abe05b803f2f574976406492fce2c426e049b76ac823c35f5; _swuid=846a4f24-003f-b080-2d71-53faeaf6141e; ally-on=false; bottomOffset=0; deviceId=s%3A7d44adb5-c252-405f-a395-68222759bb78.oVmO1zqM2i5%2BNBTrHeUaXoV91npFCHkqtq5BmQ0QxaE; genieTrackOn=false; isNative=false; openIMHP=false; platform=web; sid=s%3Aj833e338-b6d7-4c9a-bc97-b41c064f873d.JCSEPujJwmNk7qRempcIYBmANtzySDxF%2F9BZm9iVcpU; statusBarHeight=0; strId=; subplatform=mweb; tid=s%3Ae3e4fbaf-5aa2-4d09-9c06-f031fc2d044c.cJNiPnkRnuMxVeW6j%2BhVZOxJwYPizk6n%2FwaBtNrmzUE; versionCode=1200",
+	}
+	bodyFunc := func() string {
+		b, _ := json.Marshal(map[string]interface{}{
+			"query": query,
+			"lat":   lat,
+			"lng":   lng,
+		})
+		return string(b)
+	}
+	res, err := fetchJSON(zeptoUrl, "POST", headers, bodyFunc())
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
 // -----------------------
 // Merge products from different sources by name, remove duplicate variants.
 func mergeProducts(productArrays [][]Product, appState config.AppState, query string) []Product {
@@ -823,7 +845,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	// Fetch from Zepto
 	go func() {
 		defer wg.Done()
-		zeptoRaw, err := fetchZeptoProductsV2(url.QueryEscape(query), zeptoStoreId, deviceID, lat, lng)
+		zeptoRaw, err := fetchZeptoProductsV3(url.QueryEscape(query), lat, lng)
 		if err != nil {
 			errZepto = err
 			log.Printf("Zepto fetch failed for query '%s': %v", query, err)
