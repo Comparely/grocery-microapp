@@ -124,14 +124,14 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
   const getPlatformIcon = () => {
     switch (platform) {
       case 'zepto':
-        return <Image source={require('@/assets/images/zepto.svg')} style={styles.platformImage} />;
+        return <Image source={require('@/assets/images/zepto.png')} style={styles.platformImage} />;
       case 'blinkit':
         return <Image source={require('@/assets/images/blinkit.png')} style={styles.platformImageBlinkit} />;
       case 'instamart':
         return <Image source={require('@/assets/images/swiggy_instamart.webp')} style={styles.platformImage} />;
       default:
         if (bigbasketVariants.includes(platform)) {
-          return <Image source={require('@/assets/images/bigbasket.png')} style={styles.platformImage} />;
+          return <Image source={require('@/assets/images/bbnow.webp')} style={styles.platformImage} />;
         }
         return null;
     }
