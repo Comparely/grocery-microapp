@@ -165,9 +165,9 @@ const HomeScreen = () => {
                     </View>
                 )} */}
 
-                {isWeb && (
-                    <View style={styles.waitlistContainer}>
-                        <Text style={styles.waitlistHeader}>{"We're Launching Soon!"}</Text>
+                {/* {isWeb && (
+                    <View style={styles.waitlistContainer}> */}
+                        {/* <Text style={styles.waitlistHeader}>{"We're Launching Soon!"}</Text>
                         <Text style={styles.waitlistSubText}>
                             {'Enter your email below to join our waitlist and get early access.'}
                         </Text>
@@ -184,7 +184,7 @@ const HomeScreen = () => {
                             style={styles.waitlistSubmitButton}
                             onPress={handleWaitlistSubmit}>
                             <Text style={styles.waitlistSubmitButtonText}>{'Submit'}</Text>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
                         {/* <Text style={styles.appComingSoonText}>
             Our app is coming soon!
@@ -198,8 +198,8 @@ const HomeScreen = () => {
                 <Ionicons name="logo-apple-appstore" size={40} color="#9d9d9d" />
               </View>
             </View> */}
-                    </View>
-                )}
+                    {/* </View>
+                )} */}
 
                 {/* -----------------------------app coming soon----------------------------------------------- */}
 
@@ -447,7 +447,7 @@ const styles = StyleSheet.create({
     floatingWhatsapp: {
         position: 'absolute',
         right: 20,
-        bottom: 20,
+        bottom: 40,
         backgroundColor: '#25D366',
         borderRadius: 35,
         padding: 6,
