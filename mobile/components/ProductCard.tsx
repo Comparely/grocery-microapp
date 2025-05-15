@@ -17,14 +17,17 @@ interface ProductCardProps {
 export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, product }) => {
   const router = useRouter();
 
-  const zeptoAndBlinkitOptions = product.priceOptions.filter(
-    (option) => option.platform === 'zepto' || option.platform === 'blinkit'
+  const priorityPlatforms = ['zepto', 'blinkit', 'instamart'];
+  const bigbasketVariants = ['bigbasket', 'bbnow', 'bb'];
+
+  const primaryOptions = product.priceOptions.filter(opt =>
+    priorityPlatforms.includes(opt.platform?.toLowerCase() || '')
   );
-  const instamartAndBigbasketOptions = product.priceOptions.filter(
-    (option) => option.platform === 'instamart' || option.platform === 'bigbasket'
+  const bigbasketOptions = product.priceOptions.filter(opt =>
+    bigbasketVariants.includes(opt.platform?.toLowerCase() || '')
   );
 
-  const sortedPriceOptions = [...zeptoAndBlinkitOptions, ...instamartAndBigbasketOptions].sort(
+  const sortedPriceOptions = [...primaryOptions, ...bigbasketOptions].sort(
     (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity)
   );
 
@@ -64,15 +67,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
         </Text>
 
         <View style={styles.priceOptionsColumn}>
-          {sortedPriceOptions.map((priceOption) => (
-            <PriceOptionSingle
-              session={session}
-              key={priceOption.id || `${priceOption.platform}-${priceOption.price}`}
-              priceOption={priceOption}
-              productWeight={product.weight}
-              label=""
-            />
-          ))}
+          {sortedPriceOptions.length === 0 ? (
+            <Text>No price options available</Text>
+          ) : (
+            sortedPriceOptions.map((priceOption) => (
+              <PriceOptionSingle
+                session={session}
+                key={priceOption.id || `${priceOption.platform}-${priceOption.price}`}
+                priceOption={priceOption}
+                productWeight={product.weight}
+                label=""
+              />
+            ))
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -102,56 +109,49 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
     })().catch((err) => console.log(err));
   };
 
-  const eta =
-    {
-      zepto: session.marketplaceAttributes?.zeptoStoreAttributes?.eta || 'N/A',
-      blinkit: session.marketplaceAttributes?.blinkitStoreAttributes?.eta || '15 mins',
-      instamart: session.marketplaceAttributes?.instamartStoreAttributes?.eta || '10 mins',
-      bigbasket: session.marketplaceAttributes?.bigbasketStoreAttributes?.eta || '10 mins',
-    }[priceOption.platform ?? ''] || 'N/A';
+  const platform = priceOption.platform?.toLowerCase() ?? '';
+  const bigbasketVariants = ['bigbasket', 'bbnow', 'bb'];
+
+  const eta = {
+    zepto: session.marketplaceAttributes?.zeptoStoreAttributes?.eta || 'N/A',
+    blinkit: session.marketplaceAttributes?.blinkitStoreAttributes?.eta || '15 mins',
+    instamart: session.marketplaceAttributes?.instamartStoreAttributes?.eta || '10 mins',
+    bigbasket: session.marketplaceAttributes?.bigbasketStoreAttributes?.eta || '45 mins',
+  }[platform] || 'N/A';
 
   const displayWeight = priceOption.weight || productWeight || 'N/A';
+
+  const getPlatformIcon = () => {
+    switch (platform) {
+      case 'zepto':
+        return <Image source={require('@/assets/images/zepto.svg')} style={styles.platformImage} />;
+      case 'blinkit':
+        return <Image source={require('@/assets/images/blinkit.png')} style={styles.platformImageBlinkit} />;
+      case 'instamart':
+        return <Image source={require('@/assets/images/swiggy_instamart.webp')} style={styles.platformImage} />;
+      default:
+        if (bigbasketVariants.includes(platform)) {
+          return <Image source={require('@/assets/images/bigbasket.png')} style={styles.platformImage} />;
+        }
+        return null;
+    }
+  };
 
   return (
     <TouchableOpacity
       onPress={() => handleDeepLink(priceOption.deeplink ?? '')}
       style={styles.priceOptionContainer}
     >
-      <View style={styles.rowBetween}>
-        <View style={styles.leftRow}>
-          <Text style={styles.priceText}>₹{priceOption.price}</Text>
+      <View style={styles.priceRow}>
+        <Text style={styles.priceText}>₹{priceOption.price}</Text>
+        {getPlatformIcon()}
+      </View>
 
-          {priceOption.platform === 'zepto' && (
-            <Image
-              source={require('@/assets/images/zepto.svg')}
-              style={styles.platformImage}
-            />
-          )}
-          {priceOption.platform === 'blinkit' && (
-            <Image
-              source={require('@/assets/images/blinkit.png')}
-              style={styles.platformImageBlinkit}
-            />
-          )}
-          {priceOption.platform === 'instamart' && (
-            <Image
-              source={require('@/assets/images/swiggy_instamart.webp')}
-              style={styles.platformImage}
-            />
-          )}
-          {priceOption.platform === 'bigbasket' && (
-            <Image
-              source={require('@/assets/images/bbnow.webp')}
-              style={styles.platformImage}
-            />
-          )}
-
-          <View style={styles.tagSmall}>
-            <Text style={styles.tagTextSmall}>{displayWeight}</Text>
-          </View>
+      <View style={styles.detailsRow}>
+        <View style={styles.tagSmall}>
+          <Text style={styles.tagTextSmall}>{displayWeight}</Text>
         </View>
-
-        <View style={styles.rightRow}>
+        <View style={styles.etaContainer}>
           <ThreeQuarterCircle />
           <Text style={styles.deliveryText}>{eta}</Text>
         </View>
@@ -161,21 +161,28 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
 };
 
 const styles = StyleSheet.create({
-  priceOptionContainer: { marginBottom: 7 },
-  rowBetween: {
+  priceOptionContainer: {
+    marginBottom: 10,
+    borderBottomWidth: 0.5,
+    borderColor: '#e0e0e0',
+    paddingBottom: 6,
+  },
+  priceRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  detailsRow: {
+    flexDirection: 'row',
+    // justifyContent: 'space-between',
+    gap: 8,
     alignItems: 'center',
   },
-  leftRow: {
+  etaContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  rightRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+    gap: 4,
   },
   priceText: {
     fontSize: width > 768 ? 16 : 14,
@@ -219,8 +226,9 @@ const styles = StyleSheet.create({
   imageContainer: {
     backgroundColor: 'white',
     borderRadius: 12,
-    padding: 12,
+    padding: 4,
     height: width > 768 ? 180 : 130,
+    // marginHorizontal: '40%',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 8,
