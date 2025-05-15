@@ -6,6 +6,7 @@ type marketplaceAttributes = {
     blinkitStoreAttributes: StoreAttrs;
     zeptoStoreAttributes: StoreAttrs;
     instamartStoreAttributes: StoreAttrs;
+    bigbasketStoreAttributes?: StoreAttrs;
 };
 
 export type Session = {
