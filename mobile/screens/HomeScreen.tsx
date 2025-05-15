@@ -248,7 +248,7 @@ const HomeScreen = () => {
                 )}
             </ScrollView>
 
-            <Animated.View style={[styles.floatingWhatsapp, { transform: [{ rotate }] }]}>
+            <Animated.View style={[styles.floatingWhatsapp]}>
                 <TouchableOpacity onPress={handleWhatsappRedirect}>
                     <Ionicons name="logo-whatsapp" size={40} color="#fff" />
                 </TouchableOpacity>
@@ -449,9 +449,9 @@ const styles = StyleSheet.create({
         right: 20,
         bottom: 20,
         backgroundColor: '#25D366',
-        borderRadius: 30,
-        padding: 10,
-        elevation: 5,
+        borderRadius: 35,
+        padding: 6,
+        // elevation: 5,
     },
 });
 
