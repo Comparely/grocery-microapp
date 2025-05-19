@@ -1,8 +1,10 @@
 import React from 'react';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
+import { SplashScreen, Stack } from 'expo-router';
 import { SessionProvider, useSession } from '@/context/SessionContext';
 import { LoadingScreen } from '@/screens/LoadingScreen';
+
+void SplashScreen.preventAutoHideAsync();
 
 function AppContent() {
     const { loading, error, locationDenied, requestLocationPermission } = useSession();
@@ -19,6 +21,7 @@ function AppContent() {
     //     );
     // }
 
+    void SplashScreen.hide();
     // When everything is ready, render your navigator
     return <Stack screenOptions={{ headerShown: false }} />;
 }
