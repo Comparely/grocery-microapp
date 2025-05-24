@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from '@/ui/Text';
 
-const API_BASE_URL = 'http://192.168.0.215:4500';
+const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_URL}place`;
 
 type PlaceResult = {
     address: string;
@@ -35,7 +35,7 @@ const LocationPicker = () => {
     const fetchCoordinatesFromSearch = async (query: string) => {
         try {
             setLoading(true);
-            const res = await fetch(`${API_BASE_URL}/place?query=${encodeURIComponent(query)}`);
+            const res = await fetch(`${API_BASE_URL}?query=${encodeURIComponent(query)}`);
             const data: PlaceResult[] = await res.json();
 
             if (!Array.isArray(data) || data.length === 0) {

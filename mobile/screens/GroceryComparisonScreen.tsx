@@ -8,7 +8,6 @@ import { Product } from '../types/Product';
 import { fetchAndConvertProducts } from '../api/searchProducts';
 import Navbar from '@/components/Navbar';
 import { useSession } from '@/context/SessionContext';
-import LoadingBar from '../app/components/LoadingBar';
 import { useNavigation, useRoute } from '@react-navigation/native';
 
 export const GroceryComparisonScreen: React.FC = () => {
