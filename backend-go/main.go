@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/comparely/comparely-grocery-backend/config"
+	"github.com/comparely/comparely-grocery-backend/places"
 	"github.com/comparely/comparely-grocery-backend/search"
 	"github.com/comparely/comparely-grocery-backend/sessions"
 	"github.com/gin-contrib/cors"
@@ -162,6 +163,29 @@ func main() {
 			return
 		}
 		c.JSON(http.StatusOK, mappingsData)
+	})
+
+	router.GET("/place", func(c *gin.Context) {
+		query := c.Query("query")
+
+		client := places.NewClient("AIzaSyDXxEstxNmu1Lr_vqLau0StAoRyUGPZqSg")
+
+		predictions, err := client.GetPlacePredictions(query)
+		if err != nil {
+			log.Fatal("Autocomplete error:", err)
+		}
+
+		places := make([]places.Place, 0, len(predictions))
+		for _, p := range predictions {
+			place, err := client.GetPlaceDetails(p.PlaceID)
+			if err != nil {
+				log.Println("Failed to get place details:", err)
+				continue
+			}
+			places = append(places, place)
+		}
+
+		c.JSON(http.StatusOK, places)
 	})
 
 	router.Run(fmt.Sprintf(":%d", PORT))
