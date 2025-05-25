@@ -51,13 +51,13 @@ const ComparingScreen = ({
             Animated.sequence([
                 Animated.timing(scannerAnim, {
                     toValue: 1,
-                    duration: 1500, // Increased duration for slower animation
+                    duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.linear,
                 }),
                 Animated.timing(scannerAnim, {
                     toValue: 0,
-                    duration: 1500, // Increased duration for slower animation
+                    duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.linear,
                 }),
@@ -67,7 +67,7 @@ const ComparingScreen = ({
         progressAnim.setValue(0);
         Animated.timing(progressAnim, {
             toValue: 1,
-            duration: 8000, // Slightly increased overall duration
+            duration: 8000,
             useNativeDriver: false,
         }).start(() => {
             setLoadingComplete(true);
@@ -88,7 +88,7 @@ const ComparingScreen = ({
             const slideAnimations = positions.map((pos, index) =>
                 Animated.timing(pos, {
                     toValue: (index - 1) * IMAGE_SPACING,
-                    duration: 2000, // Increased duration for slower slide
+                    duration: 2000,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
                 }),
@@ -96,36 +96,36 @@ const ComparingScreen = ({
 
             const scaleDownLeft = Animated.timing(scales[0], {
                 toValue: 1,
-                duration: 1200, // Adjusted duration
+                duration: 1200,
                 useNativeDriver: true,
             });
             const scaleUpCenter = Animated.timing(scales[1], {
                 toValue: 1.3,
-                duration: 1200, // Adjusted duration
+                duration: 1200,
                 useNativeDriver: true,
             });
 
             const scaleDownRight = Animated.timing(scales[2], {
                 toValue: 1,
-                duration: 1200, // Adjusted duration
+                duration: 1200,
                 useNativeDriver: true,
             });
 
             const fadeOutLeft = Animated.timing(opacities[0], {
                 toValue: 0.7,
-                duration: 1200, // Adjusted duration
+                duration: 1200,
                 useNativeDriver: true,
             });
 
             const fadeInCenter = Animated.sequence([
                 Animated.timing(opacities[1], {
                     toValue: 0.9,
-                    duration: 800, // Adjusted duration
+                    duration: 800,
                     useNativeDriver: true,
                 }),
                 Animated.timing(opacities[1], {
                     toValue: 1,
-                    duration: 800, // Adjusted duration
+                    duration: 800,
                     easing: Easing.inOut(Easing.quad),
                     useNativeDriver: true,
                 }),
@@ -133,7 +133,7 @@ const ComparingScreen = ({
 
             const fadeOutRight = Animated.timing(opacities[2], {
                 toValue: 0.7,
-                duration: 1200, // Adjusted duration
+                duration: 1200,
                 useNativeDriver: true,
             });
 
@@ -161,7 +161,7 @@ const ComparingScreen = ({
                     opacities[2].setValue(0.7);
 
                     animateCarousel();
-                }, 1500); // Increased delay before next animation
+                }, 1500);
             });
         };
 
@@ -240,6 +240,8 @@ const styles = StyleSheet.create({
     },
     content: {
         alignItems: 'center',
+        flex: 1,
+        justifyContent: 'flex-start',
     },
     title: {
         fontSize: 46,
@@ -262,6 +264,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         overflow: 'hidden',
+        marginBottom: 40, // ✅ Added space between scanner and bottom panel
     },
     animatedImage: {
         width: 140,
@@ -307,8 +310,8 @@ const styles = StyleSheet.create({
     bottomPanel: {
         width: '100%',
         backgroundColor: '#FFFAF0',
-        marginTop: 80,
-        padding: 60,
+        paddingVertical: 30,
+        paddingHorizontal: 20,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         alignItems: 'center',

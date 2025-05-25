@@ -5,6 +5,7 @@ import type { Product } from '../types/Product';
 import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
 import { ProductCard } from './ProductCard';
+import CartBar from './CartBar';
 
 interface ProductListProps {
     session: Session;
@@ -17,6 +18,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 
     useEffect(() => {
         if (!isLoading && products.length > 0 && showInitialLoadingAnimation) {
+            // Animation will complete separately
         } else if (!isLoading && products.length === 0) {
             setShowInitialLoadingAnimation(false);
         }
@@ -28,7 +30,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 
     if (isLoading || showInitialLoadingAnimation) {
         return (
-            <View>
+            <View style={styles.loadingWrapper}>
                 <ComparingScreen onAnimationComplete={handleComparingAnimationComplete} />
             </View>
         );
@@ -54,18 +56,26 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
                 columnWrapperStyle={styles.columnWrapper}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{
-                    paddingBottom: 100,
+                    paddingBottom: 100, // Ensure space for sticky CartBar
                     paddingHorizontal: 16,
                     paddingTop: 16,
                 }}
                 style={styles.list}
             />
+            <View style={styles.cartBarWrapper}>
+                <CartBar />
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     wrapper: {
+        flex: 1,
+        backgroundColor: '#fffaf0',
+        position: 'relative',
+    },
+    loadingWrapper: {
         flex: 1,
         backgroundColor: '#fffaf0',
     },
@@ -75,6 +85,19 @@ const styles = StyleSheet.create({
     columnWrapper: {
         justifyContent: 'space-between',
         marginBottom: 16,
+    },
+    cartBarWrapper: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        backgroundColor: '#fffaf0',
+        paddingHorizontal: 16,
+        paddingBottom: 8,
+        paddingTop: 4,
+        borderTopWidth: 1,
+        borderColor: '#ccc',
+        zIndex: 10,
     },
     emptyContainer: {
         flex: 1,

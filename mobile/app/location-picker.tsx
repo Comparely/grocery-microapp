@@ -21,8 +21,8 @@ const API_BASE_URL = 'http://192.168.0.215:4500';
 
 type PlaceResult = {
     address: string;
-    lat: number;
-    lng: number;
+    // lat: number;
+    // lng: number;
 };
 
 const LocationPicker = () => {

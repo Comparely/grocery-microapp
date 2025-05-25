@@ -5,6 +5,7 @@ import type { Product, PriceOption } from '../types/Product';
 import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
 import ThreeQuarterCircle from './timer';
+import QuantitySelector from './QuantitySelector';
 
 const { width } = Dimensions.get('window');
 
@@ -31,6 +32,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
         (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
     );
 
+    // You can track quantity here if needed, currently just using internal state in QuantitySelector
+    // const [quantity, setQuantity] = React.useState(0);
+
     const handleCardPress = () => {
         router.push({
             pathname: '/product',
@@ -46,10 +50,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
             <View style={styles.imageContainer}>
                 {product.isNewPack && (
                     <View style={styles.newPackBadge}>
-                        <Text style={styles.newPackText}>NOW IN NEW PACK</Text>
+                        <Text style={styles.newPackText}>{'NOW IN NEW PACK'}</Text>
                     </View>
                 )}
                 <Image source={{ uri: product.imageUrl }} style={styles.image} />
+                {/* Replaced quantity UI with QuantitySelector component */}
+                <QuantitySelector />
             </View>
 
             <View style={styles.detailsContainer}>
@@ -59,15 +65,18 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
                     </View>
                 </View>
 
-                <Text style={styles.mrpText}>MRP ₹{product.mrp}</Text>
+                <Text style={styles.mrpText}>
+                    {'MRP ₹'}
+                    {product.mrp}
+                </Text>
 
-                <Text style={styles.nameText} numberOfLines={2}>
+                <Text style={styles.nameText} numberOfLines={1}>
                     {product.name}
                 </Text>
 
                 <View style={styles.priceOptionsColumn}>
                     {sortedPriceOptions.length === 0 ? (
-                        <Text>No price options available</Text>
+                        <Text>{'No price options available'}</Text>
                     ) : (
                         sortedPriceOptions.map((priceOption) => (
                             <PriceOptionSingle
@@ -164,7 +173,10 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
             onPress={() => handleDeepLink(priceOption.deeplink ?? '')}
             style={styles.priceOptionContainer}>
             <View style={styles.priceRow}>
-                <Text style={styles.priceText}>₹{priceOption.price}</Text>
+                <Text style={styles.priceText}>
+                    {'₹'}
+                    {priceOption.price}
+                </Text>
                 {getPlatformIcon()}
             </View>
 
@@ -196,7 +208,6 @@ const styles = StyleSheet.create({
     },
     detailsRow: {
         flexDirection: 'row',
-        // justifyContent: 'space-between',
         gap: 8,
         alignItems: 'center',
     },
@@ -249,7 +260,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 4,
         height: width > 768 ? 180 : 130,
-        // marginHorizontal: '40%',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 8,
