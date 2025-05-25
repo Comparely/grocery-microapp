@@ -1,0 +1,193 @@
+{
+  "featuredProducts": [
+  
+    {
+      "id": 1,
+      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg",
+      "weight": "1 L",
+      "brand": "Amul",
+      "name": "Amul Taaza Homogenised Toned Milk",
+      "mrp": 74,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 74,
+          "deeplink": "https://www.zeptonow.com/pn/amul-taaza-homogenised-toned-milk-tetra-pack/pvid/84eae511-5edb-4a22-875e-5aa94976c2d6"
+        },
+        {
+          "platform": "instamart",
+          "price": 74,
+          "deeplink": "https://www.swiggy.com/instamart/item/BQ5YQH8TEN?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 71,
+          "deeplink": "https://blinkit.com/prn/amul-taaza-homogenised-toned-milk/prid/176"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1280,ar-5000-5000,pr-true,f-auto,q-80/cms/product_variant/51678793-6737-4149-b12e-fceb8c95f049/Kwality-Wall-s-Magnum-Chocolate-Truffle-ice-Cream-Stick.jpeg",
+      "weight": "80 g",
+      "brand": "Kwality Wall's",
+      "name": "Magnum Chocolate Truffle Ice Cream Stick",
+      "mrp": 70,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 70,
+          "deeplink": "https://www.zeptonow.com/pn/kwality-walls-magnum-chocolate-truffle-ice-cream-stick/pvid/928db2ba-5ef4-4575-9e87-213eb991f985"
+        },
+        {
+          "platform": "instamart",
+          "price": 70,
+          "deeplink": "https://www.swiggy.com/instamart/item/DGIAPDCF0W?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 70,
+          "deeplink": "https://blinkit.com/prn/kwality-walls-magnum-almond-ice-cream-stick/prid/611585"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1000,ar-1000-1000,pr-true,f-auto,q-80/cms/product_variant/eec88f34-2f46-4a39-af79-d8a852f31b33/Mango-Safeda.jpg",
+      "weight": "1 kg",
+      "brand": "Generic",
+      "name": "Mango Safeda",
+      "mrp": 150,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 120,
+          "deeplink": "https://www.zeptonow.com/pn/mango-safeda/pvid/4a0c0c8e-a9f4-4336-a1c6-a4c1371f9eba"
+        },
+        {
+          "platform": "instamart",
+          "price": 130,
+          "deeplink": "https://www.swiggy.com/instamart/item/QNQWDL065Q?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 125,
+          "deeplink": "https://blinkit.com/prn/safeda-banganapalli-mango-safeda-aam/prid/15619"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/app/assets/products/sliding_images/jpeg/34a57eca-4bda-47c3-838b-5fe0d348db35.jpg?ts=1724241358",
+      "weight": "350 g",
+      "brand": "The Health Factory",
+      "name": "Zero Maida Bread - 100% Whole Wheat",
+      "mrp": 75,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 58,
+          "deeplink": "https://www.zeptonow.com/pn/the-health-factory-zero-maida-bread-100-whole-wheat/pvid/58bd25ce-8f73-4031-96ed-7a1278834d2b"
+        },
+        {
+          "platform": "instamart",
+          "price": 58,
+          "deeplink": "https://www.swiggy.com/instamart/item/UZ3C4E0RVS?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 75,
+          "deeplink": "https://blinkit.com/prn/the-health-factory-zero-maida-multigrain-bread/prid/564615"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/app/assets/products/sliding_images/jpeg/6ae62ec2-3b13-4fff-b052-2ff3d4ef2d16.jpg?ts=1726473593",
+      "weight": "400 g",
+      "brand": "Amul",
+      "name": "Amul Curd",
+      "mrp": 35,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 32,
+          "deeplink": "https://www.zeptonow.com/pn/amul-masti-dahi-pouch/pvid/c50ac90e-6abb-4bc9-9aa0-34feacb95e24"
+        },
+        {
+          "platform": "instamart",
+          "price": 35,
+          "deeplink": "https://www.swiggy.com/instamart/item/JGHN8V065D?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 35,
+          "deeplink": "https://blinkit.com/prn/amul-masti-pouch-curd/prid/45533"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/da/cms-assets/cms/product/d478ee1d-78f0-444b-b7a4-f53fdedecff9.jpg?ts=1737973320",
+      "weight": "100 g",
+      "brand": "Hide & Seek",
+      "name": "Hide & Seek Chocolate Cookies",
+      "mrp": 30,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 30,
+          "deeplink": "https://www.zeptonow.com/pn/parle-hide-seek-chocolate-biscuits/pvid/efd2cdcb-00e4-4dd7-b2c4-6634af3bf529"
+        },
+        {
+          "platform": "instamart",
+          "price": 28,
+          "deeplink": "https://www.swiggy.com/instamart/item/8RWTUPOJ9U?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 30,
+          "deeplink": "https://blinkit.com/prn/hide-seek-chocolate-chip-cookies-100-g/prid/11102"
+        }
+      ]
+    }
+  ],
+  "categories": [
+    {
+      "id": "1",
+      "name": "Fresh Fruits & Vegetable",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/vegetable_fruit.webp",
+      "backgroundColor": "#e8f5e9"
+    },
+    {
+      "id": "2",
+      "name": "Cooking Oil & Ghee",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/cooking_oil.webp",
+      "backgroundColor": "#fff3e0"
+    },
+    {
+      "id": "3",
+      "name": "Bakery & Snacks",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/bakery.webp",
+      "backgroundColor": "#f3e5f5"
+    },
+    {
+      "id": "4",
+      "name": "Meat & Fish",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/meat.webp",
+      "backgroundColor": "#ffebee"
+    },
+    {
+      "id": "5",
+      "name": "Dairy & Eggs",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/milk.webp",
+      "backgroundColor": "#fffde7"
+    },
+    {
+      "id": "6",
+      "name": "Beverages",
+      "image": "https://storage.googleapis.com/comparely-static-data/CATEGORIES/optimized/my_pussy_tastes_like_pepsi_cola.webp",
+      "backgroundColor": "#e3f2fd"
+    }
+  ]
+}
