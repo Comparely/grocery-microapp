@@ -5,11 +5,11 @@ import type { Product, PriceOption } from '../types/Product';
 import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
 import ThreeQuarterCircle from './timer';
+import QuantitySelector from './QuantitySelector';
 import { useWebViews } from '@/context/WebViewContext';
 import { injectSingleProductScript_zepto } from '@/script/injectionScript_zepto';
 import { getNavigationScript, injectSingleProductScript } from '@/script/injectionScript_blinkit';
 import { useCart } from '../context/CartContext';
-import QuantitySelector from './QuantitySelector';
 import ClockIcon from './timer';
 
 const { width } = Dimensions.get('window');

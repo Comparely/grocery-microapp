@@ -13,15 +13,6 @@ function AppContent() {
         return <LoadingScreen showRetry={locationDenied} onRetry={requestLocationPermission} />;
     }
 
-    // if (error) {
-    //     return (
-    //         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-    //             <Text style={{ color: 'red' }}>Error: {error}</Text>
-    //         </View>
-    //     );
-    // }
-
-    // When everything is ready, render your navigator
     return <Stack screenOptions={{ headerShown: false }} />;
 }
 

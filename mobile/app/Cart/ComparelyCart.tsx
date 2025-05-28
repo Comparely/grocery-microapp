@@ -16,12 +16,12 @@ const platformLogos: Record<string, any> = {
     bb: require('@/assets/images/instamart1.png'),
 };
 
-const platformCartURLs: Record<string, string> = {
-    blinkit: 'https://blinkit.com/cart',
-    zepto: 'https://www.zeptonow.com/?cart=open',
-    instamart: 'https://www.swiggy.com/instamart/cart',
-    bb: 'https://www.bigbasket.com/basket/',
-};
+// const platformCartURLs: Record<string, string> = {
+//     blinkit: 'https://blinkit.com/cart',
+//     zepto: 'https://www.zeptonow.com/?cart=open',
+//     instamart: 'https://www.swiggy.com/instamart/cart',
+//     bb: 'https://www.bigbasket.com/basket/',
+// };
 
 // const platformExtraCharges: Record<string, number> = {
 //     blinkit: 18,
