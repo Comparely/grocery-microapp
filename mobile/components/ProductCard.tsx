@@ -10,6 +10,11 @@ import { injectSingleProductScript_zepto } from '@/script/injectionScript_zepto'
 import { injectSingleProductScript } from '@/script/injectionScript_blinkit';
 import { useCart } from '../context/CartContext';
 import QuantitySelector from './QuantitySelector';
+import { useWebViews } from '@/context/WebViewContext';
+import { injectSingleProductScript_zepto } from '@/script/injectionScript_zepto';
+import { injectSingleProductScript } from '@/script/injectionScript_blinkit';
+import { useCart } from '../context/CartContext';
+import QuantitySelector from './QuantitySelector';
 
 const { width } = Dimensions.get('window');
 
