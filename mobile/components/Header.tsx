@@ -38,7 +38,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
         if (str.length > maxLength) {
             return str.substring(0, maxLength) + '...';
         }
-        if(str.length < 1) return undefined
+        if (str.length < 1) return undefined;
         return str;
     }
 

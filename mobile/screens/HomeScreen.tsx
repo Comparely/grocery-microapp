@@ -18,6 +18,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/ui/Text';
 import { Category } from '@/types/Category';
 import { useSession } from '@/context/SessionContext';
+import CartScreen from './CartScreen';
+import { useCart } from '@/context/CartContext';
 
 const isWeb = Platform.OS === 'web';
 const isIos = Platform.OS === 'ios';
@@ -27,6 +29,7 @@ const HomeScreen = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
     const [email, setEmail] = useState<string>('');
+    const { getTotalItems } = useCart();
 
     const wiggleAnim = useRef(new Animated.Value(0)).current;
 
@@ -167,7 +170,7 @@ const HomeScreen = () => {
 
                 {/* {isWeb && (
                     <View style={styles.waitlistContainer}> */}
-                        {/* <Text style={styles.waitlistHeader}>{"We're Launching Soon!"}</Text>
+                {/* <Text style={styles.waitlistHeader}>{"We're Launching Soon!"}</Text>
                         <Text style={styles.waitlistSubText}>
                             {'Enter your email below to join our waitlist and get early access.'}
                         </Text>
@@ -186,7 +189,7 @@ const HomeScreen = () => {
                             <Text style={styles.waitlistSubmitButtonText}>{'Submit'}</Text>
                         </TouchableOpacity> */}
 
-                        {/* <Text style={styles.appComingSoonText}>
+                {/* <Text style={styles.appComingSoonText}>
             Our app is coming soon!
 
             </Text>
@@ -198,7 +201,7 @@ const HomeScreen = () => {
                 <Ionicons name="logo-apple-appstore" size={40} color="#9d9d9d" />
               </View>
             </View> */}
-                    {/* </View>
+                {/* </View>
                 )} */}
 
                 {/* -----------------------------app coming soon----------------------------------------------- */}
@@ -253,6 +256,7 @@ const HomeScreen = () => {
                     <Ionicons name="logo-whatsapp" size={40} color="#fff" />
                 </TouchableOpacity>
             </Animated.View>
+            {getTotalItems() > 0 && <CartScreen />}
         </View>
     );
 };
