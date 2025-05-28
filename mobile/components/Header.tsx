@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchBar } from './SearchBar';
 import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
@@ -12,6 +13,24 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ session }) => {
     const router = useRouter();
+    const [storedLocation, setStoredLocation] = useState<string | null>(null);
+
+    // Reload location every time screen is focused
+    useFocusEffect(
+        useCallback(() => {
+            const loadLocation = async () => {
+                try {
+                    const saved = await AsyncStorage.getItem('selected_location');
+                    if (saved) {
+                        setStoredLocation(saved);
+                    }
+                } catch (e) {
+                    console.error('Failed to load location', e);
+                }
+            };
+            void loadLocation();
+        }, []),
+    );
 
     const findLeastTimeStore = () => {
         const blinkitETA = parseFloat(
@@ -50,20 +69,33 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
     };
 
     const handleSearchPress = () => {
-        console.log('Search bar clicked'); // Debugging log
         router.push('/search');
+    };
+
+    const handleLocationPress = () => {
+        router.push('/location-picker');
     };
 
     return (
         <View style={styles.container}>
-            <View style={styles.locationContainer}>
+            <TouchableOpacity style={styles.locationButton} onPress={handleLocationPress}>
                 <Ionicons name="location" size={24} color="#cbd402" />
-                <Text style={styles.locationText}>{'Address'}</Text>
-            </View>
+                <View style={styles.locationInfo}>
+                    <View style={styles.row}>
+                        <Text style={styles.locationText}>{'Deliver to'}</Text>
+                        <Ionicons
+                            name="chevron-down"
+                            size={20}
+                            color="yellow"
+                            style={{ marginLeft: 4 }}
+                        />
+                    </View>
 
-            <Text style={styles.addressText}>
-                {trimIfNeeded(session?.address ?? 'No address found')}
-            </Text>
+                    <Text style={styles.addressText}>
+                        {trimIfNeeded(storedLocation ?? session?.address ?? 'Tap to set location')}
+                    </Text>
+                </View>
+            </TouchableOpacity>
 
             {session && (
                 <View style={styles.rightContainer}>
@@ -97,13 +129,14 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                     </View>
                 </View>
             )}
+
             <View style={styles.searchContainer}>
                 <SearchBar
                     onClick={handleSearchPress}
                     value=""
-                    onChangeText={() => {}} // No-op since not editable
+                    onChangeText={() => {}}
                     placeholder="Search for groceries..."
-                    editable={false} // Navigation only on home screen
+                    editable={false}
                 />
             </View>
         </View>
@@ -116,29 +149,34 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         backgroundColor: '#004738',
     },
-    locationContainer: {
-        marginTop: 8,
-        paddingHorizontal: 20,
+    locationButton: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 20,
+        marginTop: 3,
         marginBottom: 5,
     },
-    locationSelector: {
+    locationInfo: {
+        // Container for both lines
+        // Add any padding/margin you want here
+        marginLeft: 2,
+        marginTop: 4,
+    },
+
+    row: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginLeft: 5,
     },
+
     locationText: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#ffffff',
-        marginRight: 5,
-    },
-    addressText: {
+        color: 'yellow',
         fontSize: 14,
-        color: '#ffffff',
-        opacity: 0.8,
-        marginLeft: 29,
+    },
+
+    addressText: {
+        color: 'white',
+        fontSize: 14,
+        marginTop: 4, // small spacing between lines
     },
     rightContainer: {
         position: 'absolute',
