@@ -27,8 +27,6 @@ const PriceSection: React.FC<PriceSectionParams> = ({ session, products }) => {
     const [scrollOffset, setScrollOffset] = useState(0);
     const [itemWidth, setItemWidth] = useState(0); // Track width of ProductCard
 
-    console.log('products', products);
-
     // Assume ProductCard width is consistent; adjust this based on actual ProductCard styling
     const scrollAmount = itemWidth || width * 0.6; // Fallback to 60% of screen if itemWidth not set
 
