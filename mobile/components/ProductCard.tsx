@@ -4,6 +4,12 @@ import { useRouter } from 'expo-router';
 import type { Product, PriceOption } from '../types/Product';
 import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
+import ThreeQuarterCircle from './timer';
+import { useWebViews } from '@/context/WebViewContext';
+import { injectSingleProductScript_zepto } from '@/script/injectionScript_zepto';
+import { getNavigationScript, injectSingleProductScript } from '@/script/injectionScript_blinkit';
+import { useCart } from '../context/CartContext';
+import QuantitySelector from './QuantitySelector';
 import ClockIcon from './timer';
 
 const { width } = Dimensions.get('window');
@@ -12,7 +18,6 @@ interface ProductCardProps {
     fullWidth: boolean;
     session: Session;
     product: Product;
-    isHomeScreenView?: boolean;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -22,8 +27,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     isHomeScreenView,
 }) => {
     const router = useRouter();
+    const { cart, addToCart, removeFromCart } = useCart();
+    const { blinkitWebViewRef, zeptoWebViewRef } = useWebViews();
 
-    // Added 'amazonfresh' here
     const priorityPlatforms = ['zepto', 'blinkit', 'instamart', 'amazonfresh'];
     const bigbasketVariants = ['bigbasket', 'bbnow', 'bb'];
 
@@ -45,6 +51,50 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         });
     };
 
+    const quantity = cart.find((item) => item.product.id === product.id)?.quantity || 0;
+
+    const handleChangeQuantity = (newQty: number) => {
+        const currentQty = quantity;
+
+        const platformLinks = Object.fromEntries(
+            product.priceOptions.map((opt) => [opt.platform?.toLowerCase(), opt.deeplink]),
+        );
+
+        if (newQty > currentQty) {
+            addToCart(product);
+            Object.entries(platformLinks).forEach(([platform, url]) => {
+                let script = '';
+                let navScript = '';
+                switch (platform) {
+                    case 'blinkit':
+                        navScript = getNavigationScript(url);
+                        blinkitWebViewRef.current?.injectScript(navScript);
+                        // Delay injection of product script
+                        setTimeout(() => {
+                            const actionScript = injectSingleProductScript({ url });
+                            blinkitWebViewRef.current?.injectScript(actionScript);
+                        }, 3000); // 3 second delay, tweak if needed
+                        break;
+                    case 'zepto':
+                        navScript = getNavigationScript(url);
+                        zeptoWebViewRef.current?.injectScript(navScript);
+                        // Delay injection of product script
+                        setTimeout(() => {
+                            const actionScript = injectSingleProductScript_zepto({ url });
+                            zeptoWebViewRef.current?.injectScript(actionScript);
+                        }, 3000); // 3 second delay, tweak if needed
+                        break;
+                    default:
+                        console.warn(`Unsupported platform: ${platform}`);
+                }
+            });
+        } else if (newQty < currentQty) {
+            Object.keys(platformLinks).forEach((platform) => {
+                removeFromCart(product.id.toString(), platform);
+            });
+        }
+    };
+
     return (
         <TouchableOpacity
             onPress={handleCardPress}
@@ -59,13 +109,25 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <View style={styles.cardWrapper}>
                 <Image source={{ uri: product.imageUrl }} style={styles.image} />
                 <Text style={styles.brandText}>{product.brand}</Text>
+                <QuantitySelector quantity={quantity} onChange={handleChangeQuantity} />
+            </View>
+
+            <View style={styles.detailsContainer}>
+                <View style={styles.tagsContainer}>
+                    <View style={styles.tag}>
+                        <Text style={styles.tagText}>{product.brand}</Text>
+                    </View>
+                </View>
+
+                <Text style={styles.mrpText}>MRP ₹{product.mrp}</Text>
+
                 <Text style={styles.nameText} numberOfLines={2}>
                     {product.name}
                 </Text>
 
                 <View style={styles.priceOptionsColumn}>
                     {sortedPriceOptions.length === 0 ? (
-                        <Text>{'No price options available'}</Text>
+                        <Text>No price options available</Text>
                     ) : (
                         sortedPriceOptions.map((priceOption) => (
                             <PriceOptionSingle
@@ -111,18 +173,15 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
     const platform = priceOption.platform?.toLowerCase() ?? '';
     const bigbasketVariants = ['bigbasket', 'bbnow', 'bb'];
 
-    // Added amazonfresh eta here
     const eta =
         {
             zepto: session.marketplaceAttributes?.zeptoStoreAttributes?.eta || 'N/A',
             blinkit: session.marketplaceAttributes?.blinkitStoreAttributes?.eta || '15 mins',
             instamart: session.marketplaceAttributes?.instamartStoreAttributes?.eta || '10 mins',
             bigbasket: session.marketplaceAttributes?.bigbasketStoreAttributes?.eta || '45 mins',
-            amazonfresh:
-                session.marketplaceAttributes?.amazonFreshStoreAttributes?.eta || '20 mins',
         }[platform] || 'N/A';
 
-    const displayWeight = priceOption.weight || productWeight || 'N/A';
+    const displayWeight = priceOption.weight || 'N/A';
 
     const getPlatformIcon = () => {
         switch (platform) {
@@ -137,7 +196,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
                 return (
                     <Image
                         source={require('@/assets/images/blinkit.png')}
-                        style={styles.platformImage}
+                        style={styles.platformImageBlinkit}
                     />
                 );
             case 'instamart':
@@ -161,33 +220,32 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
     };
 
     return (
-        <TouchableOpacity
-            onPress={() => handleDeepLink(priceOption.deeplink ?? '')}
-            style={styles.priceOptionContainer}>
-            <View style={styles.platformRow}>
-                {getPlatformIcon()}
-                <Text style={styles.finalPrice}>
-                    {'₹'}
-                    {priceOption.price}
-                </Text>
-            </View>
+        <>
+            <TouchableOpacity
+                onPress={() => handleDeepLink(priceOption.deeplink ?? '')}
+                style={styles.priceOptionContainer}>
+                <View style={styles.priceRow}>
+                    <Text style={styles.priceText}>₹{priceOption.price}</Text>
+                    {getPlatformIcon()}
+                </View>
 
-            <View style={styles.detailsRow}>
-                <Text style={styles.weightText}>{displayWeight}</Text>
-                <View style={styles.mrpEtaColumn}>
-                    {priceOption.originalPrice ? (
-                        <Text style={styles.priceText}>
-                            {'₹'}
-                            {priceOption.originalPrice}
-                        </Text>
-                    ) : null}
-                    <View style={styles.etaRow}>
-                        <ClockIcon />
-                        <Text style={styles.etaText}>{eta}</Text>
+                <View style={styles.detailsRow}>
+                    <Text style={styles.weightText}>{displayWeight}</Text>
+                    <View style={styles.mrpEtaColumn}>
+                        {priceOption.originalPrice ? (
+                            <Text style={styles.priceText}>
+                                {'₹'}
+                                {priceOption.originalPrice}
+                            </Text>
+                        ) : null}
+                        <View style={styles.etaRow}>
+                            <ClockIcon />
+                            <Text style={styles.etaText}>{eta}</Text>
+                        </View>
                     </View>
                 </View>
-            </View>
-        </TouchableOpacity>
+            </TouchableOpacity>
+        </>
     );
 };
 
@@ -299,7 +357,41 @@ const styles = StyleSheet.create({
     },
     etaText: {
         fontSize: 12,
-        color: 'gray',
+        fontWeight: '500',
+    },
+    mrpText: {
+        color: '#9d9d9d',
+        fontSize: 11,
+        marginBottom: 3,
+    },
+    nameText: {
+        color: '#181b19',
+        fontSize: width > 768 ? 16 : 13,
+        fontWeight: 'bold',
+        marginBottom: 6,
+        lineHeight: 18,
+    },
+    priceOptionsColumn: {
+        flexDirection: 'column',
+    },
+    addButton: {
+        backgroundColor: '#4CAF50', // green color
+        paddingVertical: 8,
+        paddingHorizontal: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        alignSelf: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 4,
+        elevation: 3, // Android shadow
+    },
+    addButtonText: {
+        color: '#fff',
+        fontWeight: '600',
+        letterSpacing: 0.5,
     },
 });
 

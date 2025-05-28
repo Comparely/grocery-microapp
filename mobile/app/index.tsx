@@ -2,7 +2,8 @@ import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 import HomeScreen from '@/screens/HomeScreen';
 import '@/global.css';
 import Head from 'expo-router/head';
-// import SearchScrapeProduct from '@/screens/amazonproductscrape';
+import SearchScrapeProduct from '@/screens/SearchScrapeProduct';
+import LoginScreen from '@/screens/LoginScreen';
 
 const App = () => {
     return (
@@ -14,10 +15,10 @@ const App = () => {
                 </title>
             </Head>
             <HomeScreen />
+            {/* <LoginScreen platform="blinkit" /> */}
             {/* <SearchScrapeProduct /> */}
-            {/* <FlipkartMinutesScraper /> */}
-            {/* <SearchScrapeProduct /> */}
-            {/* <FlipkartMinutesScraper /> */}
+            {/* <LoginScreen /> */}
+            {/* {blinkitLoggedIn && zeptoLoggedIn ? <LoginScreen /> : <HomeScreen />} */}
         </SafeAreaView>
     );
 };

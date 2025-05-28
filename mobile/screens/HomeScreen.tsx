@@ -23,6 +23,8 @@ import SeparatorLine from '@/components/seperator';
 import DeliveryTags from '@/components/Deliverytags';
 import Footer from '@/components/Footer';
 import { useRouter } from 'expo-router'; // Import useRouter
+import CartScreen from './CartScreen';
+import { useCart } from '@/context/CartContext';
 
 const isWeb = Platform.OS === 'web';
 const isIos = Platform.OS === 'ios';
@@ -32,6 +34,7 @@ const HomeScreen = () => {
     const [categories, setCategories] = useState<Category[]>([]);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
     const [email, setEmail] = useState<string>('');
+    const { getTotalItems } = useCart();
 
     const wiggleAnim = useRef(new Animated.Value(0)).current;
     const router = useRouter(); // Initialize useRouter
@@ -221,6 +224,7 @@ const HomeScreen = () => {
                     <Ionicons name="logo-whatsapp" size={40} color="#fff" />
                 </TouchableOpacity>
             </Animated.View>
+            {getTotalItems() > 0 && <CartScreen />}
         </View>
     );
 };
