@@ -8,8 +8,11 @@ import { Product } from '../types/Product';
 import { fetchAndConvertProducts } from '../api/searchProducts';
 import Navbar from '@/components/Navbar';
 import { useSession } from '@/context/SessionContext';
+import CartScreen from './CartScreen';
+import { useCart } from '@/context/CartContext';
 
 export const GroceryComparisonScreen: React.FC = () => {
+    const { getTotalItems } = useCart();
     const [searchQuery, setSearchQuery] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [products, setProducts] = useState<Product[]>([]);
@@ -148,6 +151,11 @@ export const GroceryComparisonScreen: React.FC = () => {
                 contentContainerStyle={styles.scrollViewContent}>
                 <ProductList products={products} isLoading={isLoading} session={session!} />
             </ScrollView>
+            {getTotalItems() > 0 && (
+                <View style={styles.cartWrapper}>
+                    <CartScreen />
+                </View>
+            )}
         </View>
     );
 };
@@ -172,6 +180,13 @@ const styles = StyleSheet.create({
     scrollViewContent: {
         paddingBottom: 0,
     },
+    cartWrapper: {
+        zIndex: 10000,
+        backgroundColor: 'white',
+        borderTopWidth: 1,
+        borderColor: '#eee',
+    },
+
     // suggestionList: {
     //   position: 'absolute',
     //   top: 60,
