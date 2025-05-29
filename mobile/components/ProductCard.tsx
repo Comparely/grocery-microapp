@@ -1,8 +1,6 @@
 import React from 'react';
-import { StyleSheet, View, Image, Linking, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import type { Product, PriceOption } from '../types/Product';
-import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
 import ThreeQuarterCircle from './timer';
 import QuantitySelector from './QuantitySelector';
@@ -93,6 +91,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 removeFromCart(product.id.toString(), platform);
             });
         }
+    };
+
+    const handleCardPress = () => {
+        router.push({
+            pathname: '/product',
+            params: { product: JSON.stringify(product) },
+        });
     };
 
     return (
@@ -373,25 +378,6 @@ const styles = StyleSheet.create({
     },
     priceOptionsColumn: {
         flexDirection: 'column',
-    },
-    addButton: {
-        backgroundColor: '#4CAF50', // green color
-        paddingVertical: 8,
-        paddingHorizontal: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        justifyContent: 'center',
-        alignSelf: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 4,
-        elevation: 3, // Android shadow
-    },
-    addButtonText: {
-        color: '#fff',
-        fontWeight: '600',
-        letterSpacing: 0.5,
     },
 });
 
