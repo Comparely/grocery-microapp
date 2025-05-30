@@ -2,6 +2,7 @@ import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 import HomeScreen from '@/screens/HomeScreen';
 import '@/global.css';
 import Head from 'expo-router/head';
+// import SearchScrapeProduct from '@/screens/amazonproductscrape';
 
 const App = () => {
     return (
@@ -13,6 +14,7 @@ const App = () => {
                 </title>
             </Head>
             <HomeScreen />
+            {/* <SearchScrapeProduct /> */}
         </SafeAreaView>
     );
 };
