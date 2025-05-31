@@ -184,32 +184,39 @@ export const isUserLoggedInScript = `
   true;
   `;
 
-export const productScrapingScript = `(function () {
-  const BASE_URL = 'https://www.zeptonow.com';
-
-  const getHighestResImage = (srcSet) => {
-    if (!srcSet) return '';
-    const urls = srcSet.split(',').map(s => s.trim().split(' ')[0]);
-    return urls[urls.length - 1]; // last one is highest-res
-  };
-
-  const products = Array.from(document.querySelectorAll('[data-testid="product-card"]')).map(card => {
-    const name = card.querySelector('[data-testid="product-card-name"]')?.innerText.trim() || '';
-    const price = card.querySelector('[data-testid="product-card-price"]')?.innerText.trim() || '';
-    const quantity = card.querySelector('[data-testid="product-card-quantity"]')?.innerText.trim() || '';
-    const deliveryTime = card.querySelector('p.block.font-body')?.innerText.trim() || '';
-
-    const imgEl = card.querySelector('img');
-    const image = getHighestResImage(imgEl?.getAttribute('srcset')) || imgEl?.src || '';
-
-    const relativeLink = card.getAttribute('href') || '';
-    const link = relativeLink.startsWith('http') ? relativeLink : BASE_URL + relativeLink;
-
-    return { name, price, quantity, deliveryTime, image, link };
-  });
-
-  window.ReactNativeWebView.postMessage(JSON.stringify(products));
-})();
-
-true;
-`;
+export const productScrapingScript_zepto = () => {
+    const script = `(async function () {
+      const BASE_URL = 'https://www.zeptonow.com';
+      const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+    
+      // Auto-scroll down the page
+      const autoScroll = async () => {
+        const distance = 500;
+        for (let i = 0; i < 20; i++) {
+          window.scrollBy(0, distance);
+          await sleep(500); // wait for new items to load
+        }
+      };
+    
+      await autoScroll();
+    
+      const getHighestResImage = (srcSet) => {
+        if (!srcSet) return '';
+        const urls = srcSet.split(',').map(s => s.trim().split(' ')[0]);
+        return urls[urls.length - 1];
+      };
+    
+      const products = Array.from(document.querySelectorAll('[data-testid="product-card"]')).map(card => {
+        const name = card.querySelector('[data-testid="product-card-name"]')?.innerText.trim() || '';
+        const price = card.querySelector('[data-testid="product-card-price"]')?.innerText.trim() || '';
+        const quantity = card.querySelector('[data-testid="product-card-quantity"]')?.innerText.trim() || '';
+        const deliveryTime = card.querySelector('p.block.font-body')?.innerText.trim() || '';
+        const image = card.querySelector('img').getAttribute('src') || '';
+        const link = BASE_URL + card.getAttribute('href');
+    
+        return { name, price, quantity, deliveryTime, image, link };
+      });
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'scrapeData', data: products }));
+    })(); true;`;
+    return script;
+};

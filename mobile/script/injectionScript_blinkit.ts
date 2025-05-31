@@ -163,3 +163,42 @@ export const injectSingleProductScript = (product: { url: string; variant?: stri
   `;
     return script;
 };
+
+export const productScrapingScript_blinkit = () => {
+    const script = `(async function () {
+  const BASE_URL = 'https://blinkit.com';
+
+  const slugify = (text) =>
+    text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+  // Auto-scroll down the page
+  const autoScroll = async () => {
+    const distance = 500;
+    for (let i = 0; i < 20; i++) {
+      window.scrollBy(0, distance);
+      await sleep(500); // wait for new items to load
+    }
+  };
+
+  await autoScroll();
+
+  const cards = Array.from(document.querySelectorAll('div[role="button"][class*="tw-relative"]'));
+
+  const products = cards.map((card) => {
+    const id = card.getAttribute('id') || '';
+    const name = card.querySelector('div[class*="tw-text-300"]')?.innerText.trim() || '';
+    const price = card.querySelector('div[class*="tw-text-200 tw-font-semibold"]')?.innerText.trim() || '';
+    const quantity = card.querySelector('div[class*="tw-text-200 tw-font-medium tw-line-clamp-1"]')?.innerText.trim() || '';
+    const image = card.querySelector('img')?.src || '';
+    const slug = slugify(name);
+    const link = id && slug ? \`\${BASE_URL}/prn/\${slug}/prid/\${id}\` : BASE_URL;
+
+    return { name, price, quantity, image, link };
+  }).filter(p => p.name && p.price && p.image && p.link.includes('blinkit.com'));
+
+  window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'scrapeData', data: products }));
+})(); true;`;
+    return script;
+};
