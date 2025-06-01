@@ -6,10 +6,8 @@ import { useRouter } from 'expo-router';
 // const { width } = Dimensions.get('window');
 
 const CartScreen = () => {
-    const { cart } = useCart();
+    const { cart,  getTotalItems } = useCart();
     const router = useRouter();
-
-    const total = cart.reduce((sum, item) => sum + item.product.mrp * item.quantity, 0);
 
     return (
         <View>
@@ -43,7 +41,7 @@ const CartScreen = () => {
                         {'View Cart'}
                         {'\n'}
                         <Text style={styles.cartItems}>
-                            {cart.length} item{cart.length > 1 ? 's' : ''}
+                            {getTotalItems()} item{getTotalItems() > 1 ? 's' : ''}
                         </Text>
                     </Text>
                     <View style={styles.arrowButton}>

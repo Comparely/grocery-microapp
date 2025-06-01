@@ -67,7 +67,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const clearCart = () => setCart([]);
 
-    const getTotalItems = () => cart.reduce((sum, item) => sum + item.quantity, 0);
+    const getTotalItems = () => {
+        const uniqueProductIds = new Set(cart.map((item) => item.product.id));
+        return uniqueProductIds.size;
+    };
 
     return (
         <CartContext.Provider
