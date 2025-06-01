@@ -29,27 +29,10 @@ const platformDeliveryTimes: Record<string, string> = {
 
 const ComparelyCart = () => {
     const router = useRouter();
-    const { cart, addToCart, removeFromCart } = useCart();
+    const { cart, addToCart, grouped, removeFromCart } = useCart();
     const [expandedIndex, setExpandedIndex] = useState<{
         [key: string]: boolean;
     }>({});
-    const groupedByPlatform: Record<string, typeof cart> = {};
-    // console.log(cart);
-    cart.forEach((item) => {
-        item.product.priceOptions.forEach((priceOption) => {
-            const platform = priceOption.platform?.toLowerCase();
-            if (!platform) return;
-
-            if (!groupedByPlatform[platform]) {
-                groupedByPlatform[platform] = [];
-            }
-
-            groupedByPlatform[platform].push({
-                ...item,
-                platform,
-            });
-        });
-    });
 
     // console.log(groupedByPlatform);
 
@@ -81,13 +64,14 @@ const ComparelyCart = () => {
             </View>
 
             <View style={styles.content}>
-                {Object.keys(groupedByPlatform).length === 0 && (
+                {Object.keys(grouped).length === 0 && (
                     <Text style={{ textAlign: 'center', marginTop: 20, color: '#555' }}>
                         Your cart is empty
                     </Text>
                 )}
 
-                {Object.entries(groupedByPlatform).map(([platform, items]) => {
+                {Object.entries(grouped).map(([platform, items]) => {
+                    console.log(platform, items);
                     const totalPrice = getPlatformTotal(items);
                     const extraCharges = platformExtraCharges[platform] || 0;
                     const deliveryTime = platformDeliveryTimes[platform] || '';
@@ -112,6 +96,7 @@ const ComparelyCart = () => {
                                         <Text style={styles.price}>₹{totalPrice}</Text>
                                     </View>
                                 </View>
+
                                 <View style={styles.vendorMeta}>
                                     <View style={styles.row}>
                                         <Text style={styles.extraCharges}>
@@ -123,6 +108,7 @@ const ComparelyCart = () => {
                                         <Text style={styles.deliveryTime}>{deliveryTime}</Text>
                                     </View>
                                 </View>
+
                                 <TouchableOpacity onPress={() => toggleExpand(platform)}>
                                     <Text style={styles.deliveryExpand}>
                                         {expandedIndex[platform] ? '˅' : '>'}
@@ -139,7 +125,9 @@ const ComparelyCart = () => {
                                         const price = priceOption ? priceOption.price : product.mrp;
 
                                         return (
-                                            <View key={product.id} style={styles.productCard}>
+                                            <View
+                                                key={`${platform}-${product.id}`}
+                                                style={styles.productCard}>
                                                 <Image
                                                     source={{ uri: product.imageUrl }}
                                                     style={styles.productImage}
@@ -180,11 +168,10 @@ const ComparelyCart = () => {
                                     <TouchableOpacity
                                         style={styles.openAppBtn}
                                         onPress={() => {
-                                            // Open first product's deeplink for that platform if exists
-                                            const firstProduct = items[0]?.product;
-                                            const deeplinkObj = firstProduct?.priceOptions.find(
-                                                (po) => po.platform === platform,
-                                            );
+                                            const deeplinkObj =
+                                                items[0]?.product?.priceOptions.find(
+                                                    (po) => po.platform === platform,
+                                                );
                                             if (deeplinkObj) {
                                                 Linking.openURL(deeplinkObj.deeplink);
                                             }

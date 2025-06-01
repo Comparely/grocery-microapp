@@ -9,10 +9,11 @@ type CartItem = {
 
 type CartContextType = {
     cart: CartItem[];
-    addToCart: (product: Product, platform: string) => void;
+    addToCart: (product: Product) => void;
     removeFromCart: (productId: string, platform: string) => void;
     clearCart: () => void;
     getTotalItems: () => number;
+    grouped: Record<string, CartItem[]>;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -22,24 +23,35 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const getKey = (productId: string, platform: string) => `${productId}-${platform}`;
 
-    const addToCart = (product: Product, platform: string) => {
+    const addToCart = (product: Product) => {
         setCart((prev) => {
-            const key = getKey(product.id.toString(), platform);
-            const existing = prev.find(
-                (item) => getKey(item.product.id.toString(), item.platform) === key,
-            );
+            const newCart = [...prev];
 
-            if (existing) {
-                return prev.map((item) =>
-                    getKey(item.product.id.toString(), item.platform) === key
-                        ? { ...item, quantity: item.quantity + 1 }
-                        : item,
+            product.priceOptions.forEach(({ platform }) => {
+                const key = getKey(product.id.toString(), platform);
+                const existing = newCart.find(
+                    (item) => getKey(item.product.id.toString(), item.platform) === key,
                 );
-            } else {
-                return [...prev, { product, platform, quantity: 1 }];
-            }
+
+                if (existing) {
+                    existing.quantity += 1;
+                } else {
+                    newCart.push({ product, platform, quantity: 1 });
+                }
+            });
+
+            return newCart;
         });
     };
+
+    const grouped = cart.reduce(
+        (acc, item) => {
+            acc[item.platform] = acc[item.platform] || [];
+            acc[item.platform].push(item);
+            return acc;
+        },
+        {} as Record<string, CartItem[]>,
+    );
 
     const removeFromCart = (productId: string, platform: string) => {
         const key = getKey(productId, platform);
@@ -58,7 +70,8 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const getTotalItems = () => cart.reduce((sum, item) => sum + item.quantity, 0);
 
     return (
-        <CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, getTotalItems }}>
+        <CartContext.Provider
+            value={{ cart, addToCart, removeFromCart, grouped, clearCart, getTotalItems }}>
             {children}
         </CartContext.Provider>
     );
