@@ -13,6 +13,13 @@ const platformLogos: Record<string, any> = {
     bb: require('@/assets/images/instamart1.png'),
 };
 
+const platformCartURLs: Record<string, string> = {
+    blinkit: 'https://blinkit.com/cart',
+    zepto: 'https://www.zeptonow.com/?cart=open',
+    instamart: 'https://www.swiggy.com/instamart/cart',
+    bb: 'https://www.bigbasket.com/basket/',
+};
+
 const platformExtraCharges: Record<string, number> = {
     blinkit: 18,
     zepto: 19,
@@ -71,7 +78,6 @@ const ComparelyCart = () => {
                 )}
 
                 {Object.entries(grouped).map(([platform, items]) => {
-                    console.log(platform, items);
                     const totalPrice = getPlatformTotal(items);
                     const extraCharges = platformExtraCharges[platform] || 0;
                     const deliveryTime = platformDeliveryTimes[platform] || '';
@@ -152,8 +158,7 @@ const ComparelyCart = () => {
                                                 <QuantitySelector
                                                     quantity={quantity}
                                                     onChange={(newQty) => {
-                                                        if (newQty > quantity)
-                                                            addToCart(product, platform);
+                                                        if (newQty > quantity) addToCart(product);
                                                         else if (newQty < quantity)
                                                             removeFromCart(
                                                                 product.id.toString(),
@@ -173,7 +178,7 @@ const ComparelyCart = () => {
                                                     (po) => po.platform === platform,
                                                 );
                                             if (deeplinkObj) {
-                                                Linking.openURL(deeplinkObj.deeplink);
+                                                Linking.openURL(platformCartURLs[platform] || '');
                                             }
                                         }}>
                                         <Text style={styles.openAppText}>Open in {platform}</Text>
