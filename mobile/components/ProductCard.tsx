@@ -46,7 +46,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
             <View style={styles.imageContainer}>
                 {product.isNewPack && (
                     <View style={styles.newPackBadge}>
-                        <Text style={styles.newPackText}>NOW IN NEW PACK</Text>
+                        <Text style={styles.newPackText}>{'NOW IN NEW PACK'}</Text>
                     </View>
                 )}
                 <Image source={{ uri: product.imageUrl }} style={styles.image} />
@@ -59,26 +59,42 @@ export const ProductCard: React.FC<ProductCardProps> = ({ fullWidth, session, pr
                     </View>
                 </View>
 
-                <Text style={styles.mrpText}>MRP ₹{product.mrp}</Text>
+                <Text style={styles.mrpText}>
+                    {'MRP ₹'}
+                    {product.mrp}
+                </Text>
 
                 <Text style={styles.nameText} numberOfLines={2}>
                     {product.name}
                 </Text>
 
+                {/* Always show price options in a column */}
                 <View style={styles.priceOptionsColumn}>
                     {sortedPriceOptions.length === 0 ? (
-                        <Text>No price options available</Text>
+                        <Text>{'No price options available'}</Text>
                     ) : (
-                        sortedPriceOptions.map((priceOption) => (
-                            <PriceOptionSingle
-                                session={session}
+                        sortedPriceOptions.map((priceOption, index) => (
+                            <View
                                 key={
                                     priceOption.id || `${priceOption.platform}-${priceOption.price}`
-                                }
-                                priceOption={priceOption}
-                                productWeight={product.weight}
-                                label=""
-                            />
+                                }>
+                                {index === 0 && (
+                                    <View>
+                                        <Text style={styles.badgeText}>{'Cheapest'}</Text>
+                                    </View>
+                                )}
+                                {index === 1 && (
+                                    <View>
+                                        <Text style={styles.badgeText}>{'Fastest'}</Text>
+                                    </View>
+                                )}
+                                <PriceOptionSingle
+                                    session={session}
+                                    priceOption={priceOption}
+                                    productWeight={product.weight}
+                                    label=""
+                                />
+                            </View>
                         ))
                     )}
                 </View>
@@ -164,7 +180,10 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
             onPress={() => handleDeepLink(priceOption.deeplink ?? '')}
             style={styles.priceOptionContainer}>
             <View style={styles.priceRow}>
-                <Text style={styles.priceText}>₹{priceOption.price}</Text>
+                <Text style={styles.priceText}>
+                    {'₹'}
+                    {priceOption.price}
+                </Text>
                 {getPlatformIcon()}
             </View>
 
@@ -196,7 +215,6 @@ const styles = StyleSheet.create({
     },
     detailsRow: {
         flexDirection: 'row',
-        // justifyContent: 'space-between',
         gap: 8,
         alignItems: 'center',
     },
@@ -211,13 +229,13 @@ const styles = StyleSheet.create({
         color: '#181b19',
     },
     platformImage: {
-        width: 36,
-        height: 18,
+        width: 45,
+        height: 25,
         resizeMode: 'contain',
     },
     platformImageBlinkit: {
-        width: 36,
-        height: 13,
+        width: 45,
+        height: 25,
         resizeMode: 'cover',
     },
     tagSmall: {
@@ -234,6 +252,7 @@ const styles = StyleSheet.create({
     deliveryText: {
         fontSize: 11,
         color: '#181b19',
+        fontWeight: 'bold',
     },
     container: {
         width: '48%',
@@ -241,7 +260,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 7,
     },
     fullWidthContainer: {
-        width: 234,
+        width: 210,
         marginRight: 15,
     },
     imageContainer: {
@@ -249,7 +268,6 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         padding: 4,
         height: width > 768 ? 180 : 130,
-        // marginHorizontal: '40%',
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 8,
@@ -304,10 +322,15 @@ const styles = StyleSheet.create({
         fontSize: width > 768 ? 16 : 13,
         fontWeight: 'bold',
         marginBottom: 6,
-        lineHeight: 18,
     },
     priceOptionsColumn: {
         flexDirection: 'column',
+    },
+    badgeText: {
+        color: '#004738',
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 4,
     },
 });
 

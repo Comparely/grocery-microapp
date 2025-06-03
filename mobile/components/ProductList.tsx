@@ -35,33 +35,33 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
     }
 
     if (products.length === 0) {
-        return (
-            <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>{'Search for products to see results'}</Text>
-            </View>
-        );
+        // return (
+        //     <View style={styles.emptyContainer}>
+        //         <Text style={styles.emptyText}>{'Search for products to see results'}</Text>
+        //     </View>
+        // );
     }
 
-    return (
-        <View style={styles.wrapper}>
-            <FlatList
-                data={products}
-                numColumns={2}
-                renderItem={({ item }) => (
-                    <ProductCard fullWidth={false} session={session} product={item} key={item.id} />
-                )}
-                keyExtractor={(item) => item.id.toString()}
-                columnWrapperStyle={styles.columnWrapper}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{
-                    paddingBottom: 100,
-                    paddingHorizontal: 16,
-                    paddingTop: 16,
-                }}
-                style={styles.list}
-            />
-        </View>
-    );
+    // return (
+    //     <View style={styles.wrapper}>
+    //         <FlatList
+    //             data={products}
+    //             numColumns={2}
+    //             renderItem={({ item }) => (
+    //                 <ProductCard fullWidth={false} session={session} product={item} key={item.id} />
+    //             )}
+    //             keyExtractor={(item) => item.id.toString()}
+    //             columnWrapperStyle={styles.columnWrapper}
+    //             showsVerticalScrollIndicator={false}
+    //             contentContainerStyle={{
+    //                 paddingBottom: 100,
+    //                 paddingHorizontal: 16,
+    //                 paddingTop: 16,
+    //             }}
+    //             style={styles.list}
+    //         />
+    //     </View>
+    // );
 };
 
 const styles = StyleSheet.create({

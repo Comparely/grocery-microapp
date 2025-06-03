@@ -18,6 +18,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/ui/Text';
 import { Category } from '@/types/Category';
 import { useSession } from '@/context/SessionContext';
+import VideoSection from '@/components/videoads';
+import SeparatorLine from '@/components/seperator';
+import DeliveryTags from '@/components/Deliverytags';
+import Footer from '@/components/Footer';
 
 const isWeb = Platform.OS === 'web';
 const isIos = Platform.OS === 'ios';
@@ -157,52 +161,6 @@ const HomeScreen = () => {
                         <Text style={styles.emptyText}>{'No featured products available.'}</Text>
                     </View>
                 )}
-                {/* {categories.length > 0 ? (
-                    <CategoriesSection categories={categories} />
-                ) : (
-                    <View style={styles.emptySection}>
-                        <Text style={styles.emptyText}>No categories available.</Text>
-                    </View>
-                )} */}
-
-                {/* {isWeb && (
-                    <View style={styles.waitlistContainer}> */}
-                {/* <Text style={styles.waitlistHeader}>{"We're Launching Soon!"}</Text>
-                        <Text style={styles.waitlistSubText}>
-                            {'Enter your email below to join our waitlist and get early access.'}
-                        </Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Your email address"
-                            placeholderTextColor="#aaa"
-                            keyboardType="email-address"
-                            value={email}
-                            onChangeText={setEmail}
-                            autoCapitalize="none"
-                        />
-                        <TouchableOpacity
-                            style={styles.waitlistSubmitButton}
-                            onPress={handleWaitlistSubmit}>
-                            <Text style={styles.waitlistSubmitButtonText}>{'Submit'}</Text>
-                        </TouchableOpacity> */}
-
-                {/* <Text style={styles.appComingSoonText}>
-            Our app is coming soon!
-
-            </Text>
-            <View style={styles.storeIconsContainer}>
-              <View style={styles.storeIconWrapper}>
-                <Ionicons name="logo-google-playstore" size={40} color="#9d9d9d" />
-              </View>
-              <View style={styles.storeIconWrapper}>
-                <Ionicons name="logo-apple-appstore" size={40} color="#9d9d9d" />
-              </View>
-            </View> */}
-                {/* </View>
-                )} */}
-
-                {/* -----------------------------app coming soon----------------------------------------------- */}
-
                 {isWeb && false && (
                     <View style={styles.appComingSoonContainer}>
                         <Text style={styles.appComingSoonHeader}>{'App Coming Soon'}</Text>
@@ -246,6 +204,11 @@ const HomeScreen = () => {
                         </View>
                     </View>
                 )}
+                <SeparatorLine />
+                <VideoSection />
+                <SeparatorLine />
+                <DeliveryTags />
+                <Footer />
             </ScrollView>
 
             <Animated.View style={[styles.floatingWhatsapp]}>
