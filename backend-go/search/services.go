@@ -868,6 +868,107 @@ func mergeProductsV2(productArrays [][]Product, appState config.AppState, query 
 	return finalMerged
 }
 
+func mergeProductsFromCacheAndPatch(appState config.AppState, productArrays [][]Product, query string) []Product {
+	ctx := context.Background()
+	var finalMerged []Product
+	mergeMap := make(map[string]int) // normalized name + brand → index in finalMerged
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for _, productList := range productArrays {
+		for _, incoming := range productList {
+			wg.Add(1)
+			go func(incoming Product) {
+				defer wg.Done()
+				normalizedName := normalize(incoming.Name)
+
+				for _, priceOption := range incoming.Prices {
+					platform := strings.ToLower(priceOption.Source)
+					redisKey := fmt.Sprintf("product:%s-%s", normalizedName, platform)
+
+					// Fetch existing mapped products
+					cached, err := appState.RedisClient.Get(ctx, redisKey).Bytes()
+					var mappedGroup []Product
+					if err == nil {
+						err = json.Unmarshal(cached, &mappedGroup)
+						if err != nil {
+							log.Printf("Failed to parse Redis mapped group for key %s", redisKey)
+							mappedGroup = []Product{}
+						}
+					} else {
+						mappedGroup = []Product{}
+					}
+
+					// Check if this product belongs to any group in mappedGroup
+					matched := false
+					for i, prod := range mappedGroup {
+						if isSimilarProduct(prod, incoming) {
+							// Patch the group (update variants/prices only if new)
+							merged := prod
+							merged.Prices = append(merged.Prices, incoming.Prices...)
+							mappedGroup[i] = merged
+							matched = true
+							break
+						}
+					}
+
+					if !matched {
+						mappedGroup = append(mappedGroup, incoming)
+					}
+
+					// Patch Redis with updated mappedGroup (only this key)
+					newCache, err := json.Marshal(mappedGroup)
+					if err == nil {
+						err = appState.RedisClient.Set(ctx, redisKey, newCache, 48*time.Hour).Err()
+						if err != nil {
+							log.Printf("Failed to patch Redis group for key %s: %v", redisKey, err)
+						}
+					} else {
+						log.Printf("Failed to marshal patched group for key %s: %v", redisKey, err)
+					}
+				}
+
+				mu.Lock()
+				key := normalizedName + "|" + normalize(incoming.Brand)
+				if idx, ok := mergeMap[key]; ok {
+					if isSimilarProduct(finalMerged[idx], incoming) {
+						finalMerged[idx].Prices = append(finalMerged[idx].Prices, incoming.Prices...)
+					}
+				} else {
+					mergeMap[key] = len(finalMerged)
+					finalMerged = append(finalMerged, incoming)
+				}
+				mu.Unlock()
+			}(incoming)
+		}
+	}
+	wg.Wait()
+
+	// Deduplicate variants
+	for i := range finalMerged {
+		priceMap := make(map[string][]Variant)
+		seen := make(map[string]struct{})
+		for _, po := range finalMerged[i].Prices {
+			for _, v := range po.Variants {
+				priceMap[po.Source] = appendIfNotExistsVariant(priceMap[po.Source], v, seen)
+			}
+		}
+		var newPrices []PriceOption
+		for source, variants := range priceMap {
+			newPrices = append(newPrices, PriceOption{Source: source, Variants: variants})
+		}
+		finalMerged[i].Prices = newPrices
+	}
+
+	finalMerged = applyPendingMappings(finalMerged, appState, query)
+
+	sort.Slice(finalMerged, func(i, j int) bool {
+		return countUniqueSources(finalMerged[i].Prices) > countUniqueSources(finalMerged[j].Prices)
+	})
+
+	return finalMerged
+}
+
 func SearchProducts(appState config.AppState, query string, deviceID string) ([]Product, error) {
 	var (
 		blinkitProducts   []Product
@@ -1178,6 +1279,158 @@ func SearchProductsV2(appState config.AppState, query string, deviceID string) (
 			log.Printf("Failed to cache merged products for query '%s': %v", query, err)
 		}
 	}
+
+	// Send unmapped to Ginger (only for fresh fetches)
+	unmapped := []Product{}
+	for _, prod := range mergedProducts {
+		if len(prod.Prices) == 1 {
+			unmapped = append(unmapped, prod)
+		}
+	}
+
+	if len(unmapped) > 0 {
+		unmappedJSON, err := json.Marshal(unmapped)
+		if err != nil {
+			log.Printf("Failed to marshal unmapped products for query '%s': %v", query, err)
+		} else {
+			unmappedKey := "unmapped:" + query
+			err = appState.RedisClient.Set(ctx, unmappedKey, unmappedJSON, 24*time.Hour).Err()
+			if err != nil {
+				log.Printf("Failed to store unmapped products in Redis for query '%s': %v", query, err)
+			} else {
+				log.Printf("Queued %d unmapped products for query '%s' in Redis", len(unmapped), query)
+				go func() {
+					payload := fmt.Sprintf(`{"type": "search-intelligence", "data": {"query": "%s"}}`, query)
+					resp, err := http.Post(config.GetGingerURL("spawn"), "application/json", bytes.NewBuffer([]byte(payload)))
+					if err != nil {
+						log.Printf("Failed to trigger Ginger API for query '%s': %v", query, err)
+						return
+					}
+					defer resp.Body.Close()
+					log.Printf("Triggered Ginger API for query '%s', status: %s", query, resp.Status)
+				}()
+			}
+		}
+	}
+
+	return mergedProducts, nil
+}
+
+func SearchProductsV3(appState config.AppState, query string, deviceID string) ([]Product, error) {
+	ctx := context.Background()
+
+	var (
+		blinkitProducts   []Product
+		instamartProducts []Product
+		zeptoProducts     []Product
+		bigbasketProducts []Product
+		errBlinkit        error
+		errInstamart      error
+		errZepto          error
+		errBigbasket      error
+	)
+	var lat, lng string
+	var zeptoStoreId string
+	var instamartStoreId string
+
+	if deviceID != "" {
+		sess, err := sessions.GetSession(ctx, appState, deviceID)
+		if err == nil {
+			lat = sess.Lat
+			lng = sess.Lng
+			zeptoStoreId = sess.MarketPlaceAttributes.ZeptoStoreAttributes.StoreID
+			instamartStoreId = sess.MarketPlaceAttributes.InstamartStoreAttributes.StoreID
+		} else {
+			log.Printf("Session not found for deviceID %s: %v", deviceID, err)
+		}
+	}
+
+	if lat == "" && lng == "" {
+		lat = "12.975060"
+		lng = "77.604691"
+	}
+	if zeptoStoreId == "" {
+		zeptoStoreId = "fa5e892d-65d7-4da6-9bde-e1f22deb7b6f"
+	}
+	if instamartStoreId == "" {
+		instamartStoreId = "1402463"
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(4)
+
+	go func() {
+		defer wg.Done()
+		blinkitRaw, err := fetchBlinkitProducts(url.QueryEscape(query), lat, lng)
+		if err != nil {
+			errBlinkit = err
+			log.Printf("Blinkit fetch failed for query '%s': %v", query, err)
+			return
+		}
+		blinkitProducts = mapBlinkit(map[string]interface{}{"products": blinkitRaw})
+	}()
+
+	go func() {
+		defer wg.Done()
+		instaRaw, err := fetchInstamartProducts(url.QueryEscape(query), instamartStoreId)
+		if err != nil {
+			errInstamart = err
+			log.Printf("Instamart fetch failed for query '%s': %v", query, err)
+			return
+		}
+		instamartProducts = mapInstamart(instaRaw)
+	}()
+
+	go func() {
+		defer wg.Done()
+		zeptoRaw, err := fetchZeptoProductsV3(url.QueryEscape(query), lat, lng)
+		if err != nil {
+			errZepto = err
+			log.Printf("Zepto fetch failed for query '%s': %v", query, err)
+			return
+		}
+		zeptoProducts = mapZepto(zeptoRaw)
+	}()
+
+	go func() {
+		defer wg.Done()
+		bigbasketRaw, err := fetchBigBasketProducts(url.QueryEscape(query), lat, lng)
+		if err != nil {
+			errBigbasket = err
+			log.Printf("BigBasket fetch failed for query '%s': %v", query, err)
+			return
+		}
+		bigbasketProducts = mapBigBasket(bigbasketRaw)
+	}()
+
+	wg.Wait()
+
+	log.Printf("blinkit: %d, instamart: %d, zepto: %d, bigbasket: %d", len(blinkitProducts), len(instamartProducts), len(zeptoProducts), len(bigbasketProducts))
+
+	if errBlinkit != nil && errInstamart != nil && errZepto != nil {
+		return nil, fmt.Errorf("all sources failed: Blinkit (%v), Instamart (%v), Zepto (%v)", errBlinkit, errInstamart, errZepto)
+	}
+
+	availableProducts := [][]Product{}
+	if errBlinkit == nil {
+		availableProducts = append(availableProducts, blinkitProducts)
+	}
+	if errInstamart == nil {
+		availableProducts = append(availableProducts, instamartProducts)
+	}
+	if errZepto == nil {
+		availableProducts = append(availableProducts, zeptoProducts)
+	}
+	if errBigbasket == nil {
+		availableProducts = append(availableProducts, bigbasketProducts)
+	}
+
+	if len(availableProducts) == 0 {
+		log.Printf("No products available for query '%s' due to all sources failing", query)
+		return []Product{}, nil
+	}
+
+	mergedProducts := mergeProductsFromCacheAndPatch(appState, availableProducts, query)
 
 	// Send unmapped to Ginger (only for fresh fetches)
 	unmapped := []Product{}
