@@ -1,6 +1,17 @@
-import React, { useEffect, useRef } from 'react';
-import { StyleSheet, TextInput, View, TouchableOpacity, Platform } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import {
+    StyleSheet,
+    TextInput,
+    View,
+    TouchableOpacity,
+    Platform,
+    Text,
+    ActivityIndicator,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const RECENT_SEARCHES_KEY = 'recentSearches';
 
 interface SearchBarProps {
     value: string;
@@ -8,7 +19,7 @@ interface SearchBarProps {
     placeholder?: string;
     onClick?: () => void;
     editable?: boolean;
-    onSubmitEditing?: () => void;
+    onSubmitEditing?: () => Promise<void> | void;
     onBlur?: () => void;
 }
 
@@ -22,51 +33,149 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     onBlur,
 }) => {
     const inputRef = useRef<TextInput>(null);
+    const [showRecent, setShowRecent] = useState(false);
+    const [recentSearches, setRecentSearches] = useState<string[]>([]);
+    const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        if (editable && inputRef.current) {
-            inputRef.current.focus();
-        }
-    }, [editable]);
+        const loadRecentSearches = async () => {
+            try {
+                const storedSearches = await AsyncStorage.getItem(RECENT_SEARCHES_KEY);
+                if (storedSearches) {
+                    setRecentSearches(JSON.parse(storedSearches));
+                }
+            } catch (error) {
+                console.error('Failed to load recent searches:', error);
+            }
+        };
+        loadRecentSearches();
+    }, []);
+
+    useEffect(() => {
+        const saveRecentSearches = async () => {
+            try {
+                await AsyncStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recentSearches));
+            } catch (error) {
+                console.error('Failed to save recent searches:', error);
+            }
+        };
+        saveRecentSearches();
+    }, [recentSearches]);
 
     const handlePress = () => {
         if (onClick && !editable) {
             onClick();
+        } else {
+            setShowRecent(true);
+        }
+    };
+
+    const handleRemoveRecent = (item: string) => {
+        setRecentSearches((prev) => prev.filter((search) => search !== item));
+    };
+
+    const handleRecentSearchClick = async (item: string) => {
+        onChangeText(item);
+        setShowRecent(false);
+        if (onSubmitEditing) {
+            setLoading(true);
+            try {
+                await onSubmitEditing();
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
+    const handleBlur = () => {
+        setShowRecent(false);
+        onBlur && onBlur();
+    };
+
+    const handleSubmitEditing = async () => {
+        if (value.trim().length > 0) {
+            setRecentSearches((prev) => {
+                const filtered = prev.filter(
+                    (search) => search.toLowerCase() !== value.trim().toLowerCase(),
+                );
+                const newList = [value.trim(), ...filtered];
+                return newList.slice(0, 5);
+            });
+        }
+        setShowRecent(false);
+        setLoading(true);
+
+        try {
+            await onSubmitEditing?.();
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <TouchableOpacity
-            onPress={editable ? undefined : handlePress}
-            style={styles.touchableContainer}
-            activeOpacity={editable ? 1 : 0.7}>
-            <View style={styles.container} pointerEvents={editable ? 'auto' : 'none'}>
-                <Feather name="search" size={20} color="#181b19" style={styles.icon} />
-                <TextInput
-                    ref={inputRef}
-                    style={styles.input}
-                    value={value}
-                    onChangeText={onChangeText}
-                    placeholder={placeholder}
-                    placeholderTextColor="#9d9d9d"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    editable={editable}
-                    onFocus={editable ? undefined : handlePress}
-                    onSubmitEditing={onSubmitEditing}
-                    onBlur={onBlur}
-                />
-                {value.length > 0 && editable && (
-                    <TouchableOpacity onPress={() => onChangeText('')}>
-                        <Feather name="x" size={20} color="#181b19" />
-                    </TouchableOpacity>
-                )}
-            </View>
-        </TouchableOpacity>
+        <View style={styles.wrapper}>
+            {showRecent && recentSearches.length > 0 && (
+                <View style={styles.dropdown}>
+                    {recentSearches.map((item) => (
+                        <View style={styles.recentItem} key={item}>
+                            <TouchableOpacity
+                                onPress={() => handleRecentSearchClick(item)}
+                                style={styles.recentTextContainer}>
+                                <Text style={styles.recentText}>{item}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => handleRemoveRecent(item)}
+                                style={styles.crossContainer}>
+                                <Feather name="x" size={16} color="#181b19" />
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                </View>
+            )}
+
+            <TouchableOpacity
+                onPress={editable ? undefined : handlePress}
+                style={styles.touchableContainer}
+                activeOpacity={editable ? 1 : 0.7}>
+                <View style={styles.container} pointerEvents={editable ? 'auto' : 'none'}>
+                    <Feather name="search" size={20} color="#181b19" style={styles.icon} />
+                    <TextInput
+                        ref={inputRef}
+                        style={styles.input}
+                        value={value}
+                        onChangeText={onChangeText}
+                        placeholder={placeholder}
+                        placeholderTextColor="#9d9d9d"
+                        autoCapitalize="none"
+                        autoCorrect={false}
+                        editable={editable}
+                        onFocus={handlePress}
+                        onSubmitEditing={handleSubmitEditing}
+                        onBlur={handleBlur}
+                    />
+                    {value.length > 0 && editable && (
+                        <TouchableOpacity onPress={() => onChangeText('')}>
+                            <Feather name="x" size={20} color="#181b19" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            </TouchableOpacity>
+
+            {loading && (
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color="#181b19" />
+                    <Text style={styles.loadingText}>Loading...</Text>
+                </View>
+            )}
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
+    wrapper: {
+        width: '100%',
+        position: 'relative',
+    },
     touchableContainer: {
         width: '100%',
     },
@@ -88,6 +197,56 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         paddingVertical: 4,
         paddingHorizontal: 8,
+    },
+    dropdown: {
+        position: 'absolute',
+        top: 58, // Adjust based on expected dropdown height
+        left: 0,
+        right: 0,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 1 },
+        shadowRadius: 4,
+        zIndex: 999,
+        maxHeight: 180,
+        overflow: 'hidden',
+    },
+    recentItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e0e0e0',
+    },
+    recentTextContainer: {
+        flex: 1,
+    },
+    recentText: {
+        fontSize: 16,
+        color: '#181b19',
+    },
+    crossContainer: {
+        marginLeft: 8,
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 10,
+    },
+    loadingText: {
+        marginTop: 8,
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
 });
 

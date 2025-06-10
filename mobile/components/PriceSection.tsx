@@ -101,6 +101,7 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         paddingHorizontal: 15,
         marginBottom: 4,
+        alignSelf: 'center',
     },
     subtitle: {
         fontSize: width > 768 ? 18 : 16,
@@ -108,6 +109,8 @@ const styles = StyleSheet.create({
         textAlign: 'left',
         paddingHorizontal: 15,
         marginBottom: 15,
+        alignSelf: 'center',
+        fontWeight: '500',
     },
     listContainer: {
         position: 'relative',

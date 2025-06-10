@@ -78,26 +78,36 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.locationButton} onPress={handleLocationPress}>
-                <Ionicons name="location" size={24} color="#cbd402" />
-                <View style={styles.locationInfo}>
-                    <View style={styles.row}>
-                        <Text style={styles.locationText}>{'Deliver to'}</Text>
-                        <Ionicons
-                            name="chevron-down"
-                            size={20}
-                            color="yellow"
-                            style={{ marginLeft: 4 }}
-                        />
+            <View style={styles.container2}>
+                <TouchableOpacity style={styles.locationButton} onPress={handleLocationPress}>
+                    <Ionicons name="location" size={24} color="#cbd402" />
+                    <View style={styles.locationInfo}>
+                        <View style={styles.row}>
+                            <Text style={styles.locationText}>{'Deliver to'}</Text>
+                            <Ionicons
+                                name="chevron-down"
+                                size={20}
+                                color="white"
+                                style={{ marginLeft: 4 }}
+                            />
+                        </View>
+
+                        <Text style={styles.addressText}>
+                            {trimIfNeeded(
+                                storedLocation ?? session?.address ?? 'Tap to set location',
+                            )}
+                        </Text>
                     </View>
+                </TouchableOpacity>
 
-                    <Text style={styles.addressText}>
-                        {trimIfNeeded(storedLocation ?? session?.address ?? 'Tap to set location')}
-                    </Text>
-                </View>
-            </TouchableOpacity>
+                {/* <Image
+                    source={require('../assets/images/comparely-yellow.png')}
+                    style={styles.brandImage}
+                    resizeMode="contain"
+                /> */}
+            </View>
 
-            {session && (
+            {/* {session && (
                 <View style={styles.rightContainer}>
                     <View
                         style={[
@@ -128,7 +138,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                         </View>
                     </View>
                 </View>
-            )}
+            )} */}
 
             <View style={styles.searchContainer}>
                 <SearchBar
@@ -149,6 +159,11 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         backgroundColor: '#004738',
     },
+    container2: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
     locationButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -157,8 +172,6 @@ const styles = StyleSheet.create({
         marginBottom: 5,
     },
     locationInfo: {
-        // Container for both lines
-        // Add any padding/margin you want here
         marginLeft: 2,
         marginTop: 4,
     },
@@ -167,9 +180,14 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
+    // brandImage: {
+    //     width: 40, // adjust as needed
+    //     height: 40, // adjust as needed
+    //     marginRight: 20,
+    // },
 
     locationText: {
-        color: 'yellow',
+        color: 'white',
         fontSize: 14,
     },
 

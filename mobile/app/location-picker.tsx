@@ -87,7 +87,12 @@ const LocationPicker = () => {
         <KeyboardAvoidingView
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <Text style={styles.title}>{'Set Your Delivery Location'}</Text>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={24} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.title}>{'Set Location'}</Text>
+            </View>
 
             <View style={styles.searchContainer}>
                 <Ionicons name="search" size={20} color="#aaa" />
@@ -106,26 +111,28 @@ const LocationPicker = () => {
                 />
             </View>
 
-            {loading && (
-                <ActivityIndicator size="small" color="#fff" style={{ marginBottom: 20 }} />
-            )}
-
-            {searchResults.length > 0 && (
-                <FlatList
-                    style={{ maxHeight: 200, marginBottom: 20 }}
-                    data={searchResults}
-                    keyExtractor={(item, idx) => item.address + idx}
-                    renderItem={({ item }) => (
-                        <TouchableOpacity
-                            onPress={() => {
-                                void handleSelectLocation(item.address);
-                            }}
-                            style={styles.resultItem}>
-                            <RNText style={styles.resultText}>{item.address}</RNText>
-                        </TouchableOpacity>
-                    )}
-                />
-            )}
+            <View style={styles.emptyContainer}>
+                {loading ? (
+                    <ActivityIndicator size="small" color="#000" style={{ marginBottom: 20 }} />
+                ) : searchResults.length > 0 ? (
+                    <FlatList
+                        style={{ width: '100%' }}
+                        data={searchResults}
+                        keyExtractor={(item, idx) => item.address + idx}
+                        renderItem={({ item }) => (
+                            <TouchableOpacity
+                                onPress={() => {
+                                    void handleSelectLocation(item.address);
+                                }}
+                                style={styles.resultItem}>
+                                <RNText style={styles.resultText}>{item.address}</RNText>
+                            </TouchableOpacity>
+                        )}
+                    />
+                ) : (
+                    <Text style={styles.emptyText}>{'Search Location to see results'}</Text>
+                )}
+            </View>
 
             {location && searchResults.length === 0 && (
                 <Text style={styles.locationPreview}>
@@ -140,16 +147,28 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#004738',
-        padding: 20,
+        padding: 16,
         justifyContent: 'flex-start',
     },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 20,
+        marginBottom: 20,
+        position: 'relative',
+        height: 40,
+    },
+    backButton: {
+        zIndex: 2,
+    },
     title: {
-        fontSize: 20,
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        textAlign: 'center',
+        fontSize: 17,
         fontWeight: '600',
         color: '#fff',
-        marginBottom: 20,
-        textAlign: 'center',
-        justifyContent: 'center',
     },
     searchContainer: {
         flexDirection: 'row',
@@ -166,6 +185,24 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#000',
     },
+    emptyContainer: {
+        flex: 1,
+        backgroundColor: '#fffaf0',
+        borderRadius: 24,
+        padding: 16,
+        margin: 16,
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        minHeight: 700,
+        width: '99%',
+        alignSelf: 'center',
+    },
+    emptyText: {
+        fontSize: 16,
+        color: 'black',
+        textAlign: 'center',
+        marginTop: 20,
+    },
     locationPreview: {
         color: '#fff',
         fontSize: 14,
@@ -175,12 +212,18 @@ const styles = StyleSheet.create({
     resultItem: {
         backgroundColor: '#fff',
         padding: 12,
-        borderBottomColor: '#ddd',
-        borderBottomWidth: 1,
-        borderRadius: 5,
+        marginBottom: 8,
+        borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 1,
+        elevation: 1,
+        width: '100%',
     },
     resultText: {
         color: '#000',
+        fontSize: 14,
     },
 });
 

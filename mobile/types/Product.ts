@@ -13,6 +13,7 @@ export interface PriceOption {
     id?: number;
     platform?: string;
     price?: number;
+    originalPrice?: number;
     deliveryTime?: number;
     deeplink?: string;
     weight?: string;

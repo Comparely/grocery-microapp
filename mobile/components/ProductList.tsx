@@ -17,6 +17,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 
     useEffect(() => {
         if (!isLoading && products.length > 0 && showInitialLoadingAnimation) {
+            // Do nothing, wait for animation to complete
         } else if (!isLoading && products.length === 0) {
             setShowInitialLoadingAnimation(false);
         }
@@ -28,7 +29,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 
     if (isLoading || showInitialLoadingAnimation) {
         return (
-            <View>
+            <View style={styles.wrapper1}>
                 <ComparingScreen onAnimationComplete={handleComparingAnimationComplete} />
             </View>
         );
@@ -43,7 +44,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
     }
 
     return (
-        <View style={styles.wrapper}>
+        <View style={styles.wrapper1}>
             <FlatList
                 data={products}
                 numColumns={2}
@@ -65,7 +66,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 };
 
 const styles = StyleSheet.create({
-    wrapper: {
+    wrapper1: {
         flex: 1,
         backgroundColor: '#fffaf0',
     },
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#9d9d9d',
+        color: 'black',
         textAlign: 'center',
     },
 });

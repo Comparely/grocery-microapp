@@ -1,27 +1,21 @@
 import React from 'react';
-import { View } from 'react-native';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-const ThreeQuarterCircle: React.FC = () => {
+const ClockIcon: React.FC<{ size?: number; color?: string }> = ({ size = 16, color = 'gray' }) => {
     return (
-        <View>
-            <Svg height="15" width="15" viewBox="0 0 100 100">
-                <Circle cx="50" cy="50" r="30" fill="#C6DB00" />
-
-                <Path
-                    d="
-      M 50,50
-      L 50,5
-      A 45,45 0 0,1 95,50
-      Z
-    "
-                    fill="white"
-                />
-
-                <Circle cx="50" cy="50" r="45" stroke="black" strokeWidth="10" fill="none" />
-            </Svg>
-        </View>
+        <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+            {/* Outer Circle */}
+            <Circle cx="12" cy="12" r="9" stroke={color} strokeWidth="2" />
+            {/* Clock hands - hour and minute */}
+            <Path
+                d="M12 8v4l3 2"
+                stroke={color}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </Svg>
     );
 };
 
-export default ThreeQuarterCircle;
+export default ClockIcon;
