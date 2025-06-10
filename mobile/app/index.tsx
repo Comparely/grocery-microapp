@@ -3,6 +3,7 @@ import HomeScreen from '@/screens/HomeScreen';
 import '@/global.css';
 import Head from 'expo-router/head';
 
+
 const App = () => {
     return (
         <SafeAreaView style={styles.container}>

@@ -13,10 +13,9 @@ const ComparingScreen = ({
     const scannerAnim = useRef(new Animated.Value(0)).current;
     const progressAnim = useRef(new Animated.Value(0)).current;
     const fadeOutAnim = useRef(new Animated.Value(1)).current;
+    const carouselAnim = useRef(new Animated.Value(0)).current;
 
     const [loadingComplete, setLoadingComplete] = useState(false);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const fadeAnim = useRef(new Animated.Value(1)).current;
 
     const imageSources = [
         require('../assets/images/instamartlogo.jpeg'),
@@ -24,40 +23,23 @@ const ComparingScreen = ({
         require('../assets/images/bblogo.png'),
     ];
 
-    const IMAGE_WIDTH = 140;
-    const ITEM_SPACING = 10;
-    const IMAGE_SPACING = IMAGE_WIDTH + ITEM_SPACING * 2;
-
-    const positions = [
-        useRef(new Animated.Value(-IMAGE_SPACING)).current,
-        useRef(new Animated.Value(0)).current,
-        useRef(new Animated.Value(IMAGE_SPACING)).current,
-    ];
-    const scales = [
-        useRef(new Animated.Value(1)).current,
-        useRef(new Animated.Value(1.3)).current,
-        useRef(new Animated.Value(1)).current,
-    ];
-    const opacities = [
-        useRef(new Animated.Value(0.7)).current,
-        useRef(new Animated.Value(1)).current,
-        useRef(new Animated.Value(0.7)).current,
-    ];
-
-    const [carouselImages, setCarouselImages] = useState(imageSources);
+    const IMAGE_WIDTH = 180;
+    const ITEM_SPACING = -20;
+    const ITEM_WIDTH_WITH_SPACING = IMAGE_WIDTH + ITEM_SPACING * 2;
+    const TOTAL_WIDTH = ITEM_WIDTH_WITH_SPACING * imageSources.length;
 
     useEffect(() => {
         Animated.loop(
             Animated.sequence([
                 Animated.timing(scannerAnim, {
                     toValue: 1,
-                    duration: 1500, // Increased duration for slower animation
+                    duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.linear,
                 }),
                 Animated.timing(scannerAnim, {
                     toValue: 0,
-                    duration: 1500, // Increased duration for slower animation
+                    duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.linear,
                 }),
@@ -67,7 +49,7 @@ const ComparingScreen = ({
         progressAnim.setValue(0);
         Animated.timing(progressAnim, {
             toValue: 1,
-            duration: 8000, // Slightly increased overall duration
+            duration: 8000,
             useNativeDriver: false,
         }).start(() => {
             setLoadingComplete(true);
@@ -82,87 +64,23 @@ const ComparingScreen = ({
             });
         });
 
-        let currentImages = [...carouselImages];
-
         const animateCarousel = () => {
-            const slideAnimations = positions.map((pos, index) =>
-                Animated.timing(pos, {
-                    toValue: (index - 1) * IMAGE_SPACING,
-                    duration: 2000, // Increased duration for slower slide
-                    easing: Easing.out(Easing.quad),
-                    useNativeDriver: true,
-                }),
-            );
-
-            const scaleDownLeft = Animated.timing(scales[0], {
-                toValue: 1,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
+            const segmentDuration = 1000;
+            const pauseDuration = 1000;
+            const segmentAnimations = imageSources.map((_, index) => {
+                const segmentStart = index / imageSources.length;
+                const segmentEnd = (index + 1) / imageSources.length;
+                return Animated.sequence([
+                    Animated.timing(carouselAnim, {
+                        toValue: segmentEnd,
+                        duration: segmentDuration,
+                        easing: Easing.linear,
+                        useNativeDriver: true,
+                    }),
+                    Animated.delay(pauseDuration),
+                ]);
             });
-            const scaleUpCenter = Animated.timing(scales[1], {
-                toValue: 1.3,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            const scaleDownRight = Animated.timing(scales[2], {
-                toValue: 1,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            const fadeOutLeft = Animated.timing(opacities[0], {
-                toValue: 0.7,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            const fadeInCenter = Animated.sequence([
-                Animated.timing(opacities[1], {
-                    toValue: 0.9,
-                    duration: 800, // Adjusted duration
-                    useNativeDriver: true,
-                }),
-                Animated.timing(opacities[1], {
-                    toValue: 1,
-                    duration: 800, // Adjusted duration
-                    easing: Easing.inOut(Easing.quad),
-                    useNativeDriver: true,
-                }),
-            ]);
-
-            const fadeOutRight = Animated.timing(opacities[2], {
-                toValue: 0.7,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            Animated.parallel([
-                ...slideAnimations,
-                scaleDownLeft,
-                scaleUpCenter,
-                scaleDownRight,
-                fadeOutLeft,
-                fadeInCenter,
-                fadeOutRight,
-            ]).start(() => {
-                currentImages = [...currentImages.slice(1), currentImages[0]];
-                setCarouselImages(currentImages);
-
-                setTimeout(() => {
-                    positions.forEach((pos, index) => {
-                        pos.setValue((index - 1) * IMAGE_SPACING);
-                    });
-                    scales[0].setValue(1);
-                    scales[1].setValue(1.3);
-                    scales[2].setValue(1);
-                    opacities[0].setValue(0.7);
-                    opacities[1].setValue(1);
-                    opacities[2].setValue(0.7);
-
-                    animateCarousel();
-                }, 1500); // Increased delay before next animation
-            });
+            Animated.loop(Animated.sequence(segmentAnimations)).start();
         };
 
         animateCarousel();
@@ -171,6 +89,7 @@ const ComparingScreen = ({
             scannerAnim.stopAnimation();
             progressAnim.stopAnimation();
             fadeOutAnim.stopAnimation();
+            carouselAnim.stopAnimation();
         };
     }, [onAnimationComplete]);
 
@@ -184,6 +103,11 @@ const ComparingScreen = ({
         outputRange: ['0%', '100%'],
     });
 
+    const carouselTranslateX = carouselAnim.interpolate({
+        inputRange: [0, 1],
+        outputRange: [0, -TOTAL_WIDTH],
+    });
+
     return (
         <Animated.View style={[styles.container, { opacity: loadingComplete ? fadeOutAnim : 1 }]}>
             <View style={styles.content}>
@@ -191,20 +115,26 @@ const ComparingScreen = ({
                 <Text style={styles.subtitle}>{'We are finding you the best deals...'}</Text>
 
                 <View style={styles.carouselContainer}>
-                    {[0, 1, 2].map((i) => (
-                        <Animated.Image
-                            key={i}
-                            source={carouselImages[i]}
-                            style={[
-                                styles.animatedImage,
-                                {
-                                    transform: [{ translateX: positions[i] }, { scale: scales[i] }],
-                                    zIndex: i === 1 ? 2 : 1,
-                                    opacity: opacities[i],
-                                },
-                            ]}
-                        />
-                    ))}
+                    <Animated.View
+                        style={[
+                            styles.carouselTrack,
+                            { transform: [{ translateX: carouselTranslateX }] },
+                        ]}>
+                        {imageSources.map((image, index) => (
+                            <Image
+                                key={`first-${index}`}
+                                source={image}
+                                style={[styles.animatedImage, { marginHorizontal: ITEM_SPACING }]}
+                            />
+                        ))}
+                        {imageSources.map((image, index) => (
+                            <Image
+                                key={`second-${index}`}
+                                source={image}
+                                style={[styles.animatedImage, { marginHorizontal: ITEM_SPACING }]}
+                            />
+                        ))}
+                    </Animated.View>
                     <View style={styles.scannerFrameOverlay}>
                         <Animated.View
                             style={[
@@ -263,11 +193,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         overflow: 'hidden',
     },
-    animatedImage: {
-        width: 140,
-        height: 80,
-        resizeMode: 'contain',
+    carouselTrack: {
+        flexDirection: 'row',
         position: 'absolute',
+        left: 0,
+    },
+    animatedImage: {
+        width: 180,
+        height: 100,
+        resizeMode: 'contain',
     },
     scannerFrameOverlay: {
         position: 'absolute',
@@ -307,7 +241,7 @@ const styles = StyleSheet.create({
     bottomPanel: {
         width: '100%',
         backgroundColor: '#FFFAF0',
-        marginTop: 80,
+        marginTop: 50,
         padding: 60,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
@@ -316,6 +250,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: -3 },
         shadowOpacity: 0.1,
         shadowRadius: 5,
+        bottom: 0,
     },
     itemName: {
         fontSize: 23,
