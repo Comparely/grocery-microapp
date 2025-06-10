@@ -100,11 +100,11 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                     </View>
                 </TouchableOpacity>
 
-                <Image
+                {/* <Image
                     source={require('../assets/images/comparely-yellow.png')}
                     style={styles.brandImage}
                     resizeMode="contain"
-                />
+                /> */}
             </View>
 
             {/* {session && (
@@ -180,11 +180,11 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
     },
-    brandImage: {
-        width: 40, // adjust as needed
-        height: 40, // adjust as needed
-        marginRight: 20,
-    },
+    // brandImage: {
+    //     width: 40, // adjust as needed
+    //     height: 40, // adjust as needed
+    //     marginRight: 20,
+    // },
 
     locationText: {
         color: 'white',

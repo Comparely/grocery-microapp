@@ -41,8 +41,6 @@ const Footer = () => {
                 </TouchableOpacity>
             </View>
 
-
-
             <Text style={styles.copyright}>
                 © 2025 – RKA FORTUNE Pvt. Ltd.{' '}
                 <Text style={styles.link} onPress={() => Linking.openURL('#')}>

@@ -11,7 +11,7 @@ const styles = StyleSheet.create({
     separator: {
         height: 1,
         backgroundColor: '#E0E0E0', // Light gray
-        marginVertical: 16,
+        // marginVertical: 16,
         // marginHorizontal: 20,
     },
 });

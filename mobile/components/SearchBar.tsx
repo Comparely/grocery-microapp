@@ -19,7 +19,7 @@ interface SearchBarProps {
     placeholder?: string;
     onClick?: () => void;
     editable?: boolean;
-    onSubmitEditing?: () => Promise<void> | void; // Marked as potentially async
+    onSubmitEditing?: () => Promise<void> | void;
     onBlur?: () => void;
 }
 
@@ -37,7 +37,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     const [recentSearches, setRecentSearches] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
 
-    // Load recent searches from AsyncStorage on mount
     useEffect(() => {
         const loadRecentSearches = async () => {
             try {
@@ -52,7 +51,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         loadRecentSearches();
     }, []);
 
-    // Save recent searches to AsyncStorage whenever they change
     useEffect(() => {
         const saveRecentSearches = async () => {
             try {
@@ -76,9 +74,17 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         setRecentSearches((prev) => prev.filter((search) => search !== item));
     };
 
-    const handleRecentSearchClick = (item: string) => {
+    const handleRecentSearchClick = async (item: string) => {
         onChangeText(item);
         setShowRecent(false);
+        if (onSubmitEditing) {
+            setLoading(true);
+            try {
+                await onSubmitEditing();
+            } finally {
+                setLoading(false);
+            }
+        }
     };
 
     const handleBlur = () => {
@@ -89,35 +95,49 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     const handleSubmitEditing = async () => {
         if (value.trim().length > 0) {
             setRecentSearches((prev) => {
-                const filtered = prev.filter((search) => search.toLowerCase() !== value.trim().toLowerCase());
+                const filtered = prev.filter(
+                    (search) => search.toLowerCase() !== value.trim().toLowerCase(),
+                );
                 const newList = [value.trim(), ...filtered];
-                return newList.slice(0, 5); // Limit to 5 items
+                return newList.slice(0, 5);
             });
         }
         setShowRecent(false);
-
-        // Show loading overlay
         setLoading(true);
 
         try {
-            // Await potential async search logic
             await onSubmitEditing?.();
         } finally {
-            setLoading(false); // Hide loading when done
+            setLoading(false);
         }
     };
 
     return (
         <View style={styles.wrapper}>
+            {showRecent && recentSearches.length > 0 && (
+                <View style={styles.dropdown}>
+                    {recentSearches.map((item) => (
+                        <View style={styles.recentItem} key={item}>
+                            <TouchableOpacity
+                                onPress={() => handleRecentSearchClick(item)}
+                                style={styles.recentTextContainer}>
+                                <Text style={styles.recentText}>{item}</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => handleRemoveRecent(item)}
+                                style={styles.crossContainer}>
+                                <Feather name="x" size={16} color="#181b19" />
+                            </TouchableOpacity>
+                        </View>
+                    ))}
+                </View>
+            )}
+
             <TouchableOpacity
                 onPress={editable ? undefined : handlePress}
                 style={styles.touchableContainer}
-                activeOpacity={editable ? 1 : 0.7}
-            >
-                <View
-                    style={styles.container}
-                    pointerEvents={editable ? 'auto' : 'none'}
-                >
+                activeOpacity={editable ? 1 : 0.7}>
+                <View style={styles.container} pointerEvents={editable ? 'auto' : 'none'}>
                     <Feather name="search" size={20} color="#181b19" style={styles.icon} />
                     <TextInput
                         ref={inputRef}
@@ -141,28 +161,6 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 </View>
             </TouchableOpacity>
 
-            {showRecent && recentSearches.length > 0 && (
-                <View style={styles.dropdown}>
-                    {recentSearches.map((item) => (
-                        <View style={styles.recentItem} key={item}>
-                            <TouchableOpacity
-                                onPress={() => handleRecentSearchClick(item)}
-                                style={styles.recentTextContainer}
-                            >
-                                <Text style={styles.recentText}>{item}</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                onPress={() => handleRemoveRecent(item)}
-                                style={styles.crossContainer}
-                            >
-                                <Feather name="x" size={16} color="#181b19" />
-                            </TouchableOpacity>
-                        </View>
-                    ))}
-                </View>
-            )}
-
-            {/* Loading overlay */}
             {loading && (
                 <View style={styles.loadingOverlay}>
                     <ActivityIndicator size="large" color="#181b19" />
@@ -174,8 +172,13 @@ export const SearchBar: React.FC<SearchBarProps> = ({
 };
 
 const styles = StyleSheet.create({
-    wrapper: { width: '100%' },
-    touchableContainer: { width: '100%' },
+    wrapper: {
+        width: '100%',
+        position: 'relative',
+    },
+    touchableContainer: {
+        width: '100%',
+    },
     container: {
         backgroundColor: '#fffaf0',
         borderRadius: 10,
@@ -184,7 +187,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 12,
     },
-    icon: { marginRight: 8 },
+    icon: {
+        marginRight: 8,
+    },
     input: {
         flex: 1,
         fontSize: 16,
@@ -194,14 +199,20 @@ const styles = StyleSheet.create({
         paddingHorizontal: 8,
     },
     dropdown: {
-        marginTop: 4,
-        backgroundColor: '#fffaf0',
+        position: 'absolute',
+        top: 58, // Adjust based on expected dropdown height
+        left: 0,
+        right: 0,
+        backgroundColor: 'white',
         borderRadius: 10,
         elevation: 3,
         shadowColor: '#000',
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 1 },
         shadowRadius: 4,
+        zIndex: 999,
+        maxHeight: 180,
+        overflow: 'hidden',
     },
     recentItem: {
         flexDirection: 'row',
@@ -210,9 +221,16 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#e0e0e0',
     },
-    recentTextContainer: { flex: 1 },
-    recentText: { fontSize: 16, color: '#181b19' },
-    crossContainer: { marginLeft: 8 },
+    recentTextContainer: {
+        flex: 1,
+    },
+    recentText: {
+        fontSize: 16,
+        color: '#181b19',
+    },
+    crossContainer: {
+        marginLeft: 8,
+    },
     loadingOverlay: {
         position: 'absolute',
         top: 0,

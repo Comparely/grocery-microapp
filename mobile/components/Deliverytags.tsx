@@ -10,7 +10,7 @@ import Image4 from '../assets/images/bbmins.png';
 const { width: screenWidth } = Dimensions.get('window');
 
 const IMAGE_WIDTH = 120; // width of each image
-const SPACING = 20;      // space between images
+const SPACING = 20; // space between images
 const VISIBLE_IMAGES = 3; // how many images visible in the row
 
 const images = [Image1, Image2, Image3, Image4];
@@ -27,7 +27,7 @@ const DeliveryImagesScroller = () => {
                 duration: 8000,
                 easing: Easing.linear,
                 useNativeDriver: true,
-            })
+            }),
         ).start();
     }, [scrollX]);
 
@@ -39,15 +39,16 @@ const DeliveryImagesScroller = () => {
                 style={[
                     styles.scrollContainer,
                     {
-                        transform: [{
-                            translateX: scrollX.interpolate({
-                                inputRange: [0, (IMAGE_WIDTH + SPACING) * images.length],
-                                outputRange: [0, -(IMAGE_WIDTH + SPACING) * images.length],
-                            }),
-                        }],
-                    }
-                ]}
-            >
+                        transform: [
+                            {
+                                translateX: scrollX.interpolate({
+                                    inputRange: [0, (IMAGE_WIDTH + SPACING) * images.length],
+                                    outputRange: [0, -(IMAGE_WIDTH + SPACING) * images.length],
+                                }),
+                            },
+                        ],
+                    },
+                ]}>
                 {scrollImages.map((img, idx) => (
                     <Image key={idx} source={img} style={styles.image} />
                 ))}

@@ -17,6 +17,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 
     useEffect(() => {
         if (!isLoading && products.length > 0 && showInitialLoadingAnimation) {
+            // Do nothing, wait for animation to complete
         } else if (!isLoading && products.length === 0) {
             setShowInitialLoadingAnimation(false);
         }
@@ -28,44 +29,44 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 
     if (isLoading || showInitialLoadingAnimation) {
         return (
-            <View>
+            <View style={styles.wrapper1}>
                 <ComparingScreen onAnimationComplete={handleComparingAnimationComplete} />
             </View>
         );
     }
 
     if (products.length === 0) {
-        // return (
-        //     <View style={styles.emptyContainer}>
-        //         <Text style={styles.emptyText}>{'Search for products to see results'}</Text>
-        //     </View>
-        // );
+        return (
+            <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>{'Search for products to see results'}</Text>
+            </View>
+        );
     }
 
-    // return (
-    //     <View style={styles.wrapper}>
-    //         <FlatList
-    //             data={products}
-    //             numColumns={2}
-    //             renderItem={({ item }) => (
-    //                 <ProductCard fullWidth={false} session={session} product={item} key={item.id} />
-    //             )}
-    //             keyExtractor={(item) => item.id.toString()}
-    //             columnWrapperStyle={styles.columnWrapper}
-    //             showsVerticalScrollIndicator={false}
-    //             contentContainerStyle={{
-    //                 paddingBottom: 100,
-    //                 paddingHorizontal: 16,
-    //                 paddingTop: 16,
-    //             }}
-    //             style={styles.list}
-    //         />
-    //     </View>
-    // );
+    return (
+        <View style={styles.wrapper1}>
+            <FlatList
+                data={products}
+                numColumns={2}
+                renderItem={({ item }) => (
+                    <ProductCard fullWidth={false} session={session} product={item} key={item.id} />
+                )}
+                keyExtractor={(item) => item.id.toString()}
+                columnWrapperStyle={styles.columnWrapper}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{
+                    paddingBottom: 100,
+                    paddingHorizontal: 16,
+                    paddingTop: 16,
+                }}
+                style={styles.list}
+            />
+        </View>
+    );
 };
 
 const styles = StyleSheet.create({
-    wrapper: {
+    wrapper1: {
         flex: 1,
         backgroundColor: '#fffaf0',
     },
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
     },
     emptyText: {
         fontSize: 16,
-        color: '#9d9d9d',
+        color: 'black',
         textAlign: 'center',
     },
 });

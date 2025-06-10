@@ -22,6 +22,7 @@ import VideoSection from '@/components/videoads';
 import SeparatorLine from '@/components/seperator';
 import DeliveryTags from '@/components/Deliverytags';
 import Footer from '@/components/Footer';
+import { useRouter } from 'expo-router'; // Import useRouter
 
 const isWeb = Platform.OS === 'web';
 const isIos = Platform.OS === 'ios';
@@ -33,6 +34,7 @@ const HomeScreen = () => {
     const [email, setEmail] = useState<string>('');
 
     const wiggleAnim = useRef(new Animated.Value(0)).current;
+    const router = useRouter(); // Initialize useRouter
 
     useEffect(() => {
         // wiggle animation
@@ -121,6 +123,11 @@ const HomeScreen = () => {
         }
     };
 
+    // New function to navigate to the location picker
+    const navigateToLocationPicker = () => {
+        router.push('/location-picker'); // Use router.push with the file path
+    };
+
     const rotate = wiggleAnim.interpolate({
         inputRange: [-1, 1],
         outputRange: ['-10deg', '10deg'],
@@ -138,10 +145,8 @@ const HomeScreen = () => {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={[styles.retryButton, styles.secondaryButton]}
-                    onPress={requestLocationPermission}>
-                    <Text style={styles.secondaryButtonText}>
-                        {'Continue with default location'}
-                    </Text>
+                    onPress={navigateToLocationPicker}>
+                    <Text style={styles.secondaryButtonText}>{'Select Location Manually'}</Text>
                 </TouchableOpacity>
             </View>
         );
