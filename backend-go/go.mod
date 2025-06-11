@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/agnivade/levenshtein v1.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/chromedp/cdproto v0.0.0-20250420205042-3f8c33ccbdec // indirect
 	github.com/chromedp/chromedp v0.13.6 // indirect
