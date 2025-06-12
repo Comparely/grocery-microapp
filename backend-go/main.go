@@ -75,7 +75,7 @@ func main() {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Query parameter q is required"})
 			return
 		}
-		products, err := search.SearchProductsV3(appState, query, deviceID)
+		products, err := search.SearchProductsV2(appState, query, deviceID)
 		if err != nil {
 			log.Println("Error during search:", err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
