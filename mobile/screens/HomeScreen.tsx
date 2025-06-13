@@ -22,7 +22,7 @@ import VideoSection from '@/components/videoads';
 import SeparatorLine from '@/components/seperator';
 import DeliveryTags from '@/components/Deliverytags';
 import Footer from '@/components/Footer';
-import { useRouter } from 'expo-router'; // Import useRouter
+import { useRouter } from 'expo-router';
 
 const isWeb = Platform.OS === 'web';
 const isIos = Platform.OS === 'ios';
@@ -34,10 +34,9 @@ const HomeScreen = () => {
     const [email, setEmail] = useState<string>('');
 
     const wiggleAnim = useRef(new Animated.Value(0)).current;
-    const router = useRouter(); // Initialize useRouter
+    const router = useRouter();
 
     useEffect(() => {
-        // wiggle animation
         Animated.loop(
             Animated.sequence([
                 Animated.timing(wiggleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
@@ -46,7 +45,6 @@ const HomeScreen = () => {
             ]),
         ).start();
 
-        // fetch featured data
         const { featuredProducts, featuredCategories } = fetchHomePageData();
         setFeaturedProducts(featuredProducts);
         setCategories(featuredCategories);
@@ -54,7 +52,6 @@ const HomeScreen = () => {
 
     const handleWhatsappRedirect = () => {
         const message = encodeURIComponent("Hi, I'm interested in Comparely!");
-
         const webUrl = `https://api.whatsapp.com/send?phone=${process.env.EXPO_PUBLIC_SUPPORT_WA_NUMBER}&text=${message}`;
 
         if (Platform.OS === 'web') {
@@ -67,10 +64,7 @@ const HomeScreen = () => {
         } else {
             Linking.openURL(webUrl).catch((error) => {
                 console.error('Error opening WhatsApp:', error);
-                Alert.alert(
-                    'Cannot Open WhatsApp',
-                    'Please make sure WhatsApp is installed or try again later.',
-                );
+                Alert.alert('Cannot Open WhatsApp', 'Please make sure WhatsApp is installed or try again later.');
             });
         }
     };
@@ -86,17 +80,15 @@ const HomeScreen = () => {
     };
 
     const handleSocialMediaRedirect = (
-        platform: 'instagram' | 'twitter' | 'facebook' | 'linkedin',
+        platform: 'instagram' | 'twitter' | 'linkedin' | 'youtube',
     ) => {
-        // Define your social media URLs
         const socialMediaUrls: Record<string, string> = {
             instagram: 'https://www.instagram.com/comparelyy',
             twitter: 'https://twitter.com',
-            facebook: 'https://www.facebook.com',
             linkedin: 'https://www.linkedin.com',
+            youtube: 'https://www.youtube.com/@comparely', // ✅ Replace with actual
         };
 
-        // Validate platform before using it
         if (!socialMediaUrls[platform]) {
             console.error(`Invalid platform: ${platform}`);
             Alert.alert('Error', `Invalid platform selected: ${platform}.`);
@@ -115,17 +107,13 @@ const HomeScreen = () => {
         } else {
             Linking.openURL(url).catch((error) => {
                 console.error(`Error opening ${platform}:`, error);
-                Alert.alert(
-                    'Cannot Open Link',
-                    `Please try opening ${platform} manually or try again later.`,
-                );
+                Alert.alert('Cannot Open Link', `Please try opening ${platform} manually or try again later.`);
             });
         }
     };
 
-    // New function to navigate to the location picker
     const navigateToLocationPicker = () => {
-        router.push('/location-picker'); // Use router.push with the file path
+        router.push('/location-picker');
     };
 
     const rotate = wiggleAnim.interpolate({
@@ -196,14 +184,14 @@ const HomeScreen = () => {
 
                                 <TouchableOpacity
                                     style={styles.socialButton}
-                                    onPress={() => handleSocialMediaRedirect('facebook')}>
-                                    <Ionicons name="logo-facebook" size={30} color="#004738" />
+                                    onPress={() => handleSocialMediaRedirect('linkedin')}>
+                                    <Ionicons name="logo-linkedin" size={30} color="#004738" />
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={styles.socialButton}
-                                    onPress={() => handleSocialMediaRedirect('linkedin')}>
-                                    <Ionicons name="logo-linkedin" size={30} color="#004738" />
+                                    onPress={() => handleSocialMediaRedirect('youtube')}>
+                                    <Ionicons name="logo-youtube" size={30} color="#004738" />
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -226,7 +214,9 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    // -------------------------------------------APP COMMING SOON STYLE---------------------------------------------------
+    scrollContent: {
+        paddingBottom: 0, // ✅ Removed extra padding at the bottom
+    },
     appComingSoonContainer: {
         marginHorizontal: 20,
         marginBottom: 30,
@@ -280,7 +270,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginHorizontal: 10,
     },
-    // --------------------------------------------------------------------------------------------------------------------
     container: {
         flex: 1,
         backgroundColor: '#004738',
@@ -290,9 +279,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#fffaf0',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-    },
-    scrollContent: {
-        paddingBottom: 20,
     },
     deniedContainer: {
         flex: 1,
@@ -330,17 +316,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
     },
-    loadingContainer: {
-        flex: 1,
-        backgroundColor: '#004738',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loadingText: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: '500',
-    },
     emptySection: {
         padding: 20,
         alignItems: 'center',
@@ -350,68 +325,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textAlign: 'center',
     },
-    waitlistContainer: {
-        marginHorizontal: 20,
-        marginBottom: 30,
-        marginTop: 10,
-        padding: 20,
-        backgroundColor: '#fffaf0',
-        borderRadius: 10,
-        alignItems: 'center',
-    },
-    waitlistHeader: {
-        fontSize: 24,
-        color: '#004738',
-        fontWeight: 'bold',
-        marginBottom: 10,
-        textAlign: 'center',
-    },
-    waitlistSubText: {
-        fontSize: 16,
-        color: '#555',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    input: {
-        width: '100%',
-        height: 50,
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        marginBottom: 20,
-        color: '#333',
-    },
-    waitlistSubmitButton: {
-        backgroundColor: '#cbd402',
-        paddingVertical: 15,
-        paddingHorizontal: 25,
-        borderRadius: 8,
-        width: '100%',
-        alignItems: 'center',
-        marginBottom: 20,
-    },
-    waitlistSubmitButtonText: {
-        color: '#181b19',
-        fontSize: 18,
-        fontWeight: '600',
-    },
-    appComingSoonText: {
-        fontSize: 16,
-        color: '#555',
-        textAlign: 'center',
-        marginBottom: 15,
-    },
-    storeIconsContainer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    storeIconWrapper: {
-        marginHorizontal: 10,
-        opacity: 0.5,
-    },
     floatingWhatsapp: {
         position: 'absolute',
         right: 20,
@@ -419,7 +332,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#25D366',
         borderRadius: 35,
         padding: 6,
-        // elevation: 5,
     },
 });
 
