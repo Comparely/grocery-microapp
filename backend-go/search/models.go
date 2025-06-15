@@ -42,3 +42,19 @@ type PendingMappings struct {
 		Similarity float64            `json:"similarity"`
 	} `json:"mappings"`
 }
+
+type ProductCache struct {
+	ProductKey     string               `json:"product_key"`
+	MappedProducts []PendingMappingItem `json:"mapped_products"`
+	LastUpdated    string               `json:"last_updated"`
+	MappingCount   int                  `json:"mapping_count"`
+	QueriesUsedIn  []string             `json:"queries_used_in"`
+}
+
+type MappingStats struct {
+	TotalProducts    int    `json:"total_products"`
+	MappedProducts   int    `json:"mapped_products"`
+	CrossQueryHits   int    `json:"cross_query_hits"`
+	ProcessingTimeMs int64  `json:"processing_time_ms"`
+	LastUpdated      string `json:"last_updated"`
+}

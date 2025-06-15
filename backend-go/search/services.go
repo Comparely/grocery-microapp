@@ -13,7 +13,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"sort"
 	"strconv"
@@ -21,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/agnivade/levenshtein"
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/fetch"
@@ -717,256 +715,155 @@ func fetchZeptoProductsV3(query string, lat, lng string) (map[string]interface{}
 	return res, nil
 }
 
-// -----------------------
-// Merge products from different sources by name, remove duplicate variants.
-func mergeProducts(productArrays [][]Product, appState config.AppState, query string) []Product {
-	merged := make(map[string]Product)
-	for _, products := range productArrays {
-		for _, prod := range products {
-			if existing, ok := merged[prod.Name]; ok {
-				existing.Prices = append(existing.Prices, prod.Prices...)
-				merged[prod.Name] = existing
-			} else {
-				merged[prod.Name] = prod
-			}
+// countMappedProducts counts how many products have mappings from multiple sources
+func countMappedProducts(products []Product) int {
+	count := 0
+	for _, product := range products {
+		if len(product.Prices) > 1 {
+			count++
 		}
 	}
-	// Optionally, remove duplicate variants per source.
-	finalArray := make([]Product, 0, len(merged))
-	for _, prod := range merged {
-		priceMap := make(map[string][]Variant)
-		for _, po := range prod.Prices {
-			for _, v := range po.Variants {
-				keyBytes, _ := json.Marshal(v)
-				key := string(keyBytes)
-				priceMap[po.Source] = appendIfNotExists(priceMap[po.Source], v, key)
-			}
-		}
-		var mergedPrices []PriceOption
-		for source, variants := range priceMap {
-			mergedPrices = append(mergedPrices, PriceOption{Source: source, Variants: variants})
-		}
-		prod.Prices = mergedPrices
-		finalArray = append(finalArray, prod)
+	return count
+}
+
+// mergeProducts combines products from different sources and applies the enhanced mapping system
+func mergeProducts(availableProducts [][]Product, appState config.AppState, query string) []Product {
+	// Flatten all products from all sources
+	var allProducts []Product
+	for _, sourceProducts := range availableProducts {
+		allProducts = append(allProducts, sourceProducts...)
 	}
 
-	finalArray = applyPendingMappings(finalArray, appState, query)
+	if len(allProducts) == 0 {
+		return []Product{}
+	}
 
-	unique := make(map[string]Product, len(finalArray))
-	for _, prod := range finalArray {
-		name := prod.Name
-		if existing, ok := unique[name]; ok {
-			if countUniqueSources(prod.Prices) > countUniqueSources(existing.Prices) {
-				unique[name] = prod
-			}
+	// Apply enhanced pending mappings using the new product-level caching system
+	mergedProducts := applyEnhancedPendingMappings(allProducts, appState, query)
+
+	// Group products by normalized name to merge similar products
+	productGroups := make(map[string][]Product)
+	for _, product := range mergedProducts {
+		// Create a normalized key for grouping (lowercase, trimmed)
+		normalizedName := strings.ToLower(strings.TrimSpace(product.Name))
+		productGroups[normalizedName] = append(productGroups[normalizedName], product)
+	}
+	// Merge products within each group
+	var finalProducts []Product
+	for _, group := range productGroups {
+		if len(group) == 1 {
+			// Single product, no merging needed
+			finalProducts = append(finalProducts, group[0])
 		} else {
-			unique[name] = prod
+			// Multiple products with similar names, merge them
+			merged := mergeProductGroup(group)
+			finalProducts = append(finalProducts, merged)
 		}
 	}
 
-	finalArray = make([]Product, 0, len(unique))
-	for _, prod := range unique {
-		finalArray = append(finalArray, prod)
-	}
+	// Sort products by number of sources (more sources first)
+	sort.Slice(finalProducts, func(i, j int) bool {
+		sourcesI := len(finalProducts[i].Prices)
+		sourcesJ := len(finalProducts[j].Prices)
 
-	sort.Slice(finalArray, func(i, j int) bool {
-		return countUniqueSources(finalArray[i].Prices) > countUniqueSources(finalArray[j].Prices)
+		// Primary sort: by number of sources (descending)
+		if sourcesI != sourcesJ {
+			return sourcesI > sourcesJ
+		}
+
+		// Secondary sort: by product name (ascending) for consistent ordering
+		return finalProducts[i].Name < finalProducts[j].Name
 	})
 
-	return finalArray
+	log.Printf("Sorted %d products for query '%s' (mapped: %d, unmapped: %d)",
+		len(finalProducts), query, countMappedProducts(finalProducts),
+		len(finalProducts)-countMappedProducts(finalProducts))
+
+	return finalProducts
 }
 
-func normalize(str string) string {
-	s := strings.ToLower(str)
-	s = regexp.MustCompile(`[^a-z0-9 ]+`).ReplaceAllString(s, "")
-	s = strings.ReplaceAll(s, "ml", "")
-	s = strings.ReplaceAll(s, "gm", "")
-	s = strings.ReplaceAll(s, "kg", "")
-	s = strings.ReplaceAll(s, "ltr", "")
-	s = strings.TrimSpace(s)
-	return s
-}
-
-func isSimilarProduct(p1, p2 Product) bool {
-	name1 := normalize(p1.Name)
-	name2 := normalize(p2.Name)
-	brand1 := normalize(p1.Brand)
-	brand2 := normalize(p2.Brand)
-	weight1 := normalize(p1.Weight)
-	weight2 := normalize(p2.Weight)
-
-	nameScore := 100 - levenshtein.ComputeDistance(name1, name2)
-
-	return nameScore >= 80 && (brand1 == brand2 || weight1 == weight2)
-}
-
-func variantKey(v Variant) string {
-	return v.Weight + "|" + v.Deeplink // define uniqueness by important fields
-}
-
-func appendIfNotExistsVariant(arr []Variant, v Variant, seen map[string]struct{}) []Variant {
-	key := variantKey(v)
-	if _, exists := seen[key]; !exists {
-		arr = append(arr, v)
-		seen[key] = struct{}{}
+// mergeProductGroup merges multiple products with similar names into a single product
+func mergeProductGroup(products []Product) Product {
+	if len(products) == 0 {
+		return Product{}
 	}
-	return arr
-}
 
-func mergeProductsV2(productArrays [][]Product, appState config.AppState, query string) []Product {
-	var finalMerged []Product
-	var mu sync.Mutex
-	var wg sync.WaitGroup
-	mergeMap := make(map[string]int) // normalized name + brand → index in finalMerged
+	// Use the first product as the base
+	merged := products[0]
+	merged.ID = uuid.NewString() // Generate new ID for merged product
 
-	for _, productList := range productArrays {
-		for _, incoming := range productList {
-			wg.Add(1)
-			go func(incoming Product) {
-				defer wg.Done()
+	// Merge all price options from other products
+	sourceSet := make(map[string]bool)
+	sourceSet[merged.Prices[0].Source] = true
 
-				key := normalize(incoming.Name) + "|" + normalize(incoming.Brand)
-				mu.Lock()
-				if idx, ok := mergeMap[key]; ok {
-					if isSimilarProduct(finalMerged[idx], incoming) {
-						finalMerged[idx].Prices = append(finalMerged[idx].Prices, incoming.Prices...)
+	for i := 1; i < len(products); i++ {
+		product := products[i]
+
+		// Add price options from sources we haven't seen yet
+		for _, priceOption := range product.Prices {
+			if !sourceSet[priceOption.Source] {
+				merged.Prices = append(merged.Prices, priceOption)
+				sourceSet[priceOption.Source] = true
+			} else {
+				// Source already exists, merge variants
+				for j, existingPriceOption := range merged.Prices {
+					if existingPriceOption.Source == priceOption.Source {
+						// Deduplicate variants by deeplink
+						for _, variant := range priceOption.Variants {
+							isDuplicate := false
+							for _, existingVariant := range existingPriceOption.Variants {
+								if existingVariant.Deeplink == variant.Deeplink {
+									isDuplicate = true
+									break
+								}
+							}
+							if !isDuplicate {
+								merged.Prices[j].Variants = append(merged.Prices[j].Variants, variant)
+							}
+						}
+						break
 					}
-				} else {
-					mergeMap[key] = len(finalMerged)
-					finalMerged = append(finalMerged, incoming)
 				}
-				mu.Unlock()
-			}(incoming)
-		}
-	}
-	wg.Wait()
-
-	// Deduplicate variants
-	for i := range finalMerged {
-		priceMap := make(map[string][]Variant)
-		seen := make(map[string]struct{})
-
-		for _, po := range finalMerged[i].Prices {
-			for _, v := range po.Variants {
-				priceMap[po.Source] = appendIfNotExistsVariant(priceMap[po.Source], v, seen)
 			}
 		}
 
-		var newPrices []PriceOption
-		for source, variants := range priceMap {
-			newPrices = append(newPrices, PriceOption{Source: source, Variants: variants})
+		// Update product metadata if the new product has better data
+		if merged.Brand == "" && product.Brand != "" {
+			merged.Brand = product.Brand
 		}
-		finalMerged[i].Prices = newPrices
+		if merged.Weight == "" && product.Weight != "" {
+			merged.Weight = product.Weight
+		}
+		if merged.ImageURL == "" && product.ImageURL != "" {
+			merged.ImageURL = product.ImageURL
+		}
+		if merged.MRP == 0 && product.MRP > 0 {
+			merged.MRP = product.MRP
+		}
 	}
 
-	finalMerged = applyPendingMappings(finalMerged, appState, query)
-
-	sort.Slice(finalMerged, func(i, j int) bool {
-		return countUniqueSources(finalMerged[i].Prices) > countUniqueSources(finalMerged[j].Prices)
-	})
-
-	return finalMerged
+	return merged
 }
 
-func mergeProductsFromCacheAndPatch(appState config.AppState, productArrays [][]Product, query string) []Product {
-	ctx := context.Background()
-	var finalMerged []Product
-	mergeMap := make(map[string]int) // normalized name + brand → index in finalMerged
-	var mu sync.Mutex
-	var wg sync.WaitGroup
+// Helper functions for enhanced mapping
+// Statistical functions
+func calculateMappingEfficiency(products []Product) (float64, map[string]int) {
+	total := len(products)
+	mapped := countMappedProducts(products)
 
-	for _, productList := range productArrays {
-		for _, incoming := range productList {
-			wg.Add(1)
-			go func(incoming Product) {
-				defer wg.Done()
-				normalizedName := normalize(incoming.Name)
-
-				for _, priceOption := range incoming.Prices {
-					platform := strings.ToLower(priceOption.Source)
-					redisKey := fmt.Sprintf("product:%s-%s", normalizedName, platform)
-
-					// Fetch existing mapped products
-					cached, err := appState.RedisClient.Get(ctx, redisKey).Bytes()
-					var mappedGroup []Product
-					if err == nil {
-						err = json.Unmarshal(cached, &mappedGroup)
-						if err != nil {
-							log.Printf("Failed to parse Redis mapped group for key %s", redisKey)
-							mappedGroup = []Product{}
-						}
-					} else {
-						mappedGroup = []Product{}
-					}
-
-					// Check if this product belongs to any group in mappedGroup
-					matched := false
-					for i, prod := range mappedGroup {
-						if isSimilarProduct(prod, incoming) {
-							// Patch the group (update variants/prices only if new)
-							merged := prod
-							merged.Prices = append(merged.Prices, incoming.Prices...)
-							mappedGroup[i] = merged
-							matched = true
-							break
-						}
-					}
-
-					if !matched {
-						mappedGroup = append(mappedGroup, incoming)
-					}
-
-					// Patch Redis with updated mappedGroup (only this key)
-					newCache, err := json.Marshal(mappedGroup)
-					if err == nil {
-						err = appState.RedisClient.Set(ctx, redisKey, newCache, 48*time.Hour).Err()
-						if err != nil {
-							log.Printf("Failed to patch Redis group for key %s: %v", redisKey, err)
-						}
-					} else {
-						log.Printf("Failed to marshal patched group for key %s: %v", redisKey, err)
-					}
-				}
-
-				mu.Lock()
-				key := normalizedName + "|" + normalize(incoming.Brand)
-				if idx, ok := mergeMap[key]; ok {
-					if isSimilarProduct(finalMerged[idx], incoming) {
-						finalMerged[idx].Prices = append(finalMerged[idx].Prices, incoming.Prices...)
-					}
-				} else {
-					mergeMap[key] = len(finalMerged)
-					finalMerged = append(finalMerged, incoming)
-				}
-				mu.Unlock()
-			}(incoming)
+	sourceCount := make(map[string]int)
+	for _, product := range products {
+		for _, price := range product.Prices {
+			sourceCount[price.Source]++
 		}
 	}
-	wg.Wait()
 
-	// Deduplicate variants
-	for i := range finalMerged {
-		priceMap := make(map[string][]Variant)
-		seen := make(map[string]struct{})
-		for _, po := range finalMerged[i].Prices {
-			for _, v := range po.Variants {
-				priceMap[po.Source] = appendIfNotExistsVariant(priceMap[po.Source], v, seen)
-			}
-		}
-		var newPrices []PriceOption
-		for source, variants := range priceMap {
-			newPrices = append(newPrices, PriceOption{Source: source, Variants: variants})
-		}
-		finalMerged[i].Prices = newPrices
+	efficiency := 0.0
+	if total > 0 {
+		efficiency = float64(mapped) / float64(total) * 100
 	}
 
-	finalMerged = applyPendingMappings(finalMerged, appState, query)
-
-	sort.Slice(finalMerged, func(i, j int) bool {
-		return countUniqueSources(finalMerged[i].Prices) > countUniqueSources(finalMerged[j].Prices)
-	})
-
-	return finalMerged
+	return efficiency, sourceCount
 }
 
 func SearchProducts(appState config.AppState, query string, deviceID string) ([]Product, error) {
@@ -1096,7 +993,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 	// endTime := time.Now()
 	// log.Printf("mergeProductsV2 took %v", endTime.Sub(startTime))
 	// mergedProducts := mergeProducts(availableProducts, appState, query)
-	mergedProducts := mergeProductsV2(availableProducts, appState, query)
+	mergedProducts := mergeProducts(availableProducts, appState, query)
 	// log.Println(mergedProducts)
 	// log.Println(mergedProductsV2)
 
@@ -1269,7 +1166,7 @@ func SearchProductsV2(appState config.AppState, query string, deviceID string) (
 		return []Product{}, nil
 	}
 
-	mergedProducts = mergeProductsV2(availableProducts, appState, query)
+	mergedProducts = mergeProducts(availableProducts, appState, query)
 
 	// Cache the final result in Redis
 	cachedBytes, err := json.Marshal(mergedProducts)
@@ -1430,7 +1327,7 @@ func SearchProductsV3(appState config.AppState, query string, deviceID string) (
 		return []Product{}, nil
 	}
 
-	mergedProducts := mergeProductsFromCacheAndPatch(appState, availableProducts, query)
+	mergedProducts := mergeProducts(availableProducts, appState, query)
 
 	// Send unmapped to Ginger (only for fresh fetches)
 	unmapped := []Product{}
@@ -1755,4 +1652,268 @@ func mergeOneMapping(prod Product, item PendingMappingItem) Product {
 		Variants: []Variant{v},
 	})
 	return prod
+}
+
+// Product-level caching functions for enhanced cross-query optimization
+
+// generateProductKey creates a consistent cache key for product-level mapping
+func generateProductKey(productName, productBrand string) string {
+	normalizedName := strings.ToLower(strings.TrimSpace(productName))
+	normalizedBrand := strings.ToLower(strings.TrimSpace(productBrand))
+	return fmt.Sprintf("product_mapping:%s:%s", normalizedName, normalizedBrand)
+}
+
+// getProductMappings retrieves cached mappings for a specific product
+func getProductMappings(appState config.AppState, productName, productBrand string) []PendingMappingItem {
+	ctx := context.Background()
+	key := generateProductKey(productName, productBrand)
+
+	cached, err := appState.RedisClient.Get(ctx, key).Result()
+	if err != nil {
+		if err != redis.Nil {
+			log.Printf("Error retrieving product mappings for %s: %v", key, err)
+		}
+		return []PendingMappingItem{}
+	}
+
+	var cache ProductCache
+	if err := json.Unmarshal([]byte(cached), &cache); err != nil {
+		log.Printf("Error unmarshalling product cache for %s: %v", key, err)
+		return []PendingMappingItem{}
+	}
+
+	return cache.MappedProducts
+}
+
+// saveProductMappings stores mappings for a specific product with query tracking
+func saveProductMappings(appState config.AppState, productName, productBrand string, mappings []PendingMappingItem, query string) {
+	ctx := context.Background()
+	key := generateProductKey(productName, productBrand)
+
+	// Get existing cache or create new one
+	var cache ProductCache
+	cached, err := appState.RedisClient.Get(ctx, key).Result()
+	if err == nil {
+		json.Unmarshal([]byte(cached), &cache)
+	}
+
+	// Merge with existing mappings, avoiding duplicates by deeplink
+	existingDeeplinks := make(map[string]bool)
+	for _, existing := range cache.MappedProducts {
+		existingDeeplinks[existing.Deeplink] = true
+	}
+
+	for _, mapping := range mappings {
+		if !existingDeeplinks[mapping.Deeplink] {
+			cache.MappedProducts = append(cache.MappedProducts, mapping)
+			existingDeeplinks[mapping.Deeplink] = true
+		}
+	}
+
+	// Limit number of mappings per product (keep most recent)
+	maxMappings := 5
+	if len(cache.MappedProducts) > maxMappings {
+		cache.MappedProducts = cache.MappedProducts[len(cache.MappedProducts)-maxMappings:]
+	}
+
+	// Update metadata
+	cache.ProductKey = key
+	cache.LastUpdated = time.Now().Format(time.RFC3339)
+	cache.MappingCount = len(cache.MappedProducts)
+
+	// Track query usage
+	queryExists := false
+	for _, existingQuery := range cache.QueriesUsedIn {
+		if existingQuery == query {
+			queryExists = true
+			break
+		}
+	}
+	if !queryExists {
+		cache.QueriesUsedIn = append(cache.QueriesUsedIn, query)
+	}
+
+	// Save to cache with 7-day expiration
+	cacheJSON, err := json.Marshal(cache)
+	if err != nil {
+		log.Printf("Error marshalling product cache for %s: %v", key, err)
+		return
+	}
+
+	err = appState.RedisClient.Set(ctx, key, cacheJSON, 7*24*time.Hour).Err()
+	if err != nil {
+		log.Printf("Error saving product mappings for %s: %v", key, err)
+	}
+}
+
+// cleanupOldProductMappings removes old product mappings from the cache
+func cleanupOldProductMappings(appState config.AppState, maxAgeDays int) error {
+	ctx := context.Background()
+	pattern := "product_mapping:*"
+
+	cutoffTime := time.Now().AddDate(0, 0, -maxAgeDays)
+	cleanedCount := 0
+
+	iter := appState.RedisClient.Scan(ctx, 0, pattern, 100).Iterator()
+	for iter.Next(ctx) {
+		key := iter.Val()
+		cached, err := appState.RedisClient.Get(ctx, key).Result()
+		if err != nil {
+			continue
+		}
+
+		var cache ProductCache
+		if err := json.Unmarshal([]byte(cached), &cache); err != nil {
+			continue
+		}
+
+		lastUpdated, err := time.Parse(time.RFC3339, cache.LastUpdated)
+		if err != nil || lastUpdated.Before(cutoffTime) {
+			appState.RedisClient.Del(ctx, key)
+			cleanedCount++
+		}
+	}
+
+	if cleanedCount > 0 {
+		log.Printf("Cleaned up %d old product mappings", cleanedCount)
+	}
+
+	return iter.Err()
+}
+
+// Enhanced mapping utilities
+func isProductMapped(product Product) bool {
+	return len(product.Prices) > 1
+}
+
+func getUnmappedProducts(products []Product) []Product {
+	var unmapped []Product
+	for _, product := range products {
+		if !isProductMapped(product) {
+			unmapped = append(unmapped, product)
+		}
+	}
+	return unmapped
+}
+
+// applyEnhancedPendingMappings applies the enhanced product-level caching system
+func applyEnhancedPendingMappings(products []Product, appState config.AppState, query string) []Product {
+	if len(products) == 0 {
+		return products
+	}
+
+	startTime := time.Now()
+
+	// Step 1: Apply product-level cached mappings
+	products = applyProductLevelMappings(products, appState, query)
+
+	// Step 2: Apply query-specific pending mappings (fallback)
+	products = applyPendingMappings(products, appState, query)
+
+	// Step 3: Save successful mappings for future queries
+	saveMappingsForFutureQueries(products, appState, query)
+
+	// Log statistics
+	processingTime := time.Since(startTime)
+	mappedCount := countMappedProducts(products)
+	efficiency, _ := calculateMappingEfficiency(products)
+
+	log.Printf("Enhanced mapping for query '%s': %d/%d products mapped (%.1f%%), processing time: %v",
+		query, mappedCount, len(products), efficiency, processingTime)
+
+	return products
+}
+
+// applyProductLevelMappings applies cached mappings from previous queries
+func applyProductLevelMappings(products []Product, appState config.AppState, query string) []Product {
+	ctx := context.Background()
+	crossQueryHits := 0
+
+	for i, product := range products {
+		// Skip already mapped products
+		if isProductMapped(product) {
+			continue
+		}
+
+		// Get cached mappings for this product
+		cachedMappings := getProductMappings(appState, product.Name, product.Brand)
+		if len(cachedMappings) == 0 {
+			continue
+		}
+
+		// Apply available mappings
+		for _, mapping := range cachedMappings {
+			// Check if the mapped product exists in current results
+			if productExistsInResults(products, mapping) {
+				// Apply the mapping
+				products[i] = mergeOneMapping(products[i], mapping)
+				crossQueryHits++
+			}
+		}
+	}
+
+	if crossQueryHits > 0 {
+		log.Printf("Applied %d cross-query mappings for query '%s'", crossQueryHits, query)
+
+		// Update stats in Redis
+		statsKey := "mapping_stats"
+		statsJSON, _ := appState.RedisClient.Get(ctx, statsKey).Result()
+		var stats MappingStats
+		if statsJSON != "" {
+			json.Unmarshal([]byte(statsJSON), &stats)
+		}
+		stats.CrossQueryHits += crossQueryHits
+		stats.LastUpdated = time.Now().Format(time.RFC3339)
+
+		newStatsJSON, _ := json.Marshal(stats)
+		appState.RedisClient.Set(ctx, statsKey, newStatsJSON, 24*time.Hour)
+	}
+
+	return products
+}
+
+// productExistsInResults checks if a mapped product exists in current search results
+func productExistsInResults(products []Product, mapping PendingMappingItem) bool {
+	for _, product := range products {
+		// Check for exact name match and source match
+		if strings.EqualFold(product.Name, mapping.Name) {
+			for _, priceOption := range product.Prices {
+				if priceOption.Source == mapping.Source {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// saveMappingsForFutureQueries stores successful mappings for cross-query optimization
+func saveMappingsForFutureQueries(products []Product, appState config.AppState, query string) {
+	for _, product := range products {
+		// Only save mappings for products that have multiple sources
+		if len(product.Prices) > 1 {
+			// Convert product to pending mapping items
+			var mappings []PendingMappingItem
+			for _, priceOption := range product.Prices {
+				for _, variant := range priceOption.Variants {
+					mapping := PendingMappingItem{
+						ID:       product.ID,
+						Name:     product.Name,
+						Brand:    product.Brand,
+						Mrp:      variant.OriginalPrice,
+						Source:   priceOption.Source,
+						Weight:   variant.Weight,
+						Deeplink: variant.Deeplink,
+						ImageURL: variant.ImageURL,
+					}
+					mappings = append(mappings, mapping)
+				}
+			}
+
+			// Save mappings for this product
+			if len(mappings) > 1 {
+				saveProductMappings(appState, product.Name, product.Brand, mappings, query)
+			}
+		}
+	}
 }

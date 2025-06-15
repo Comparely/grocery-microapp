@@ -161,4 +161,7 @@ class SearchIntelligence:
             else:
                 print(f"Elig2: No mappings found for query '{query}'")
                 
-search_intelligence = SearchIntelligence()
+from .enhanced_search_intelligence import search_intelligence as enhanced_search_intelligence
+
+# Import the enhanced version for backward compatibility
+search_intelligence = enhanced_search_intelligence

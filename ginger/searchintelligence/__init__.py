@@ -1,4 +1,4 @@
-from .search_intelligence import (
+from .enhanced_search_intelligence import (
     search_intelligence,
 )
 
