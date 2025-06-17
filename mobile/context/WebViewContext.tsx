@@ -89,7 +89,7 @@ export const WebViewProvider: React.FC<{ children: React.ReactNode }> = ({ child
             />
             <HiddenWebView
                 ref={instamartWebViewRef}
-                url="https://www.instamart.com"
+                url="https://www.swiggy.com/instamart"
                 platform="instamart"
                 visible={visibleWebViews.instamart}
                 onOtpSubmitted={() => setInstamartLoggedIn(true)}

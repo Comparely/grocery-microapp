@@ -6,21 +6,22 @@ import ThreeQuarterCircle from '../../components/timer';
 import QuantitySelector from '../../components/QuantitySelector';
 import { useCart } from '@/context/CartContext';
 import { useWebViews } from '@/context/WebViewContext';
-import { getNavigationScript, injectCartSummaryScript } from '@/script/injectionScript_blinkit';
-import { injectCartSummaryScript_zepto } from '@/script/injectionScript_zepto';
+import {
+    getNavigationScript,
+    injectAddOrSubScript,
+    injectCartSummaryScript,
+} from '@/script/injectionScript_blinkit';
+import {
+    injectAddOrSubScript_zepto,
+    injectCartSummaryScript_zepto,
+} from '@/script/injectionScript_zepto';
+import { injectCartSummaryScript_instamart } from '@/script/injectionScript_instamart';
 
 const platformLogos: Record<string, any> = {
     blinkit: require('@/assets/images/blinkit.png'),
     zepto: require('@/assets/images/zepto.png'),
     instamart: require('@/assets/images/instamart1.png'),
     bb: require('@/assets/images/instamart1.png'),
-};
-
-const platformCartURLs: Record<string, string> = {
-    blinkit: 'https://blinkit.com/cart',
-    zepto: 'https://www.zeptonow.com/?cart=open',
-    instamart: 'https://www.swiggy.com/instamart/cart',
-    bb: 'https://www.bigbasket.com/basket/',
 };
 
 // const platformCartURLs: Record<string, string> = {
@@ -44,18 +45,25 @@ const platformDeliveryTimes: Record<string, string> = {
     bb: '8',
 };
 
+const platformAddOrSubScript: Record<string, (action: 'add' | 'sub', index: number) => string> = {
+    blinkit: injectAddOrSubScript,
+    zepto: injectAddOrSubScript_zepto,
+    // instamart: injectAddOrSubScript_instamart,
+};
+
 const billScriptMap: Record<string, () => string> = {
     blinkit: injectCartSummaryScript,
     zepto: injectCartSummaryScript_zepto,
-    // instamart: instamartBillScript,
+    // instamart: injectCartSummaryScript_instamart,
 };
 
 const ComparelyCart = () => {
     const router = useRouter();
-    const { cart, addToCart, grouped, removeFromCart, getTotalItems } = useCart();
+    const { cart, addToCartV2, grouped, removeFromCart, getTotalItems } = useCart();
     const {
         blinkitWebViewRef,
         zeptoWebViewRef,
+        instamartWebViewRef,
         billSummaries,
         visibleWebViews,
         setVisibleWebViews,
@@ -66,13 +74,14 @@ const ComparelyCart = () => {
     const cartUrls = {
         blinkit: 'https://blinkit.com/cart',
         zepto: 'https://www.zeptonow.com/?cart=open',
-        // instamart: 'https://www.swiggy.com/instamart/cart', // example
+        instamart: 'https://www.swiggy.com/instamart/cart',
         // bb: 'https://www.bb.in/gp/cart/view.html', // examplen
     } as const;
     const platformRefs = {
         blinkit: blinkitWebViewRef,
         zepto: zeptoWebViewRef,
-        // add instamartWebViewRef, amazonWebViewRef if defined
+        instamart: instamartWebViewRef,
+        // add amazonWebViewRef if defined
     };
 
     useEffect(() => {
@@ -198,7 +207,7 @@ const ComparelyCart = () => {
 
                             {expandedIndex[platform] && (
                                 <>
-                                    {items.map(({ product, quantity }) => {
+                                    {items.map(({ product, quantity }, index) => {
                                         const priceOption = product.priceOptions.find(
                                             (po) => po.platform === platform,
                                         );
@@ -229,14 +238,51 @@ const ComparelyCart = () => {
                                                         ₹{price}
                                                     </Text>
                                                 </View>
-                                                <QuantitySelector
+                                                {/* <QuantitySelector
                                                     quantity={quantity}
                                                     onChange={(newQty) => {
                                                         if (newQty > quantity) addToCart(product);
-                                                        else if (newQty < quantity)
-                                                        if (newQty > quantity) {
-                                                            addToCart(product);
-                                                        } else if (newQty < quantity) {
+                                                        else {
+                                                            removeFromCart(
+                                                                product.id.toString(),
+                                                                platform,
+                                                            );
+                                                        }
+                                                    }}
+                                                /> */}
+                                                <QuantitySelector
+                                                    quantity={quantity}
+                                                    onChange={(newQty) => {
+                                                        const action =
+                                                            newQty > quantity ? 'add' : 'sub';
+
+                                                        switch (platform) {
+                                                            case 'blinkit':
+                                                                blinkitWebViewRef.current?.injectScript(
+                                                                    platformAddOrSubScript[
+                                                                        platform
+                                                                    ](action, index),
+                                                                );
+                                                                break;
+                                                            case 'zepto':
+                                                                zeptoWebViewRef.current?.injectScript(
+                                                                    platformAddOrSubScript[
+                                                                        platform
+                                                                    ](action, index),
+                                                                );
+                                                                break;
+                                                            case 'instamart':
+                                                                instamartWebViewRef.current?.injectScript(
+                                                                    platformAddOrSubScript[
+                                                                        platform
+                                                                    ](action, index),
+                                                                );
+                                                                break;
+                                                        }
+                                                        // Call addToCart or removeFromCart based on action
+                                                        if (action === 'add') {
+                                                            addToCartV2(product, platform);
+                                                        } else {
                                                             removeFromCart(
                                                                 product.id.toString(),
                                                                 platform,

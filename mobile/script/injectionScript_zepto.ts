@@ -279,3 +279,28 @@ export const injectCartSummaryScript_zepto = (): string => {
   `;
     return script;
 };
+
+export const injectAddOrSubScript_zepto = (action: 'add' | 'sub', index: number): string => {
+    const script = `
+    (function() {
+      const i = ${index};
+      const addButtons = document.querySelectorAll('button[aria-label="Add"]');
+      const subButtons = document.querySelectorAll('button[aria-label="Remove"]');
+
+      if ('${action}' === 'add' && addButtons[i]) {
+        addButtons[i].click();
+        console.log('Clicked ADD button at index', i);
+      } else if ('${action}' === 'sub' && subButtons[i]) {
+        subButtons[i].click();
+        console.log('Clicked REMOVE button at index', i);
+      } else {
+        console.warn('No button found for action "${action}" at index', i);
+      }
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'PRODUCT_QUANTITY_UPDATED'
+        }));
+    })();
+    true;
+  `;
+    return script;
+};

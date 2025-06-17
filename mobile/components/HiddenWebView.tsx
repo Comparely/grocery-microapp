@@ -37,6 +37,7 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
             | { type: 'OTP_SUBMITTED' }
             | { type: 'CART_FLOW_COMPLETE' }
             | { type: 'CART_BILL_SUMMARY' }
+            | { type: 'PRODUCT_QUANTITY_UPDATED'; payload: { productId: string; quantity: number } }
             | { type: 'RAW'; payload: string };
 
         const onMessage = (e: WebViewMessageEvent) => {
@@ -101,6 +102,9 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
                         };
                     });
 
+                    break;
+                case 'PRODUCT_QUANTITY_UPDATED':
+                    console.log('✅ Product quantity updated:', msg.payload);
                     break;
                 case 'RAW':
                 default:

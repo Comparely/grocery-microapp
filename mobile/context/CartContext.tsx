@@ -13,6 +13,8 @@ type CartContextType = {
     removeFromCart: (productId: string, platform: string) => void;
     clearCart: () => void;
     getTotalItems: () => number;
+    addToCartV2: (product: Product, platform: string) => void;
+    removeFromCartV2: (product: Product) => void;
     grouped: Record<string, CartItem[]>;
 };
 
@@ -44,6 +46,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
+    const addToCartV2 = (product: Product, platform: string) => {
+        const key = getKey(product.id.toString(), platform);
+
+        setCart((prev) => {
+            const newCart = [...prev];
+            const existing = newCart.find(
+                (item) => getKey(item.product.id.toString(), item.platform) === key,
+            );
+
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                newCart.push({ product, platform, quantity: 1 });
+            }
+
+            return newCart;
+        });
+    };
+
     const grouped = cart.reduce(
         (acc, item) => {
             acc[item.platform] = acc[item.platform] || [];
@@ -65,6 +86,26 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
     };
 
+    const removeFromCartV2 = (product: Product) => {
+        setCart((prev) => {
+            let updated = [...prev];
+
+            product.priceOptions.forEach(({ platform }) => {
+                const key = getKey(product.id.toString(), platform);
+
+                updated = updated
+                    .map((item) =>
+                        getKey(item.product.id.toString(), item.platform) === key
+                            ? { ...item, quantity: item.quantity - 1 }
+                            : item,
+                    )
+                    .filter((item) => item.quantity > 0);
+            });
+
+            return updated;
+        });
+    };
+
     const clearCart = () => setCart([]);
 
     const getTotalItems = () => {
@@ -74,7 +115,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return (
         <CartContext.Provider
-            value={{ cart, addToCart, removeFromCart, grouped, clearCart, getTotalItems }}>
+            value={{
+                cart,
+                addToCart,
+                removeFromCart,
+                grouped,
+                clearCart,
+                getTotalItems,
+                addToCartV2,
+                removeFromCartV2,
+            }}>
             {children}
         </CartContext.Provider>
     );

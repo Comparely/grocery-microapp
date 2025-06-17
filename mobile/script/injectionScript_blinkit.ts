@@ -210,3 +210,30 @@ export const injectCartSummaryScript = (): string => {
   `;
     return script;
 };
+
+export const injectAddOrSubScript = (action: 'add' | 'sub', index: number): string => {
+    const script = `
+    (function() {
+      const containers = document.querySelectorAll('.AddToCart__UpdatedButtonContainer-sc-17ig0e3-0');
+      const i = ${index};
+
+      if (containers.length > i) {
+        const target = containers[i];
+
+        const minusBtn = target.querySelector('.AddToCart___StyledDiv-sc-17ig0e3-10 .AddToCart__AddMinusIcon-sc-17ig0e3-9');
+        const plusBtn = target.querySelector('.AddToCart___StyledDiv2-sc-17ig0e3-11 .AddToCart__AddMinusIcon-sc-17ig0e3-9');
+
+        if ('${action}' === 'add' && plusBtn) {
+          plusBtn.click();
+        } else if ('${action}' === 'sub' && minusBtn) {
+          minusBtn.click();
+        }
+      }
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'PRODUCT_QUANTITY_UPDATED'
+        }));
+    })();
+    true;
+  `;
+    return script;
+};
