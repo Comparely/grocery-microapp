@@ -35,7 +35,6 @@ const HomeScreen = () => {
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
     const [email, setEmail] = useState<string>('');
     const { getTotalItems } = useCart();
-
     const wiggleAnim = useRef(new Animated.Value(0)).current;
     const router = useRouter(); // Initialize useRouter
 

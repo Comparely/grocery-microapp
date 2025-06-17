@@ -9,6 +9,8 @@ import { injectSingleProductScript_zepto } from '@/script/injectionScript_zepto'
 import { getNavigationScript, injectSingleProductScript } from '@/script/injectionScript_blinkit';
 import { useCart } from '../context/CartContext';
 import ClockIcon from './timer';
+import { Product } from '@/types/Product';
+import { Session } from '@/types/Session';
 
 const { width } = Dimensions.get('window');
 
@@ -37,7 +39,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const bigbasketOptions = product.priceOptions.filter((opt) =>
         bigbasketVariants.includes(opt.platform?.toLowerCase() || ''),
     );
-
     const sortedPriceOptions = [...primaryOptions, ...bigbasketOptions].sort(
         (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
     );
@@ -93,13 +94,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         }
     };
 
-    const handleCardPress = () => {
-        router.push({
-            pathname: '/product',
-            params: { product: JSON.stringify(product) },
-        });
-    };
-
     return (
         <TouchableOpacity
             onPress={handleCardPress}
@@ -123,9 +117,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         <Text style={styles.tagText}>{product.brand}</Text>
                     </View>
                 </View>
-
                 <Text style={styles.mrpText}>MRP ₹{product.mrp}</Text>
-
                 <Text style={styles.nameText} numberOfLines={2}>
                     {product.name}
                 </Text>
@@ -164,17 +156,6 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
     priceOption,
     productWeight,
 }) => {
-    const handleDeepLink = (url: string) => {
-        (async () => {
-            const supported = await Linking.canOpenURL(url);
-            if (supported) {
-                await Linking.openURL(url);
-            } else {
-                console.log("Don't know how to open URI: " + url);
-            }
-        })().catch((err) => console.log(err));
-    };
-
     const platform = priceOption.platform?.toLowerCase() ?? '';
     const bigbasketVariants = ['bigbasket', 'bbnow', 'bb'];
 
