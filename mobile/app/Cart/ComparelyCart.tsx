@@ -250,24 +250,6 @@ const ComparelyCart = () => {
 
                                     <TouchableOpacity
                                         style={styles.openAppBtn}
-                                        onPress={() => {
-                                            const deeplinkObj =
-                                                items[0]?.product?.priceOptions.find(
-                                                    (po) => po.platform === platform,
-                                                );
-                                            if (deeplinkObj) {
-                                                Linking.openURL(platformCartURLs[platform] || '');
-                                            }
-                                        }}>
-                                        // onPress={() => {
-                                        //     const deeplinkObj =
-                                        //         items[0]?.product?.priceOptions.find(
-                                        //             (po) => po.platform === platform,
-                                        //         );
-                                        //     if (deeplinkObj) {
-                                        //         Linking.openURL(platformCartURLs[platform] || '');
-                                        //     }
-                                        // }}>
                                         onPress={() => openWebView(platform)}>
                                         <Text style={styles.openAppText}>Open in {platform}</Text>
                                     </TouchableOpacity>
