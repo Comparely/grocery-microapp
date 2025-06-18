@@ -227,11 +227,11 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
                 onPress={() => handleDeepLink(priceOption.deeplink ?? '')}
                 style={styles.priceOptionContainer}>
                 <View style={styles.platformRow}>
-                    <Text style={styles.priceText}>
+                    {getPlatformIcon()}
+                    <Text style={styles.finalPrice}>
                         {'₹'}
                         {priceOption.price}
                     </Text>
-                    {getPlatformIcon()}
                 </View>
 
                 <View style={styles.detailsRow}>
