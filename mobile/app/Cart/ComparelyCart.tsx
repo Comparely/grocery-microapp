@@ -15,7 +15,7 @@ import {
     injectAddOrSubScript_zepto,
     injectCartSummaryScript_zepto,
 } from '@/script/injectionScript_zepto';
-import { injectCartSummaryScript_instamart } from '@/script/injectionScript_instamart';
+import { injectAddOrSubScript_instamart, injectCartSummaryScript_instamart } from '@/script/injectionScript_instamart';
 
 const platformLogos: Record<string, any> = {
     blinkit: require('@/assets/images/blinkit.png'),
@@ -48,13 +48,13 @@ const platformDeliveryTimes: Record<string, string> = {
 const platformAddOrSubScript: Record<string, (action: 'add' | 'sub', index: number) => string> = {
     blinkit: injectAddOrSubScript,
     zepto: injectAddOrSubScript_zepto,
-    // instamart: injectAddOrSubScript_instamart,
+    instamart: injectAddOrSubScript_instamart,
 };
 
 const billScriptMap: Record<string, () => string> = {
     blinkit: injectCartSummaryScript,
     zepto: injectCartSummaryScript_zepto,
-    // instamart: injectCartSummaryScript_instamart,
+    instamart: injectCartSummaryScript_instamart,
 };
 
 const ComparelyCart = () => {
@@ -142,13 +142,13 @@ const ComparelyCart = () => {
                 <TouchableOpacity onPress={() => router.back()}>
                     <ArrowLeft color="white" size={24} />
                 </TouchableOpacity>
-                <Text style={styles.headerText}>Your Comparely Cart</Text>
+                <Text style={styles.headerText}>{'Your Comparely Cart'}</Text>
             </View>
 
             <View style={styles.content}>
                 {Object.keys(grouped).length === 0 && (
                     <Text style={{ textAlign: 'center', marginTop: 20, color: '#555' }}>
-                        Your cart is empty
+                        {'Your cart is empty'}
                     </Text>
                 )}
 
@@ -178,16 +178,20 @@ const ComparelyCart = () => {
                                     <View style={styles.priceInfoContainer}>
                                         <Text style={styles.itemCount}>
                                             {items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
-                                            Items
+                                            {'Items'}
                                         </Text>
-                                        <Text style={styles.price}>₹{grandTotal}</Text>
+                                        <Text style={styles.price}>
+                                            {'₹'}
+                                            {grandTotal}
+                                        </Text>
                                     </View>
                                 </View>
 
                                 <View style={styles.vendorMeta}>
                                     <View style={styles.row}>
                                         <Text style={styles.extraCharges}>
-                                            Extra Charges ₹{extraCharges}
+                                            {'Extra Charges ₹'}
+                                            {extraCharges}
                                         </Text>
                                     </View>
                                     <View style={styles.row}>
@@ -235,7 +239,8 @@ const ComparelyCart = () => {
                                                         </Text>
                                                     </View>
                                                     <Text style={styles.productPrice}>
-                                                        ₹{price}
+                                                        {'₹'}
+                                                        {price}
                                                     </Text>
                                                 </View>
                                                 {/* <QuantitySelector

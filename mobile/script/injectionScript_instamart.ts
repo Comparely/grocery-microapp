@@ -42,6 +42,48 @@ export const productScrapingScript_instamart = () => {
     return script;
 };
 
+export const injectSingleProductScript_instamart = (targetPrice: number): string => {
+    return `
+    (function () {
+      const optionsBtn = document.querySelector('[data-testid="add_buttons_center"][aria-label^="View"]');
+      if (optionsBtn) {
+        optionsBtn.click();
+        setTimeout(() => {
+          const variantInterval = setInterval(() => {
+            const variants = document.querySelectorAll('[data-testid="variants-container"]');
+
+            for (const variant of variants) {
+              const priceEl = variant.querySelector('[data-testid="item-offer-price"]');
+              if (priceEl?.getAttribute("aria-label") === "${targetPrice}") {
+                const addButton = variant.querySelector('[data-testid="add_buttons_center"]');
+                if (addButton) {
+                  addButton.click();
+                  setTimeout(() => {
+                    const confirmBtn = document.querySelector('[data-testid="InstamartItemCustomizationWidget-cta"]');
+                    if (confirmBtn) {
+                      confirmBtn.click();
+                    } else {
+                      console.warn("⚠️ Confirm button not found");
+                    }
+                  }, 500);
+
+                  clearInterval(variantInterval);
+                  return;
+                }
+              }
+            }
+          }, 300);
+        }, 500);
+      } else {
+        console.warn("⚠️ 'View options' button not found.");
+      }
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'CART_FLOW_COMPLETE',
+      }));
+    })();
+  `;
+};
+
 export const injectCartSummaryScript_instamart = (): string => {
     const script = `
     (function() {
@@ -67,13 +109,49 @@ export const injectCartSummaryScript_instamart = (): string => {
             }
         });
 
+        const deliveryTimeEl = document.querySelector('div[data-testid="sla"]');
+        if (deliveryTimeEl) {
+            billDetails["Delivery Time"] = deliveryTimeEl.innerText.trim();
+        }
+
         const result = { "Bill Details": billDetails };
 
         window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'CART_SUMMARY',
-            data: result
+            type: 'CART_BILL_SUMMARY',
+            data: {
+            'Bill details': billDetails
+          }
         }));
     })();
     true;`;
+    return script;
+};
+
+export const injectAddOrSubScript_instamart = (action: 'add' | 'sub', index: number): string => {
+    const script = `
+    (function() {
+        const i = ${index};
+        const addButtons = document.querySelectorAll('button[data-testid="add_buttons_plus"]');
+        const subButtons = document.querySelectorAll('button[data-testid="add_buttons_minus"]');
+
+        if ('${action}' === 'add' && addButtons[i]) {
+          addButtons[i].click();
+        } else if ('${action}' === 'sub' && subButtons[i]) {
+          subButtons[i].click();
+        } else {
+          console.warn('❌ No button found for action "${action}" at index', i);
+        }
+
+        setTimeout(() => {
+          window.ReactNativeWebView?.postMessage(JSON.stringify({
+            type: 'PRODUCT_QUANTITY_UPDATED',
+            source: 'instamart',
+            index: i,
+            action: '${action}'
+          }));
+        }, 0);
+    })();
+    true;
+  `;
     return script;
 };

@@ -11,6 +11,7 @@ import { useCart } from '../context/CartContext';
 import ClockIcon from './timer';
 import { PriceOption, Product } from '@/types/Product';
 import { Session } from '@/types/Session';
+import { injectSingleProductScript_instamart } from '@/script/injectionScript_instamart';
 
 const { width } = Dimensions.get('window');
 
@@ -88,9 +89,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                         instamartWebViewRef.current?.injectScript(navScript);
                         // Delay injection of product script
                         setTimeout(() => {
-                            const actionScript = injectSingleProductScript({ url });
+                            const actionScript = injectSingleProductScript_instamart(
+                                product.priceOptions[0].price ?? 0,
+                            );
                             instamartWebViewRef.current?.injectScript(actionScript);
                         }, 3000); // 3 second delay, tweak if needed
+                        break;
                     default:
                         console.warn(`Unsupported platform: ${platform}`);
                 }
