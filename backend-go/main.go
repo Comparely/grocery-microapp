@@ -19,13 +19,12 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const PORT = 4500
+const PORT = 4501
 
 var appState config.AppState = config.AppState{}
 
 func main() {
-	var err error
-	err = godotenv.Load(".env")
+	err := godotenv.Load(".env")
 	if err != nil {
 		log.Println("Error loading .env file: %s", err)
 	}
@@ -43,6 +42,22 @@ func main() {
 	}
 	log.Println("✅ Mongo connected")
 	defer cancelMongo()
+
+	http.HandleFunc("/api/products", func(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		search.HandlePostProducts(w, r)
+	} else if r.Method == http.MethodGet {
+		search.HandleGetProducts(w, r)
+	} else {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	}
+})
+	go func() {
+		log.Println("🚀 HTTP Server running on http://localhost:4500")
+		if err := http.ListenAndServe(":4500", nil); err != nil {
+			log.Fatalf("❌ HTTP server failed to start: %v", err)
+		}
+	}()
 
 	router := gin.Default()
 	router.Use(cors.New(config.GetCorsConfig()))
@@ -106,7 +121,6 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"suggestions": suggestions})
 	})
 
-	// Endpoint: Fetch all queries with pending mappings
 	router.GET("/admin/pending-queries", func(c *gin.Context) {
 		ctx := context.Background()
 		keys, err := appState.RedisClient.Keys(ctx, "pending_mappings:*").Result()
@@ -118,7 +132,6 @@ func main() {
 		queries := []string{}
 		seen := make(map[string]bool)
 		for _, key := range keys {
-			// Extract just the query part (before the first colon after prefix)
 			parts := strings.SplitN(strings.TrimPrefix(key, "pending_mappings:"), ":", 2)
 			query := parts[0]
 			if !seen[query] {
@@ -129,7 +142,6 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"queries": queries})
 	})
 
-	// Endpoint: Fetch pending mappings for a specific query
 	router.GET("/admin/pending-mappings", func(c *gin.Context) {
 		query := c.Query("q")
 		if query == "" {
@@ -148,7 +160,6 @@ func main() {
 			c.JSON(http.StatusOK, gin.H{"query": query, "mappings": []interface{}{}})
 			return
 		}
-		// Return the latest process_id
 		latestKey := keys[len(keys)-1]
 		mappingsJSON, err := appState.RedisClient.Get(ctx, latestKey).Result()
 		if err != nil {
@@ -167,14 +178,11 @@ func main() {
 
 	router.GET("/place", func(c *gin.Context) {
 		query := c.Query("query")
-
-		client := places.NewClient("AIzaSyDXxEstxNmu1Lr_vqLau0StAoRyUGPZqSg")
-
+		client := places.NewClient(os.Getenv("GOOGLE_PLACES_API_KEY"))
 		predictions, err := client.GetPlacePredictions(query)
 		if err != nil {
 			log.Fatal("Autocomplete error:", err)
 		}
-
 		places := make([]places.Place, 0, len(predictions))
 		for _, p := range predictions {
 			place, err := client.GetPlaceDetails(p.PlaceID)
@@ -184,9 +192,9 @@ func main() {
 			}
 			places = append(places, place)
 		}
-
 		c.JSON(http.StatusOK, places)
 	})
 
 	router.Run(fmt.Sprintf(":%d", PORT))
+
 }

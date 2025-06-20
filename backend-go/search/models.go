@@ -11,6 +11,13 @@ type Variant struct {
 type PriceOption struct {
 	Source   string    `json:"source"`
 	Variants []Variant `json:"variants"`
+	Platform     string  `json:"platform"`
+	Price        float64 `json:"price"`
+	DeliveryTime string  `json:"delivery_time"`
+	Link         string  `json:"link"`
+	ProductID    string  `json:"product_id"`
+	ProductURL   string  `json:"product_url"`
+	ASIN         string  `json:"asin,omitempty"`
 }
 
 type Product struct {
@@ -21,6 +28,18 @@ type Product struct {
 	MRP      float64       `json:"mrp"`
 	ImageURL string        `json:"image_url"`
 	Prices   []PriceOption `json:"prices"`
+}
+
+type AmazonFreshRawProduct struct {
+	ASIN         string
+	Name         string
+	Brand        string
+	Weight       string
+	MRP          float64
+	Image        string
+	Price        float64
+	DeliveryTime string
+	Link         string
 }
 
 type PendingMappingItem struct {
@@ -41,4 +60,14 @@ type PendingMappings struct {
 		Match      PendingMappingItem `json:"match"`
 		Similarity float64            `json:"similarity"`
 	} `json:"mappings"`
+}
+type ScrapedAmazonProduct struct {
+  Name         string `json:"name"`
+  Price        string `json:"price"`
+  DeliveryTime string `json:"DeliveryTime"` // <-- uppercase `D`
+  Image        string `json:"image"`
+  Link         string `json:"link"`
+  ASIN         string `json:"asin"`
+  Weight       string `json:"weight"`
+  Mrp          float64 `json:"mrp"`
 }
