@@ -19,6 +19,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"regexp"
 
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/emulation"
@@ -29,6 +30,7 @@ import (
 	"github.com/comparely/comparely-grocery-backend/sessions"
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
+	// "github.com/comparely/comparely-grocery-backend/models"
 )
 
 func mapBlinkit(data map[string]interface{}) []Product {
@@ -385,7 +387,64 @@ func mapBBRawProduct(raw map[string]interface{}) (Product, error) {
 	}, nil
 }
 
-// fetchBlinkitProducts fetches up to 5 pages from Blinkit.
+func MapAmazonFreshProducts(raw []ScrapedAmazonProduct) []Product {
+	var mapped []Product
+
+	for _, item := range raw {
+		priceStr := strings.ReplaceAll(item.Price, "₹", "")
+		priceStr = strings.ReplaceAll(priceStr, ",", "")
+		priceStr = strings.TrimSpace(priceStr)
+		price, err := strconv.ParseFloat(priceStr, 64)
+		if err != nil || price < 0 {
+			price = 0
+		}
+
+		link := strings.TrimSpace(item.Link)
+		if strings.HasPrefix(link, "/") {
+			link = "https://www.amazon.in" + link
+		}
+
+		weight := strings.TrimSpace(item.Weight)
+		if weight == "" {
+			weight = extractWeight(item.Name)
+		}
+
+		product := Product{
+			ID:       strings.TrimSpace(item.ASIN),
+			Name:     strings.TrimSpace(item.Name),
+			Brand:    "",
+			Weight:   weight,
+			MRP:      price,
+			ImageURL: strings.TrimSpace(item.Image),
+			Prices: []PriceOption{
+				{
+					Source:       "scraper",
+					Variants:     []Variant{},
+					Platform:     "amazon_fresh",
+					Price:        price,
+					DeliveryTime: strings.TrimSpace(item.DeliveryTime),
+					Link:         link,
+					ProductID:    item.ASIN,
+					ProductURL:   link,
+					ASIN:         item.ASIN,
+				},
+			},
+		}
+
+		mapped = append(mapped, product)
+	}
+
+	log.Printf("Mapped %d Amazon Fresh products", len(mapped))
+	return mapped
+}
+
+func extractWeight(name string) string {
+	re := regexp.MustCompile(`(?i)(\d+(\.\d+)?\s?(g|kg|ml|l|litre|pack))`)
+	match := re.FindString(name)
+	return strings.TrimSpace(match)
+}
+
+
 func fetchBlinkitProducts(query string, lat string, lng string) ([]interface{}, error) {
 	baseUrl := "https://blinkit.com"
 	url := fmt.Sprintf("%s/v6/search/products?q=%s", baseUrl, query)
@@ -715,21 +774,27 @@ func fetchZeptoProductsV3(query string, lat, lng string) (map[string]interface{}
 	return res, nil
 }
 
-// -----------------------
-// Merge products from different sources by name, remove duplicate variants.
 func mergeProducts(productArrays [][]Product, appState config.AppState, query string) []Product {
 	merged := make(map[string]Product)
+
 	for _, products := range productArrays {
 		for _, prod := range products {
-			if existing, ok := merged[prod.Name]; ok {
+			if prod.Weight == "" && len(prod.Prices) > 0 && len(prod.Prices[0].Variants) > 0 {
+				prod.Weight = prod.Prices[0].Variants[0].Weight
+			}
+			prod.Weight = normalizeWeight(prod.Weight)
+
+			key := strings.ToLower(strings.TrimSpace(prod.Name + "|" + prod.Weight))
+
+			if existing, ok := merged[key]; ok {
 				existing.Prices = append(existing.Prices, prod.Prices...)
-				merged[prod.Name] = existing
+				merged[key] = existing
 			} else {
-				merged[prod.Name] = prod
+				merged[key] = prod
 			}
 		}
 	}
-	// Optionally, remove duplicate variants per source.
+
 	finalArray := make([]Product, 0, len(merged))
 	for _, prod := range merged {
 		priceMap := make(map[string][]Variant)
@@ -742,7 +807,10 @@ func mergeProducts(productArrays [][]Product, appState config.AppState, query st
 		}
 		var mergedPrices []PriceOption
 		for source, variants := range priceMap {
-			mergedPrices = append(mergedPrices, PriceOption{Source: source, Variants: variants})
+			mergedPrices = append(mergedPrices, PriceOption{
+				Source:   source,
+				Variants: variants,
+			})
 		}
 		prod.Prices = mergedPrices
 		finalArray = append(finalArray, prod)
@@ -750,15 +818,15 @@ func mergeProducts(productArrays [][]Product, appState config.AppState, query st
 
 	finalArray = applyPendingMappings(finalArray, appState, query)
 
-	unique := make(map[string]Product, len(finalArray))
+	unique := make(map[string]Product)
 	for _, prod := range finalArray {
-		name := prod.Name
-		if existing, ok := unique[name]; ok {
+		nameKey := strings.ToLower(strings.TrimSpace(prod.Name + "|" + prod.Weight))
+		if existing, ok := unique[nameKey]; ok {
 			if countUniqueSources(prod.Prices) > countUniqueSources(existing.Prices) {
-				unique[name] = prod
+				unique[nameKey] = prod
 			}
 		} else {
-			unique[name] = prod
+			unique[nameKey] = prod
 		}
 	}
 
@@ -773,6 +841,11 @@ func mergeProducts(productArrays [][]Product, appState config.AppState, query st
 
 	return finalArray
 }
+func normalizeWeight(w string) string {
+	w = strings.ToLower(strings.TrimSpace(w))
+	w = strings.ReplaceAll(w, " ", "")
+	return w
+}
 
 func SearchProducts(appState config.AppState, query string, deviceID string) ([]Product, error) {
 	var (
@@ -780,10 +853,12 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 		instamartProducts []Product
 		zeptoProducts     []Product
 		bigbasketProducts []Product
+		// amazonfreshProducts []Product
 		errBlinkit        error
 		errInstamart      error
 		errZepto          error
 		errBigbasket      error
+		// errAmazonFresh    error
 	)
 	var lat, lng string
 	var zeptoStoreId string
@@ -865,6 +940,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 		}
 		bigbasketProducts = mapBigBasket(bigbasketRaw)
 	}()
+
 
 	wg.Wait()
 
