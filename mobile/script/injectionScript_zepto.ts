@@ -94,7 +94,6 @@ export const injectSingleProductScript_zepto = (product: {
           clicked = true;
           btn.click();
           console.log("🔘 Clicked Add to cart");
-
           // 3. After click, open cart and report
           setTimeout(() => {
             const cartIcon = document.querySelector('.Header__CartIcon-sc-1v2x4b8-0');
@@ -106,6 +105,8 @@ export const injectSingleProductScript_zepto = (product: {
             }
           }, 1500);
         }
+        const btn2 = document.querySelector('button[data-testid="auto-address-btn"]');
+        if (btn2) btn2.click();
       } catch (e) {
         console.error("Error in clickSequence:", e);
       }
@@ -303,4 +304,58 @@ export const injectAddOrSubScript_zepto = (action: 'add' | 'sub', index: number)
     true;
   `;
     return script;
+};
+
+export const injectLocationPermissionScript_zepto = (): string => {
+    return `
+    (function () {
+      try {
+        const waitForElement = (selector, callback) => {
+          const interval = setInterval(() => {
+            const el = document.querySelector(selector);
+            if (el) {
+              clearInterval(interval);
+              callback(el);
+            }
+          }, 200);
+        };
+
+        // Improved selector: looks for button text "Select location"
+        waitForElement('button', (btn) => {
+          if (btn?.innerText?.toLowerCase().includes('select location')) {
+            try {
+              btn.click();
+              console.log("📍 Zepto: Select Location button clicked.");
+            } catch (e) {
+              console.warn("⚠️ Zepto: Failed to click Select Location -", e.message);
+            }
+          } else {
+            console.log("⏳ Waiting for Select Location button...");
+          }
+        });
+
+        // Wait for the enable location button
+        waitForElement('button[aria-label="Enable"]', (enableBtn) => {
+          try {
+            enableBtn.click();
+            console.log("📍 Zepto: Enable Location button clicked.");
+            window.ReactNativeWebView?.postMessage?.(JSON.stringify({
+              type: 'LOCATION_ACCESS_TRIGGERED'
+            }));
+          } catch (e) {
+            window.ReactNativeWebView?.postMessage?.(JSON.stringify({
+              type: 'LOCATION_ACCESS_ERROR',
+              error: e.message
+            }));
+          }
+        });
+      } catch (e) {
+        window.ReactNativeWebView?.postMessage?.(JSON.stringify({
+          type: 'LOCATION_ACCESS_ERROR',
+          error: e.message
+        }));
+      }
+    })();
+    true;
+  `;
 };
