@@ -13,6 +13,7 @@ import {
     injectOtpScript_zepto,
 } from '@/script/injectionScript_zepto';
 import { BillDetailsMap, BillSummary, useWebViews } from '@/context/WebViewContext';
+import { injectLocationSelectionScript_instamart } from '@/script/injectionScript_instamart';
 // import { injectCartSummaryScript_instamart } from '@/script/injectionScript_instamart';
 
 export type HiddenWebViewRef = {
@@ -223,6 +224,8 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
                                 jsCode = injectLocationSelectionScript();
                             } else if (platform === 'zepto') {
                                 jsCode = injectLocationPermissionScript_zepto();
+                            } else {
+                                jsCode = injectLocationSelectionScript_instamart();
                             }
                             webviewRef.current?.injectJavaScript(jsCode);
 

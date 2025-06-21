@@ -193,3 +193,19 @@ export const injectAddOrSubScript_instamart = (action: 'add' | 'sub', index: num
   `;
     return script;
 };
+
+export const injectLocationSelectionScript_instamart = () => {
+    const script = `
+  (function() {
+      const locationButton = document.querySelector('[data-testid="set-gps-button"]')?.click();
+      if (locationButton) {
+          locationButton.click();
+      }
+      window.ReactNativeWebView?.postMessage?.(JSON.stringify({
+        type: 'LOCATION_ACCESS_TRIGGERED'
+      }));
+  })();
+  true;
+  `;
+    return script;
+};
