@@ -43,45 +43,83 @@ export const productScrapingScript_instamart = () => {
 };
 
 export const injectSingleProductScript_instamart = (targetPrice: number): string => {
-    return `
+    const script = `
     (function () {
-      const optionsBtn = document.querySelector('[data-testid="add_buttons_center"][aria-label^="View"]');
-      if (optionsBtn) {
-        optionsBtn.click();
-        setTimeout(() => {
-          const variantInterval = setInterval(() => {
-            const variants = document.querySelectorAll('[data-testid="variants-container"]');
+      try {
+        const addOrOptionBtn =
+          document.querySelector('[data-testid="add_buttons_center"]') ||
+          document.querySelector('#product-details-page-container > div > div._2_95H.bottomOffsetPadBottom._1Xu6u > div._7I7zN > div._1Cxye > div._AHZN._3M_WX.Hxf8j > div._2zozL > div > div > button');
 
-            for (const variant of variants) {
-              const priceEl = variant.querySelector('[data-testid="item-offer-price"]');
-              if (priceEl?.getAttribute("aria-label") === "${targetPrice}") {
-                const addButton = variant.querySelector('[data-testid="add_buttons_center"]');
-                if (addButton) {
-                  addButton.click();
-                  setTimeout(() => {
-                    const confirmBtn = document.querySelector('[data-testid="InstamartItemCustomizationWidget-cta"]');
-                    if (confirmBtn) {
-                      confirmBtn.click();
-                    } else {
-                      console.warn("⚠️ Confirm button not found");
-                    }
-                  }, 500);
+        if (!addOrOptionBtn) {
+          window.ReactNativeWebView.postMessage(JSON.stringify({
+            type: 'CART_FLOW_ERROR',
+            message: 'No ADD/Options button found'
+          }));
+          return;
+        }
 
-                  clearInterval(variantInterval);
-                  return;
+        addOrOptionBtn.click();
+
+        let attempts = 0;
+        const maxAttempts = 20;
+        const interval = setInterval(() => {
+          const variants = document.querySelectorAll('[data-testid="variants-container"]');
+
+          if (variants.length === 0) {
+            attempts++;
+            if (attempts >= maxAttempts) {
+              clearInterval(interval);
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'CART_FLOW_COMPLETE',
+                message: 'Direct add assumed successful (no variants shown)'
+              }));
+            }
+            return;
+          }
+
+          let matched = false;
+          for (const variant of variants) {
+            const priceEl = variant.querySelector('[data-testid="item-offer-price"]');
+            if (priceEl?.getAttribute("aria-label") === "${targetPrice}") {
+              const addBtn = variant.querySelector('button[data-testid="add_buttons_center"]');
+              if (addBtn) {
+                addBtn.click();
+
+                const confirmBtn = document.querySelector('[data-testid="InstamartItemCustomizationWidget-cta"]');
+                if (confirmBtn) {
+                  confirmBtn.click();
                 }
+
+                clearInterval(interval);
+                window.ReactNativeWebView.postMessage(JSON.stringify({
+                  type: 'CART_FLOW_COMPLETE',
+                  message: 'Variant with price ${targetPrice} added and confirmed'
+                }));
+                matched = true;
+                break;
               }
             }
-          }, 300);
-        }, 500);
-      } else {
-        console.warn("⚠️ 'View options' button not found.");
+          }
+
+          if (!matched) {
+            clearInterval(interval);
+            window.ReactNativeWebView.postMessage(JSON.stringify({
+              type: 'CART_FLOW_ERROR',
+              message: 'No matching variant found for price ${targetPrice}'
+            }));
+          }
+
+        }, 300);
+      } catch (err) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({
+          type: 'CART_FLOW_ERROR',
+          message: 'Script error: ' + err.message
+        }));
       }
-    window.ReactNativeWebView.postMessage(JSON.stringify({
-        type: 'CART_FLOW_COMPLETE',
-      }));
     })();
+    true;
   `;
+    return script;
 };
 
 export const injectCartSummaryScript_instamart = (): string => {

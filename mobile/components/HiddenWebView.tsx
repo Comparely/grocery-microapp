@@ -1,8 +1,17 @@
 import React, { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import { View, StyleSheet, TouchableOpacity, Text } from 'react-native';
-import { injectLoginScript, injectOtpScript } from '@/script/injectionScript_blinkit';
-import { injectLoginScript_zepto, injectOtpScript_zepto } from '@/script/injectionScript_zepto';
+import {
+    clearCart,
+    injectLocationSelectionScript,
+    injectLoginScript,
+    injectOtpScript,
+} from '@/script/injectionScript_blinkit';
+import {
+    injectLocationPermissionScript_zepto,
+    injectLoginScript_zepto,
+    injectOtpScript_zepto,
+} from '@/script/injectionScript_zepto';
 import { BillDetailsMap, BillSummary, useWebViews } from '@/context/WebViewContext';
 // import { injectCartSummaryScript_instamart } from '@/script/injectionScript_instamart';
 
@@ -24,7 +33,13 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
     ({ url, platform, visible, onOtpSubmitted }, ref) => {
         const webviewRef = useRef<WebView>(null);
         const loadedRef = useRef(false);
-        const { visibleWebViews, setVisibleWebViews, setBillSummaries } = useWebViews();
+        const {
+            visibleWebViews,
+            setVisibleWebViews,
+            setBillSummaries,
+            cartClearedOnce,
+            setCartClearedOnce,
+        } = useWebViews();
 
         useEffect(() => {
             console.log(`🚀 WebView mounted for: ${url}`);
@@ -33,10 +48,16 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
 
         type WebViewMessage =
             | { type: 'INJECTED_SUCCESS' }
+            | { type: 'CART_CLEARED' }
+            | { type: 'LOCATION_ACCESS_TRIGGERED' }
+            | { type: 'LOCATION_ACCESS_ERROR'; error: string }
             | { type: 'LOGIN_FLOW_COMPLETE' }
             | { type: 'OTP_SUBMITTED' }
             | { type: 'CART_FLOW_COMPLETE' }
-            | { type: 'CART_BILL_SUMMARY' }
+            | {
+                  data: any;
+                  type: 'CART_BILL_SUMMARY';
+              }
             | { type: 'PRODUCT_QUANTITY_UPDATED'; payload: { productId: string; quantity: number } }
             | { type: 'RAW'; payload: string };
 
@@ -54,6 +75,15 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
                 case 'INJECTED_SUCCESS':
                     console.log('✅ Generic injection confirmed!');
                     break;
+                case 'CART_CLEARED':
+                    console.log(`✅ Cart cleared for ${platform}`);
+                    break;
+                case 'LOCATION_ACCESS_TRIGGERED':
+                    console.log(`✅ Location access triggered for ${platform}`);
+                    break;
+                case 'LOCATION_ACCESS_ERROR':
+                    console.error(`❌ Location access error for ${platform}:`, msg.error);
+                    break;
                 case 'LOGIN_FLOW_COMPLETE':
                     console.log(`✅ Login script completed for ${platform} moving to OTP phase`);
                     break;
@@ -66,8 +96,9 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
                     break;
                 case 'CART_BILL_SUMMARY':
                     console.log('✅ Cart Billing details extracted successfully');
-                    // console.log('📊 Bill details:', msg.data);
+                    console.log('📊 Bill details:', msg.data);
                     setBillSummaries((prev) => {
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         const rawData = msg.data?.['Bill details'] || {};
 
                         const labelMap: Record<string, keyof BillDetailsMap> = {
@@ -85,6 +116,7 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
                             time: 0,
                         };
 
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                         Object.entries(rawData).forEach(([label, value]) => {
                             const key = labelMap[label];
                             if (key) {
@@ -104,7 +136,7 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
 
                     break;
                 case 'PRODUCT_QUANTITY_UPDATED':
-                    console.log('✅ Product quantity updated:', msg.payload);
+                    console.log('✅ Product quantity updated for ' + platform, msg.payload);
                     break;
                 case 'RAW':
                 default:
@@ -120,7 +152,9 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
                 } else if (platform === 'zepto') {
                     jsCode = injectLoginScript_zepto(phone);
                 }
-                webviewRef.current?.injectJavaScript(jsCode);
+                setTimeout(() => {
+                    webviewRef.current?.injectJavaScript(jsCode);
+                }, 1000); // wait 1s to avoid timing issues
             },
             injectOtp(otp: string) {
                 let jsCode = '';
@@ -173,7 +207,7 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
                 <TouchableOpacity
                     style={styles.backButton}
                     onPress={() => setVisibleWebViews({ ...visibleWebViews, [platform]: false })}>
-                    <Text style={styles.backButtonText}>← Back</Text>
+                    <Text style={styles.backButtonText}>{'← Back'}</Text>
                 </TouchableOpacity>
 
                 <WebView
@@ -183,6 +217,24 @@ const HiddenWebView = forwardRef<HiddenWebViewRef, Props>(
                         if (!loadedRef.current) {
                             console.log(`${url} loaded`);
                             loadedRef.current = true;
+
+                            let jsCode = '';
+                            if (platform === 'blinkit') {
+                                jsCode = injectLocationSelectionScript();
+                            } else if (platform === 'zepto') {
+                                jsCode = injectLocationPermissionScript_zepto();
+                            }
+                            webviewRef.current?.injectJavaScript(jsCode);
+
+                            setTimeout(() => {
+                                if (!cartClearedOnce[platform as keyof typeof cartClearedOnce]) {
+                                    setCartClearedOnce((prev) => ({
+                                        ...prev,
+                                        [platform]: true,
+                                    }));
+                                    webviewRef.current?.injectJavaScript(clearCart());
+                                }
+                            }, 2000); // wait 1s to avoid timing issues
                         }
                     }}
                     javaScriptEnabled
@@ -208,7 +260,7 @@ const styles_hidden = StyleSheet.create({
     },
 });
 
-// const styles = StyleSheet.create({
+// const styles_hidden = StyleSheet.create({
 //     hidden: {
 //         flex: 1,
 //         // Temporary for debugging:

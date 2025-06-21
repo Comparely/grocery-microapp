@@ -237,3 +237,74 @@ export const injectAddOrSubScript = (action: 'add' | 'sub', index: number): stri
   `;
     return script;
 };
+
+export const injectLocationSelectionScript = (): string => {
+    return `
+    (function () {
+      try {
+        const waitForElement = (selector, callback) => {
+          const interval = setInterval(() => {
+            const el = document.querySelector(selector);
+            if (el) {
+              clearInterval(interval);
+              callback(el);
+            }
+          }, 200);
+        };
+
+        // First close the download app modal (if it exists)
+        waitForElement(
+          'body > div:nth-child(15) > div > div > div > div > div.DownloadAppModal__BackButtonIcon-sc-1wef47t-14.hEjBTn',
+          (cross) => {
+            try {
+              cross.click();
+              console.log("❌ Blinkit: Closed download app modal.");
+            } catch (e) {
+              console.warn("⚠️ Blinkit: Failed to close modal -", e.message);
+            }
+          }
+        );
+
+        // Then click the detect location button
+        waitForElement(
+          'div.GetLocationModal__ButtonContainer-sc-jc7b49-5.ivJHlZ > div:nth-child(1)',
+          (detectBtn) => {
+            try {
+              detectBtn.click();
+              console.log("📍 Blinkit: Location selection button clicked.");
+              window.ReactNativeWebView?.postMessage?.(JSON.stringify({
+                type: 'LOCATION_ACCESS_TRIGGERED'
+              }));
+            } catch (e) {
+              window.ReactNativeWebView?.postMessage?.(JSON.stringify({
+                type: 'LOCATION_ACCESS_ERROR',
+                error: e.message
+              }));
+            }
+          }
+        );
+      } catch (e) {
+        window.ReactNativeWebView?.postMessage?.(JSON.stringify({
+          type: 'LOCATION_ACCESS_ERROR',
+          error: e.message
+        }));
+      }
+    })();
+    true;
+  `;
+};
+
+export const clearCart = () => {
+    const script = `(function() {
+    try {
+      const cart = JSON.parse(localStorage.getItem('cart') || '{}');
+      localStorage.removeItem('cart');
+      window.ReactNativeWebView?.postMessage?.(JSON.stringify({
+        type: 'CART_CLEARED'
+      }));
+    } catch (e) {
+      localStorage.removeItem('cart');
+    }
+  })();`;
+    return script;
+};

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, Linking } from 'react-native';
+import { View, Text, ScrollView, Image, TouchableOpacity, StyleSheet, Linking, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import ThreeQuarterCircle from '../../components/timer';
@@ -15,7 +15,10 @@ import {
     injectAddOrSubScript_zepto,
     injectCartSummaryScript_zepto,
 } from '@/script/injectionScript_zepto';
-import { injectAddOrSubScript_instamart, injectCartSummaryScript_instamart } from '@/script/injectionScript_instamart';
+import {
+    injectAddOrSubScript_instamart,
+    injectCartSummaryScript_instamart,
+} from '@/script/injectionScript_instamart';
 
 const platformLogos: Record<string, any> = {
     blinkit: require('@/assets/images/blinkit.png'),
@@ -59,7 +62,7 @@ const billScriptMap: Record<string, () => string> = {
 
 const ComparelyCart = () => {
     const router = useRouter();
-    const { cart, addToCartV2, grouped, removeFromCart, getTotalItems } = useCart();
+    const { cart, addToCartV2, grouped, removeFromCart } = useCart();
     const {
         blinkitWebViewRef,
         zeptoWebViewRef,
@@ -71,6 +74,12 @@ const ComparelyCart = () => {
     const [expandedIndex, setExpandedIndex] = useState<{
         [key: string]: boolean;
     }>({});
+    const [loadingPlatforms, setLoadingPlatforms] = useState<Record<string, boolean>>({
+        blinkit: true,
+        zepto: true,
+        instamart: true,
+    });
+
     const cartUrls = {
         blinkit: 'https://blinkit.com/cart',
         zepto: 'https://www.zeptonow.com/?cart=open',
@@ -91,9 +100,8 @@ const ComparelyCart = () => {
         });
     }, []);
 
-    const totalItems = useMemo(() => getTotalItems(), [cart]);
     useEffect(() => {
-        const timeout = setTimeout(() => {
+        const interval = setInterval(() => {
             const uniquePlatforms = Array.from(new Set(cart.map((item) => item.platform)));
             uniquePlatforms.forEach((platform) => {
                 const ref = platformRefs[platform as keyof typeof platformRefs];
@@ -102,11 +110,17 @@ const ComparelyCart = () => {
                     const script = scriptGenerator();
                     ref.current.injectScript(script);
                 }
-            });
-        }, 4000);
 
-        return () => clearTimeout(timeout);
-    }, [cart, totalItems]);
+                // Update loading when bill summary is populated
+                const summary = billSummaries[platform]?.['Bill details'];
+                if (summary && summary.grandTotal > 0 && loadingPlatforms[platform]) {
+                    setLoadingPlatforms((prev) => ({ ...prev, [platform]: false }));
+                }
+            });
+        }, 100);
+
+        return () => clearInterval(interval);
+    }, [cart, billSummaries]);
 
     // Toggle expand per platform
     const toggleExpand = (platform: string) => {
@@ -155,10 +169,12 @@ const ComparelyCart = () => {
                 {Object.entries(grouped).map(([platform, items]) => {
                     const totalPrice = getPlatformTotal(items);
                     const grandTotal =
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         billSummaries[platform]?.['Bill details']?.['grandTotal'] || 0;
                     const extraCharges = Math.max(grandTotal - totalPrice, 0);
 
                     const deliveryTime =
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         billSummaries[platform]?.['Bill details']?.['time'] ||
                         platformDeliveryTimes[platform] ||
                         '';
@@ -180,10 +196,14 @@ const ComparelyCart = () => {
                                             {items.reduce((sum, item) => sum + item.quantity, 0)}{' '}
                                             {'Items'}
                                         </Text>
-                                        <Text style={styles.price}>
-                                            {'₹'}
-                                            {grandTotal}
-                                        </Text>
+                                        {loadingPlatforms[platform] ? (
+                                            <ActivityIndicator size="small" color="#004B2F" />
+                                        ) : (
+                                            <Text style={styles.price}>
+                                                {'₹'}
+                                                {grandTotal}
+                                            </Text>
+                                        )}
                                     </View>
                                 </View>
 
@@ -302,7 +322,10 @@ const ComparelyCart = () => {
                                     <TouchableOpacity
                                         style={styles.openAppBtn}
                                         onPress={() => openWebView(platform)}>
-                                        <Text style={styles.openAppText}>Open in {platform}</Text>
+                                        <Text style={styles.openAppText}>
+                                            {'Open in '}
+                                            {platform}
+                                        </Text>
                                     </TouchableOpacity>
                                 </>
                             )}

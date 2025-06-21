@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useState, useRef, useEffect } from 'react';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
     View,
     Text,
@@ -12,7 +13,9 @@ import {
     TextInputKeyPressEventData,
     Alert,
 } from 'react-native';
-import { useWebViews } from '../context/WebViewContext';
+import { useWebViews } from '../../context/WebViewContext';
+import { useSession } from '@/context/SessionContext';
+import { getNavigationScript } from '@/script/injectionScript_blinkit';
 
 interface LoginScreenProps {
     platform: 'blinkit' | 'zepto';
@@ -23,12 +26,15 @@ const platformOtpLength: Record<'blinkit' | 'zepto', number> = {
     zepto: 6,
 };
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ platform }) => {
+const LoginScreen: React.FC<LoginScreenProps> = ({ platform = 'zepto' }) => {
+    const { blinkitWebViewRef, zeptoWebViewRef } = useWebViews();
+    const { setLoggedIn } = useSession();
+    const router = useRouter();
+    const { redirect } = useLocalSearchParams<{ redirect?: string }>();
     const [step, setStep] = useState<'phone' | 'otp'>('phone');
     const [phoneNumber, setPhoneNumber] = useState('');
     const [otp, setOtp] = useState<string[]>([]);
-    const inputsRef = useRef<Array<TextInput | null>>([]);
-    const { blinkitWebViewRef, zeptoWebViewRef } = useWebViews();
+    const inputsRef = useRef<(TextInput | null)[]>([]);
     const otpLength = platformOtpLength[platform];
 
     useEffect(() => {
@@ -39,6 +45,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ platform }) => {
             }, 100);
         }
     }, [step]);
+
+    useEffect(() => {
+        if (platform === 'blinkit') {
+            blinkitWebViewRef.current?.injectScript(getNavigationScript('https://blinkit.com/'));
+        } else if (platform === 'zepto') {
+            zeptoWebViewRef.current?.injectScript(getNavigationScript('https://zepto.com/'));
+        }
+    }, [platform, blinkitWebViewRef, zeptoWebViewRef]);
 
     useEffect(() => {
         const joinedOtp = otp.join('');
@@ -74,6 +88,12 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ platform }) => {
                 zeptoWebViewRef.current?.injectOtp(joined);
                 break;
         }
+        setLoggedIn(true);
+        if (typeof redirect === 'string') {
+            router.replace({ pathname: redirect as any }); // safest fallback if you are confident it's a valid path
+        } else {
+            router.replace('/');
+        }
     };
 
     const handleOtpChange = (text: string, index: number) => {
@@ -99,14 +119,16 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ platform }) => {
 
     const renderPhoneInput = () => (
         <>
-            <Text style={styles.heading}>Almost There!</Text>
+            <Text style={styles.heading}>{'Almost There!'}</Text>
             <Text style={styles.subheading}>
-                Let’s Get You the Best Deal{'\n'}on Your Next Meal!
+                {'Let’s Get You the Best Deal'}
+                {'\n'}
+                {'on Your Next Meal!'}
             </Text>
 
             <View style={styles.inputWrapper}>
                 <View style={styles.staticCodeBox}>
-                    <Text style={styles.codeText}>+91</Text>
+                    <Text style={styles.codeText}>{'+91'}</Text>
                 </View>
 
                 <TextInput
@@ -121,7 +143,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ platform }) => {
             </View>
 
             <TouchableOpacity style={styles.button} onPress={handlePhoneSubmit}>
-                <Text style={styles.buttonText}>Continue</Text>
+                <Text style={styles.buttonText}>{'Continue'}</Text>
             </TouchableOpacity>
         </>
     );
@@ -132,8 +154,8 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ platform }) => {
                 <Ionicons name="arrow-back" size={24} color="#004225" />
             </TouchableOpacity>
 
-            <Text style={styles.heading}>You're One Step Away!</Text>
-            <Text style={styles.subheading}>Enter the OTP to Grab{'\n'}Your Best Deal!</Text>
+            <Text style={styles.heading}>{`You're One Step Away!`}</Text>
+            <Text style={styles.subheading}>{'Enter the OTP to Grab\nYour Best Deal!'}</Text>
 
             <View style={styles.otpWrapper}>
                 {otp.map((digit, index) => (
@@ -152,7 +174,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ platform }) => {
             </View>
 
             <TouchableOpacity onPress={() => setOtp(new Array(otpLength).fill(''))}>
-                <Text style={styles.resend}>Resend Code</Text>
+                <Text style={styles.resend}>{'Resend Code'}</Text>
             </TouchableOpacity>
         </>
     );

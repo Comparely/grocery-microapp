@@ -2,12 +2,12 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'expo-router';
-
-// const { width } = Dimensions.get('window');
+import { useSession } from '@/context/SessionContext';
 
 const CartScreen = () => {
-    const { cart,  getTotalItems } = useCart();
+    const { cart, getTotalItems } = useCart();
     const router = useRouter();
+    const { loggedIn } = useSession();
 
     return (
         <View>
@@ -29,7 +29,16 @@ const CartScreen = () => {
                 // </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.cartContainer}
-                    onPress={() => router.push('/Cart/ComparelyCart')}
+                    onPress={() => {
+                        if (!loggedIn) {
+                            router.push({
+                                pathname: '/Login/LoginScreen',
+                                params: { redirect: '/Cart/ComparelyCart' },
+                            });
+                        } else {
+                            router.push('/Cart/ComparelyCart');
+                        }
+                    }}
                     activeOpacity={0.8}>
                     <View style={styles.cartImages}>
                         <Image
@@ -41,7 +50,9 @@ const CartScreen = () => {
                         {'View Cart'}
                         {'\n'}
                         <Text style={styles.cartItems}>
-                            {getTotalItems()} item{getTotalItems() > 1 ? 's' : ''}
+                            {getTotalItems()}
+                            {' item'}
+                            {getTotalItems() > 1 ? 's' : ''}
                         </Text>
                     </Text>
                     <View style={styles.arrowButton}>

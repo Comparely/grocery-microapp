@@ -66,6 +66,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             Object.entries(platformLinks).forEach(([platform, url]) => {
                 let navScript = '';
                 switch (platform) {
+                    case 'instamart':
+                        navScript = getNavigationScript(url);
+                        instamartWebViewRef.current?.injectScript(navScript);
+                        const instamartItem = product.priceOptions.find(
+                            (p) => p.platform === 'instamart' && p.deeplink === url,
+                        );
+                        const instamartPrice = instamartItem?.price ?? 0;
+                        console.log(product.priceOptions);
+                        // Delay injection of product script
+                        setTimeout(() => {
+                            const actionScript =
+                                injectSingleProductScript_instamart(instamartPrice);
+                            instamartWebViewRef.current?.injectScript(actionScript);
+                        }, 5000); // 5 second delay, tweak if needed
+                        break;
                     case 'blinkit':
                         navScript = getNavigationScript(url);
                         blinkitWebViewRef.current?.injectScript(navScript);
@@ -78,21 +93,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     case 'zepto':
                         navScript = getNavigationScript(url);
                         zeptoWebViewRef.current?.injectScript(navScript);
-                        // Delay injection of product script
                         setTimeout(() => {
                             const actionScript = injectSingleProductScript_zepto({ url });
                             zeptoWebViewRef.current?.injectScript(actionScript);
-                        }, 3000); // 3 second delay, tweak if needed
-                        break;
-                    case 'instamart':
-                        navScript = getNavigationScript(url);
-                        instamartWebViewRef.current?.injectScript(navScript);
-                        // Delay injection of product script
-                        setTimeout(() => {
-                            const actionScript = injectSingleProductScript_instamart(
-                                product.priceOptions[0].price ?? 0,
-                            );
-                            instamartWebViewRef.current?.injectScript(actionScript);
                         }, 3000); // 3 second delay, tweak if needed
                         break;
                     default:

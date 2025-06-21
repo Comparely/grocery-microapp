@@ -6,9 +6,6 @@ type WebViewContextType = {
     blinkitWebViewRef: React.RefObject<HiddenWebViewRef>;
     zeptoWebViewRef: React.RefObject<HiddenWebViewRef>;
     instamartWebViewRef: React.RefObject<HiddenWebViewRef>;
-    blinkitCart: string[];
-    zeptoCart: string[];
-    instamartCart: string[];
     blinkitLoggedIn: boolean;
     zeptoLoggedIn: boolean;
     instamartLoggedIn: boolean;
@@ -19,6 +16,16 @@ type WebViewContextType = {
     setBillSummaries: React.Dispatch<React.SetStateAction<Record<string, any>>>;
     visibleWebViews: Record<string, boolean>;
     setVisibleWebViews: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+    cartClearedOnce: {
+        blinkit: boolean;
+        zepto: boolean;
+    };
+    setCartClearedOnce: React.Dispatch<
+        React.SetStateAction<{
+            blinkit: boolean;
+            zepto: boolean;
+        }>
+    >;
 };
 
 export type BillDetailsMap = {
@@ -45,9 +52,10 @@ export const WebViewProvider: React.FC<{ children: React.ReactNode }> = ({ child
         instamart: false,
     });
 
-    const [blinkitCart, setBlinkitCart] = useState<string[]>([]);
-    const [zeptoCart, setZeptoCart] = useState<string[]>([]);
-    const [instamartCart, setInstamartCart] = useState<string[]>([]);
+    const [cartClearedOnce, setCartClearedOnce] = useState({
+        blinkit: false,
+        zepto: false,
+    });
 
     const [blinkitLoggedIn, setBlinkitLoggedIn] = useState(false);
     const [zeptoLoggedIn, setZeptoLoggedIn] = useState(false);
@@ -58,9 +66,6 @@ export const WebViewProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 blinkitWebViewRef,
                 zeptoWebViewRef,
                 instamartWebViewRef,
-                blinkitCart,
-                zeptoCart,
-                instamartCart,
                 blinkitLoggedIn,
                 zeptoLoggedIn,
                 instamartLoggedIn,
@@ -71,6 +76,8 @@ export const WebViewProvider: React.FC<{ children: React.ReactNode }> = ({ child
                 setBillSummaries,
                 visibleWebViews,
                 setVisibleWebViews,
+                cartClearedOnce,
+                setCartClearedOnce,
             }}>
             {children}
             <HiddenWebView

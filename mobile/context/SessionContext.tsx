@@ -11,6 +11,10 @@ interface SessionContextData {
     error: string | null;
     locationDenied: boolean;
     requestLocationPermission: () => void;
+    loggedIn: boolean;
+    setLoggedIn: (loggedIn: boolean) => void;
+    login: (session: Session) => void;
+    logout: () => void;
 }
 
 const FALLBACK_COORDS = { lat: 28.4595, lng: 77.0266 }; // Gurugram
@@ -23,6 +27,17 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [locationDenied, setLocationDenied] = useState(false);
+    const [loggedIn, setLoggedIn] = useState(false);
+
+    const login = (sess: Session) => {
+        setSession(sess);
+        setLoggedIn(true);
+    };
+
+    const logout = () => {
+        setSession(undefined);
+        setLoggedIn(false);
+    };
 
     // common fallback
     const fallback = () => {
@@ -103,6 +118,10 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
                 error,
                 locationDenied,
                 requestLocationPermission,
+                loggedIn,
+                setLoggedIn,
+                login,
+                logout,
             }}>
             {children}
         </SessionContext.Provider>
