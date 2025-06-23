@@ -5,6 +5,7 @@ import type { Product } from '@/types/Product';
 import { Dimensions } from 'react-native';
 import ThreeQuarterCircle from '@/components/timer';
 import Navbar from '@/components/Navbar';
+import { openInAppBrowser } from '@/utils/openInAppBrowser';
 const { width } = Dimensions.get('window');
 
 export default function ProductDetailScreen() {
@@ -14,7 +15,8 @@ export default function ProductDetailScreen() {
 
     const handleDeepLink = async (url: string) => {
         if (await Linking.canOpenURL(url)) {
-            Linking.openURL(url);
+            // Linking.openURL(url);
+            openInAppBrowser(url);
         }
     };
 
