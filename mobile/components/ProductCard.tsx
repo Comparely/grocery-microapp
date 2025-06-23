@@ -118,8 +118,6 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
             blinkit: session.marketplaceAttributes?.blinkitStoreAttributes?.eta || '15 mins',
             instamart: session.marketplaceAttributes?.instamartStoreAttributes?.eta || '10 mins',
             bigbasket: session.marketplaceAttributes?.bigbasketStoreAttributes?.eta || '45 mins',
-            amazonfresh:
-                session.marketplaceAttributes?.amazonFreshStoreAttributes?.eta || '20 mins',
         }[platform] || 'N/A';
 
     const displayWeight = priceOption.weight || productWeight || 'N/A';
