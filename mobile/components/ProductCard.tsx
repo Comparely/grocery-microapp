@@ -1,10 +1,17 @@
 import React from 'react';
-import { StyleSheet, View, Image, Linking, TouchableOpacity, Dimensions } from 'react-native';
+import { StyleSheet, View, Image, TouchableOpacity, Dimensions, Linking } from 'react-native';
 import { useRouter } from 'expo-router';
-import type { Product, PriceOption } from '../types/Product';
-import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
+import ThreeQuarterCircle from './timer';
+import QuantitySelector from './QuantitySelector';
+import { useWebViews } from '@/context/WebViewContext';
+import { injectSingleProductScript_zepto } from '@/script/injectionScript_zepto';
+import { getNavigationScript, injectSingleProductScript } from '@/script/injectionScript_blinkit';
+import { useCart } from '../context/CartContext';
 import ClockIcon from './timer';
+import { PriceOption, Product } from '@/types/Product';
+import { Session } from '@/types/Session';
+import { injectSingleProductScript_instamart } from '@/script/injectionScript_instamart';
 
 const { width } = Dimensions.get('window');
 
@@ -22,8 +29,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     isHomeScreenView,
 }) => {
     const router = useRouter();
+    const { cart, addToCart, removeFromCart } = useCart();
+    const { blinkitWebViewRef, zeptoWebViewRef, instamartWebViewRef } = useWebViews();
 
-    // Added 'amazonfresh' here
     const priorityPlatforms = ['zepto', 'blinkit', 'instamart', 'amazonfresh'];
     const bigbasketVariants = ['bigbasket', 'bbnow', 'bb'];
 
@@ -33,7 +41,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     const bigbasketOptions = product.priceOptions.filter((opt) =>
         bigbasketVariants.includes(opt.platform?.toLowerCase() || ''),
     );
-
     const sortedPriceOptions = [...primaryOptions, ...bigbasketOptions].sort(
         (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
     );
@@ -43,6 +50,63 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             pathname: '/product',
             params: { product: JSON.stringify(product) },
         });
+    };
+
+    const quantity = cart.find((item) => item.product.id === product.id)?.quantity || 0;
+
+    const handleChangeQuantity = (newQty: number) => {
+        const currentQty = quantity;
+
+        const platformLinks = Object.fromEntries(
+            product.priceOptions.map((opt) => [opt.platform?.toLowerCase(), opt.deeplink]),
+        );
+
+        if (newQty > currentQty) {
+            addToCart(product);
+            Object.entries(platformLinks).forEach(([platform, url]) => {
+                let navScript = '';
+                switch (platform) {
+                    case 'instamart':
+                        navScript = getNavigationScript(url);
+                        instamartWebViewRef.current?.injectScript(navScript);
+                        const instamartItem = product.priceOptions.find(
+                            (p) => p.platform === 'instamart' && p.deeplink === url,
+                        );
+                        const instamartPrice = instamartItem?.price ?? 0;
+                        console.log(product.priceOptions);
+                        // Delay injection of product script
+                        setTimeout(() => {
+                            const actionScript =
+                                injectSingleProductScript_instamart(instamartPrice);
+                            instamartWebViewRef.current?.injectScript(actionScript);
+                        }, 5000); // 5 second delay, tweak if needed
+                        break;
+                    case 'blinkit':
+                        navScript = getNavigationScript(url);
+                        blinkitWebViewRef.current?.injectScript(navScript);
+                        // Delay injection of product script
+                        setTimeout(() => {
+                            const actionScript = injectSingleProductScript({ url });
+                            blinkitWebViewRef.current?.injectScript(actionScript);
+                        }, 3000); // 3 second delay, tweak if needed
+                        break;
+                    case 'zepto':
+                        navScript = getNavigationScript(url);
+                        zeptoWebViewRef.current?.injectScript(navScript);
+                        setTimeout(() => {
+                            const actionScript = injectSingleProductScript_zepto({ url });
+                            zeptoWebViewRef.current?.injectScript(actionScript);
+                        }, 3000); // 3 second delay, tweak if needed
+                        break;
+                    default:
+                        console.warn(`Unsupported platform: ${platform}`);
+                }
+            });
+        } else if (newQty < currentQty) {
+            Object.keys(platformLinks).forEach((platform) => {
+                removeFromCart(product.id.toString(), platform);
+            });
+        }
     };
 
     return (
@@ -59,6 +123,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <View style={styles.cardWrapper}>
                 <Image source={{ uri: product.imageUrl }} style={styles.image} />
                 <Text style={styles.brandText}>{product.brand}</Text>
+                <QuantitySelector quantity={quantity} onChange={handleChangeQuantity} />
+            </View>
+
+            <View style={styles.priceOptionsColumn}>
+                <Text style={styles.mrpText}>
+                    {'MRP ₹'}
+                    {product.mrp}
+                </Text>
                 <Text style={styles.nameText} numberOfLines={2}>
                     {product.name}
                 </Text>
@@ -107,11 +179,9 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
             }
         })().catch((err) => console.log(err));
     };
-
     const platform = priceOption.platform?.toLowerCase() ?? '';
     const bigbasketVariants = ['bigbasket', 'bbnow', 'bb'];
 
-    // Added amazonfresh eta here
     const eta =
         {
             zepto: session.marketplaceAttributes?.zeptoStoreAttributes?.eta || 'N/A',
@@ -120,7 +190,7 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
             bigbasket: session.marketplaceAttributes?.bigbasketStoreAttributes?.eta || '45 mins',
         }[platform] || 'N/A';
 
-    const displayWeight = priceOption.weight || productWeight || 'N/A';
+    const displayWeight = priceOption.weight || 'N/A';
 
     const getPlatformIcon = () => {
         switch (platform) {
@@ -159,33 +229,35 @@ const PriceOptionSingle: React.FC<PriceOptionSingleProps> = ({
     };
 
     return (
-        <TouchableOpacity
-            onPress={() => handleDeepLink(priceOption.deeplink ?? '')}
-            style={styles.priceOptionContainer}>
-            <View style={styles.platformRow}>
-                {getPlatformIcon()}
-                <Text style={styles.finalPrice}>
-                    {'₹'}
-                    {priceOption.price}
-                </Text>
-            </View>
+        <>
+            <TouchableOpacity
+                onPress={() => handleDeepLink(priceOption.deeplink ?? '')}
+                style={styles.priceOptionContainer}>
+                <View style={styles.platformRow}>
+                    {getPlatformIcon()}
+                    <Text style={styles.finalPrice}>
+                        {'₹'}
+                        {priceOption.price}
+                    </Text>
+                </View>
 
-            <View style={styles.detailsRow}>
-                <Text style={styles.weightText}>{displayWeight}</Text>
-                <View style={styles.mrpEtaColumn}>
-                    {priceOption.originalPrice ? (
-                        <Text style={styles.priceText}>
-                            {'₹'}
-                            {priceOption.originalPrice}
-                        </Text>
-                    ) : null}
-                    <View style={styles.etaRow}>
-                        <ClockIcon />
-                        <Text style={styles.etaText}>{eta}</Text>
+                <View style={styles.detailsRow}>
+                    <Text style={styles.weightText}>{displayWeight}</Text>
+                    <View style={styles.mrpEtaColumn}>
+                        {priceOption.originalPrice ? (
+                            <Text style={styles.priceText}>
+                                {'₹'}
+                                {priceOption.originalPrice}
+                            </Text>
+                        ) : null}
+                        <View style={styles.etaRow}>
+                            <ClockIcon />
+                            <Text style={styles.etaText}>{eta}</Text>
+                        </View>
                     </View>
                 </View>
-            </View>
-        </TouchableOpacity>
+            </TouchableOpacity>
+        </>
     );
 };
 
@@ -297,7 +369,12 @@ const styles = StyleSheet.create({
     },
     etaText: {
         fontSize: 12,
-        color: 'gray',
+        fontWeight: '500',
+    },
+    mrpText: {
+        color: '#9d9d9d',
+        fontSize: 11,
+        marginBottom: 3,
     },
 });
 
