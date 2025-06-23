@@ -20,24 +20,14 @@ const Footer = () => {
             <Text style={styles.location}>Noida, Uttar Pradesh{'\n'}India - 201310</Text>
 
             <View style={styles.socialRow}>
-                <TouchableOpacity onPress={() => Linking.openURL('https://instagram.com')}>
+                <TouchableOpacity onPress={() => Linking.openURL('https://www.instagram.com/comparelyy?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==')}>
                     <FontAwesome name="instagram" size={22} color="#fff" style={styles.icon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://linkedin.com')}>
-                    <FontAwesome
-                        name="linkedin-square"
-                        size={22}
-                        color="#fff"
-                        style={styles.icon}
-                    />
+                <TouchableOpacity onPress={() => Linking.openURL('https://www.linkedin.com/company/comparelyy/')}>
+                    <FontAwesome name="linkedin-square" size={22} color="#fff" style={styles.icon} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => Linking.openURL('https://facebook.com')}>
-                    <FontAwesome
-                        name="facebook-square"
-                        size={22}
-                        color="#fff"
-                        style={styles.icon}
-                    />
+                <TouchableOpacity onPress={() => Linking.openURL('https://youtube.com/@comparelyyy?si=gRzzrTiC9qqQfn_O')}>
+                    <FontAwesome name="youtube-play" size={22} color="#fff" style={styles.icon} />
                 </TouchableOpacity>
             </View>
 
@@ -61,23 +51,23 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: '#004738',
         padding: 20,
-        marginTop: 20,
+        // marginTop: 20,
         alignItems: 'flex-start',
+        paddingBottom: 18, // Prevent space below
     },
     brandRow: {
         flexDirection: 'row',
         alignItems: 'center',
     },
     brandImage: {
-        width: 40, // adjust as needed
-        height: 40, // adjust as needed
+        width: 40,
+        height: 40,
     },
     comparelyText: {
         fontSize: 18,
         color: 'yellow',
         marginLeft: 10,
     },
-
     developedBy: {
         color: '#fff',
         fontWeight: 'bold',
@@ -101,12 +91,6 @@ const styles = StyleSheet.create({
     socialRow: {
         flexDirection: 'row',
         marginBottom: 14,
-    },
-    socialIcon: {
-        width: 24,
-        height: 24,
-        marginHorizontal: 6,
-        tintColor: '#fff', // optional: if icons are transparent and you want to color them white
     },
     copyright: {
         color: '#fff',
