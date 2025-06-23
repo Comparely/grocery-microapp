@@ -3,6 +3,8 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { SessionProvider, useSession } from '@/context/SessionContext';
 import { LoadingScreen } from '@/screens/LoadingScreen';
+import { WebViewProvider } from '@/context/WebViewContext';
+import { CartProvider } from '@/context/CartContext';
 
 function AppContent() {
     const { loading, error, locationDenied, requestLocationPermission } = useSession();
@@ -11,15 +13,6 @@ function AppContent() {
         return <LoadingScreen showRetry={locationDenied} onRetry={requestLocationPermission} />;
     }
 
-    // if (error) {
-    //     return (
-    //         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-    //             <Text style={{ color: 'red' }}>Error: {error}</Text>
-    //         </View>
-    //     );
-    // }
-
-    // When everything is ready, render your navigator
     return <Stack screenOptions={{ headerShown: false }} />;
 }
 
@@ -43,7 +36,11 @@ export default function RootLayout() {
 
     return (
         <SessionProvider>
-            <AppContent />
+            <WebViewProvider>
+                <CartProvider>
+                    <AppContent />
+                </CartProvider>
+            </WebViewProvider>
         </SessionProvider>
     );
 }

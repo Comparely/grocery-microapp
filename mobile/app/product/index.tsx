@@ -1,23 +1,40 @@
+import React from 'react';
 import ProductDetailScreen from '@/screens/ProductScreen';
 import Head from 'expo-router/head';
-import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import { SafeAreaView, StatusBar, StyleSheet, View } from 'react-native';
+import { useCart } from '@/context/CartContext';
+import CartScreen from '@/screens/CartScreen';
 
 const App = () => {
+    const { getTotalItems } = useCart();
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.safeArea}>
             <StatusBar barStyle="light-content" backgroundColor="#004738" />
             <Head>
                 <title>{'Search - Comparely'}</title>
             </Head>
-            <ProductDetailScreen />
+
+            <View style={styles.container}>
+                <View style={styles.screenContent}>
+                    <ProductDetailScreen />
+                </View>
+                {getTotalItems() > 0 && <CartScreen />}
+            </View>
         </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
+    safeArea: {
         flex: 1,
         backgroundColor: '#004738',
+    },
+    container: {
+        flex: 1,
+        justifyContent: 'space-between',
+    },
+    screenContent: {
+        flex: 1,
     },
 });
 
