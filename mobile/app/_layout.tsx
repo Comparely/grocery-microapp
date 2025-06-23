@@ -3,6 +3,8 @@ import { useFonts } from 'expo-font';
 import { SplashScreen, Stack } from 'expo-router';
 import { SessionProvider, useSession } from '@/context/SessionContext';
 import { LoadingScreen } from '@/screens/LoadingScreen';
+import { WebViewProvider } from '@/context/WebViewContext';
+import { CartProvider } from '@/context/CartContext';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -46,7 +48,11 @@ export default function RootLayout() {
 
     return (
         <SessionProvider>
-            <AppContent />
+            <WebViewProvider>
+                <CartProvider>
+                    <AppContent />
+                </CartProvider>
+            </WebViewProvider>
         </SessionProvider>
     );
 }
