@@ -3,14 +3,14 @@ options:
 steps:
   # Frontend: Install, build assets, and build Docker image
   - name: 'node:20'
-    id: 'Frontend - Install & Build'
+    id: 'Frontend - Install'
     env:
       - EXPO_PUBLIC_API_URL="https://grocery-api.comparely.co.in/"
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        cd mobile && npm install && npm run build-web
+        cd mobile && npm install
 
   - id: Write frontend .env
     name: gcr.io/cloud-builders/gcloud
