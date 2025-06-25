@@ -25,15 +25,16 @@ function AppContent() {
 
 export default function RootLayout() {
     const [fontsLoaded, fontError] = useFonts({
-        Sora: require('@/assets/fonts/Sora/Sora.ttf'),
-        'Sora-Regular': require('@/assets/fonts/Sora/static/Sora-Regular.ttf'),
-        'Sora-Bold': require('@/assets/fonts/Sora/static/Sora-Bold.ttf'),
-        'Sora-Thin': require('@/assets/fonts/Sora/static/Sora-Thin.ttf'),
-        'Sora-ExtraBold': require('@/assets/fonts/Sora/static/Sora-ExtraBold.ttf'),
-        'Sora-ExtraLight': require('@/assets/fonts/Sora/static/Sora-ExtraLight.ttf'),
-        'Sora-Medium': require('@/assets/fonts/Sora/static/Sora-Medium.ttf'),
-        'Sora-SemiBold': require('@/assets/fonts/Sora/static/Sora-SemiBold.ttf'),
-        'Sora-Light': require('@/assets/fonts/Sora/static/Sora-Light.ttf'),
+        'SF-Pro': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-Regular': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-Bold': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-Medium': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-Light': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-SemiBold': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-Thin': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-UltraLight': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-Heavy': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
+        'SF-Pro-Black': require('@/assets/fonts/SFPRO/SF-Pro.ttf'),
     });
 
     // Wait for fonts to load or error out

@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 46,
-        fontFamily: 'Sora',
+        fontFamily: 'SF-Pro',
         color: '#CBD402',
         marginBottom: 10,
         marginTop: 30,
