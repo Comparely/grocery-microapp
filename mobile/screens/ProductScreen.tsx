@@ -1,10 +1,11 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Linking, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
+// import { Ionicons } from '@expo/vector-icons';
 import type { Product } from '@/types/Product';
 import { Dimensions } from 'react-native';
 import ThreeQuarterCircle from '@/components/timer';
 import Navbar from '@/components/Navbar';
+// import QuantitySelector from '@/components/QuantitySelector';
 import { openInAppBrowser } from '@/utils/openInAppBrowser';
 const { width } = Dimensions.get('window');
 
@@ -16,7 +17,7 @@ export default function ProductDetailScreen() {
     const handleDeepLink = async (url: string) => {
         if (await Linking.canOpenURL(url)) {
             // Linking.openURL(url);
-            openInAppBrowser(url);
+            void openInAppBrowser(url);
         }
     };
 
@@ -36,13 +37,17 @@ export default function ProductDetailScreen() {
     const getBrandImage = (platform?: string) => {
         switch ((platform ?? '').toLowerCase()) {
             case 'zepto':
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return require('@/assets/images/zepto.png');
             case 'blinkit':
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return require('@/assets/images/blinkit.png');
             case 'swiggy':
             case 'instamart':
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return require('@/assets/images/instamart1.png');
             case 'bigbasket':
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
                 return require('@/assets/images/bbnow.webp');
             default:
                 return null;
@@ -62,7 +67,10 @@ export default function ProductDetailScreen() {
                     <Text style={styles.tag}>{productData.weight}</Text>
                     <Text style={styles.tag}>{productData.brand}</Text>
                 </View>
-                <Text style={styles.mrp}>MRP ₹{productData.mrp}</Text>
+                <Text style={styles.mrp}>
+                    {'MRP ₹'}
+                    {productData.mrp}
+                </Text>
                 <Text style={styles.name}>{productData.name}</Text>
 
                 <View style={styles.cardGrid}>
@@ -74,20 +82,27 @@ export default function ProductDetailScreen() {
                             <TouchableOpacity
                                 key={option.platform}
                                 style={styles.card}
+                                // eslint-disable-next-line @typescript-eslint/no-misused-promises
                                 onPress={() => handleDeepLink(option.deeplink || '')}>
-                                <View style={styles.left}>
-                                    {brandImage && (
-                                        <Image source={brandImage} style={styles.logo} />
-                                    )}
+                                <View>
                                     <View>
-                                        <Text style={styles.price}>₹{option.price}</Text>
+                                        {brandImage && (
+                                            <Image source={brandImage} style={styles.logo} />
+                                        )}
+                                    </View>
+                                    <View style={{ margin: 5 }}>
+                                        <Text style={styles.price}>
+                                            {'₹'}
+                                            {option.price}
+                                        </Text>
                                         <View style={styles.timerRow}>
                                             <ThreeQuarterCircle />
-                                            <Text style={styles.timeText}>10 mins</Text>
+                                            <Text style={styles.timeText}>{'10 mins'}</Text>
                                         </View>
+                                        {/* <QuantitySelector /> */}
                                     </View>
                                 </View>
-                                {badge ? <Text style={styles.badge}>{badge}</Text> : null}
+                                {badge && <Text style={styles.badge}>{badge}</Text>}
                             </TouchableOpacity>
                         );
                     })}
@@ -135,20 +150,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        gap: 10,
+        gap: 12,
     },
 
     card: {
         backgroundColor: '#FFF1D6',
-        borderRadius: 18,
+        borderRadius: 13,
         paddingTop: 12,
         marginBottom: 14,
-        borderWidth: 4,
+        borderWidth: 2,
         borderColor: '#CBD402',
         width: '48%',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        alignItems: 'center',
     },
 
     info: {
@@ -175,7 +189,7 @@ const styles = StyleSheet.create({
 
     mrp: {
         fontSize: 14,
-        color: '#6b7280',
+        color: 'rgba(157, 157, 157, 1)',
         fontWeight: 'bold',
         marginBottom: 2,
     },
@@ -188,14 +202,14 @@ const styles = StyleSheet.create({
     },
 
     left: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        flexDirection: 'column',
         gap: 10,
         flexShrink: 1,
     },
 
     logo: {
         width: 60,
+        marginLeft: 5,
         height: 35,
         resizeMode: 'contain',
     },
@@ -208,7 +222,7 @@ const styles = StyleSheet.create({
     timerRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 2,
         paddingBottom: 4,
     },
 
@@ -223,6 +237,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 10,
         fontSize: 14,
         borderRadius: 6,
+        borderTopLeftRadius: 0,
+        borderTopRightRadius: 0,
         fontWeight: 'bold',
         color: '#004738',
         textTransform: 'capitalize',

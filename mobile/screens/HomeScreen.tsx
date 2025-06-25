@@ -9,10 +9,11 @@ import {
     TextInput,
     Alert,
     Animated,
+    ActivityIndicator,
 } from 'react-native';
 import Header from '../components/Header';
 import PriceSection from '../components/PriceSection';
-import { fetchHomePageData } from '@/api/common';
+import { fetchHomePageData, fetchHomePageDatav2 } from '@/api/common';
 import { Product } from '@/types/Product';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/ui/Text';
@@ -23,6 +24,8 @@ import SeparatorLine from '@/components/seperator';
 import DeliveryTags from '@/components/Deliverytags';
 import Footer from '@/components/Footer';
 import { useRouter } from 'expo-router';
+import WallpaperCarousel from '@/components/WallpaperCarousel';
+import FeaturedProductsSection from '@/components/FeatureProducts';
 
 const isWeb = Platform.OS === 'web';
 const isIos = Platform.OS === 'ios';
@@ -31,10 +34,28 @@ const HomeScreen = () => {
     const { session, location, locationDenied, requestLocationPermission } = useSession();
     const [categories, setCategories] = useState<Category[]>([]);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+    const [featuredProductsv2, setFeaturedProductsv2] = useState<Product[]>([]);
+    const [loadingProducts, setLoadingProducts] = useState(true);
     const [email, setEmail] = useState<string>('');
 
     const wiggleAnim = useRef(new Animated.Value(0)).current;
     const router = useRouter();
+
+    useEffect(() => {
+        fetchHomePageDatav2(
+            session?.lat !== undefined ? Number(session.lat) : undefined,
+            session?.lng !== undefined ? Number(session.lng) : undefined,
+        )
+            .then((products) => {
+                setFeaturedProductsv2(products);
+            })
+            .catch((error) => {
+                console.error('Failed to load homepage products:', error);
+            })
+            .finally(() => {
+                setLoadingProducts(false); // Stop loading regardless of success/failure
+            });
+    }, []);
 
     useEffect(() => {
         Animated.loop(
@@ -64,7 +85,10 @@ const HomeScreen = () => {
         } else {
             Linking.openURL(webUrl).catch((error) => {
                 console.error('Error opening WhatsApp:', error);
-                Alert.alert('Cannot Open WhatsApp', 'Please make sure WhatsApp is installed or try again later.');
+                Alert.alert(
+                    'Cannot Open WhatsApp',
+                    'Please make sure WhatsApp is installed or try again later.',
+                );
             });
         }
     };
@@ -107,7 +131,10 @@ const HomeScreen = () => {
         } else {
             Linking.openURL(url).catch((error) => {
                 console.error(`Error opening ${platform}:`, error);
-                Alert.alert('Cannot Open Link', `Please try opening ${platform} manually or try again later.`);
+                Alert.alert(
+                    'Cannot Open Link',
+                    `Please try opening ${platform} manually or try again later.`,
+                );
             });
         }
     };
@@ -148,7 +175,10 @@ const HomeScreen = () => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}>
                 {session && featuredProducts.length > 0 ? (
-                    <PriceSection session={session} products={featuredProducts} />
+                    <>
+                        <WallpaperCarousel />
+                        <PriceSection session={session} products={featuredProducts} />
+                    </>
                 ) : (
                     <View style={styles.emptySection}>
                         <Text style={styles.emptyText}>{'No featured products available.'}</Text>
@@ -198,10 +228,23 @@ const HomeScreen = () => {
                     </View>
                 )}
                 <SeparatorLine />
-                <VideoSection />
+                {/* <VideoSection /> */}
                 <SeparatorLine />
                 <DeliveryTags />
-                <Footer />
+                <View style={styles.textCt}>
+                    <Text style={styles.waitText}>{`Maybe you’ll like this....`}</Text>
+                </View>
+                {loadingProducts ? (
+                    <View style={{ paddingVertical: 20 }}>
+                        <ActivityIndicator size="large" color="green" />
+                    </View>
+                ) : (
+                    featuredProductsv2.length > 0 && (
+                        <FeaturedProductsSection featuredProducts={featuredProductsv2} />
+                    )
+                )}
+
+                {isWeb && <Footer />}
             </ScrollView>
 
             <Animated.View style={[styles.floatingWhatsapp]}>
@@ -276,7 +319,7 @@ const styles = StyleSheet.create({
     },
     scrollView: {
         flex: 1,
-        backgroundColor: '#fffaf0',
+        backgroundColor: '#ffffff',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
     },
@@ -324,6 +367,79 @@ const styles = StyleSheet.create({
         color: '#9d9d9d',
         fontSize: 16,
         textAlign: 'center',
+    },
+    waitlistContainer: {
+        marginHorizontal: 20,
+        marginBottom: 30,
+        marginTop: 10,
+        padding: 20,
+        backgroundColor: '#fffaf0',
+        borderRadius: 10,
+        alignItems: 'center',
+    },
+    waitlistHeader: {
+        fontSize: 24,
+        color: '#004738',
+        fontWeight: 'bold',
+        marginBottom: 10,
+        textAlign: 'center',
+    },
+    waitlistSubText: {
+        fontSize: 16,
+        color: '#555',
+        textAlign: 'center',
+        marginBottom: 20,
+    },
+    input: {
+        width: '100%',
+        height: 50,
+        borderColor: '#ddd',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 15,
+        fontSize: 16,
+        marginBottom: 20,
+        color: '#333',
+    },
+    waitlistSubmitButton: {
+        backgroundColor: '#cbd402',
+        paddingVertical: 15,
+        paddingHorizontal: 25,
+        borderRadius: 8,
+        width: '100%',
+        alignItems: 'center',
+        marginBottom: 20,
+    },
+    waitlistSubmitButtonText: {
+        color: '#181b19',
+        fontSize: 18,
+        fontWeight: '600',
+    },
+    appComingSoonText: {
+        fontSize: 16,
+        color: '#555',
+        textAlign: 'center',
+        marginBottom: 15,
+    },
+    storeIconsContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    storeIconWrapper: {
+        marginHorizontal: 10,
+        opacity: 0.5,
+    },
+    textCt: {
+        marginBottom: 5,
+    },
+    waitText: {
+        fontSize: 20,
+        color: 'rgba(0, 71, 56, 1)',
+        fontWeight: 'bold',
+        paddingHorizontal: 20,
+        marginVertical: 5,
+        lineHeight: 32,
     },
     floatingWhatsapp: {
         position: 'absolute',

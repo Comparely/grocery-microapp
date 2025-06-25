@@ -10,7 +10,9 @@
 // }
 
 // @/api/common.ts
+import { Product } from '@/types/Product';
 import homepageData from '../homepage.json';
+import { fetchAndConvertProducts } from './searchProducts';
 
 export const fetchHomePageData = () => {
     try {
@@ -26,5 +28,49 @@ export const fetchHomePageData = () => {
             featuredProducts: [],
             featuredCategories: [],
         };
+    }
+};
+
+export function shuffleArray<T extends { priceOptions: any[] }>(array: T[]): T[] {
+    return array
+        .map((value) => ({
+            value,
+            sort: Math.random(),
+            priceOptionCount: value.priceOptions?.length || 0,
+        }))
+        .sort((a, b) => {
+            if (b.priceOptionCount === a.priceOptionCount) {
+                return a.sort - b.sort; // Shuffle within same group
+            }
+            return b.priceOptionCount - a.priceOptionCount; // Group by length descending
+        })
+        .map(({ value }) => value);
+}
+
+export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<Product[]> => {
+    try {
+        const queries = [
+            'Chocolate',
+            'Pasta',
+            'Lipstick',
+            'Nail Paint',
+            'Chips',
+            'Ice Cream',
+            'Onion',
+            'Bread',
+        ];
+
+        const allResults: Product[] = [];
+
+        for (const query of queries) {
+            const results = await fetchAndConvertProducts(query, lat, lng);
+            allResults.push(...results.slice(0, 2));
+        }
+
+        const shuffled = shuffleArray(allResults);
+        return shuffled;
+    } catch (error) {
+        console.error('Failed to fetch homepage data:', error);
+        return [];
     }
 };

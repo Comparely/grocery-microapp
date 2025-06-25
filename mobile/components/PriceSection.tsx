@@ -60,8 +60,8 @@ const PriceSection: React.FC<PriceSectionParams> = ({ session, products }) => {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>{'Lowest Prices'}</Text>
-            <Text style={styles.subtitle}>{'Compare prices across all platforms'}</Text>
+            <Text style={styles.title}>{'Compare Prices'}</Text>
+            <Text style={styles.subtitle}>{'Get lowest and fastest delivery across apps'}</Text>
             <View style={styles.listContainer}>
                 <TouchableOpacity style={styles.arrowLeft} onPress={scrollLeft}>
                     <Ionicons name="chevron-back" size={30} color="#004738" />
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     subtitle: {
         fontSize: width > 768 ? 18 : 16,
         color: '#181b19',
-        textAlign: 'left',
+        textAlign: 'center',
         paddingHorizontal: 15,
         marginBottom: 15,
         alignSelf: 'center',

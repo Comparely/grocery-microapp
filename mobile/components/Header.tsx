@@ -144,6 +144,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
                 <SearchBar
                     onClick={handleSearchPress}
                     value=""
+                    isSearch={true}
                     onChangeText={() => {}}
                     placeholder="Search for groceries..."
                     editable={false}

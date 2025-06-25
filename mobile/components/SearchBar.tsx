@@ -21,6 +21,7 @@ interface SearchBarProps {
     editable?: boolean;
     onSubmitEditing?: () => Promise<void> | void;
     onBlur?: () => void;
+    isSearch?: boolean;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
@@ -31,6 +32,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     editable = Platform.OS === 'web',
     onSubmitEditing,
     onBlur,
+    isSearch,
 }) => {
     const inputRef = useRef<TextInput>(null);
     const [showRecent, setShowRecent] = useState(false);
@@ -138,7 +140,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
                 style={styles.touchableContainer}
                 activeOpacity={editable ? 1 : 0.7}>
                 <View style={styles.container} pointerEvents={editable ? 'auto' : 'none'}>
-                    <Feather name="search" size={20} color="#181b19" style={styles.icon} />
+                    {isSearch && (
+                        <Feather name="search" size={20} color="#181b19" style={styles.icon} />
+                    )}
                     <TextInput
                         ref={inputRef}
                         style={styles.input}
@@ -180,7 +184,7 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     container: {
-        backgroundColor: '#fffaf0',
+        backgroundColor: '#ffffff',
         borderRadius: 10,
         flexDirection: 'row',
         alignItems: 'center',
@@ -237,7 +241,7 @@ const styles = StyleSheet.create({
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+        backgroundColor: '#ffffff',
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 10,

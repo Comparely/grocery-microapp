@@ -1,5 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, StyleSheet, Animated, TouchableOpacity, Easing, Image } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    Animated,
+    TouchableOpacity,
+    Easing,
+    Image,
+    ActivityIndicator,
+} from 'react-native';
+import WallpaperCarousel from './WallpaperCarousel';
 
 type ComparingScreenProps = {
     itemName?: string;
@@ -19,9 +29,10 @@ const ComparingScreen = ({
     const fadeAnim = useRef(new Animated.Value(1)).current;
 
     const imageSources = [
+        require('../assets/images/bblogo.png'),
         require('../assets/images/instamartlogo.jpeg'),
         require('../assets/images/zeptoicon.webp'),
-        require('../assets/images/bblogo.png'),
+        require('../assets/images/blinkitlogo.png'),
     ];
 
     const IMAGE_WIDTH = 140;
@@ -187,9 +198,17 @@ const ComparingScreen = ({
     return (
         <Animated.View style={[styles.container, { opacity: loadingComplete ? fadeOutAnim : 1 }]}>
             <View style={styles.content}>
-                <Text style={styles.title}>{'Comparely'}</Text>
-                <Text style={styles.subtitle}>{'We are finding you the best deals...'}</Text>
-
+                {/* <Text style={styles.title}>{'Comparely'}</Text> */}
+                <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 30 }}>
+                    <ActivityIndicator size="small" color="white" />
+                    <Text
+                        style={[
+                            styles.subtitle,
+                            { marginBottom: 0, marginLeft: 8, textAlign: 'left' },
+                        ]}>
+                        We are finding you the best deals...
+                    </Text>
+                </View>
                 <View style={styles.carouselContainer}>
                     {[0, 1, 2].map((i) => (
                         <Animated.Image
@@ -225,6 +244,9 @@ const ComparingScreen = ({
                     <Text style={styles.cancelText}>{'Cancel'}</Text>
                 </TouchableOpacity>
             </View>
+            <View style={styles.wallpaperCarouselContainer}>
+                <WallpaperCarousel />
+            </View>
         </Animated.View>
     );
 };
@@ -235,7 +257,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#004738',
-        paddingTop: 60,
+        // paddingTop: 10,
         justifyContent: 'space-between',
     },
     content: {
@@ -264,8 +286,8 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     animatedImage: {
-        width: 140,
-        height: 80,
+        width: 150,
+        height: 90,
         resizeMode: 'contain',
         position: 'absolute',
     },
@@ -291,8 +313,8 @@ const styles = StyleSheet.create({
         zIndex: 4,
     },
     progressBarBackground: {
-        marginTop: 30,
-        marginBottom: 10,
+        // marginTop: 30,
+        // marginBottom: 10,
         width: '80%',
         height: 6,
         borderRadius: 3,
@@ -307,7 +329,7 @@ const styles = StyleSheet.create({
     bottomPanel: {
         width: '100%',
         backgroundColor: '#FFFAF0',
-        marginTop: 80,
+        marginTop: 15,
         padding: 60,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
@@ -321,7 +343,7 @@ const styles = StyleSheet.create({
         fontSize: 23,
         fontWeight: '900',
         color: '#004738',
-        marginBottom: 20,
+        marginBottom: 10,
         textAlign: 'center',
     },
     cancelButton: {
@@ -334,5 +356,13 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 20,
         color: '#004738',
+    },
+    wallpaperCarouselContainer: {
+        display: 'flex',
+        backgroundColor: '#FFFAF0',
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        marginRight: -20,
     },
 });
