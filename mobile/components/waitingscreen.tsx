@@ -11,6 +11,11 @@ import {
 } from 'react-native';
 import WallpaperCarousel from './WallpaperCarousel';
 
+const bblogo = require('../assets/images/bblogo.png');
+const instamartLogo = require('../assets/images/instamartlogo.jpeg');
+const zeptoLogo = require('../assets/images/zeptoicon.webp');
+const blinkitLogo = require('../assets/images/blinkitlogo.png');
+
 type ComparingScreenProps = {
     itemName?: string;
     onAnimationComplete?: () => void;
@@ -29,10 +34,7 @@ const ComparingScreen = ({
     const fadeAnim = useRef(new Animated.Value(1)).current;
 
     const imageSources = [
-        require('../assets/images/bblogo.png'),
-        require('../assets/images/instamartlogo.jpeg'),
-        require('../assets/images/zeptoicon.webp'),
-        require('../assets/images/blinkitlogo.png'),
+        bblogo, instamartLogo, zeptoLogo, blinkitLogo
     ];
 
     const IMAGE_WIDTH = 140;
