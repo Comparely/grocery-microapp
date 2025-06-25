@@ -87,9 +87,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                       ? styles.homeCard
                       : styles.container
             }>
-            <TouchableOpacity style={styles.heartIcon}>
+            {/* <TouchableOpacity style={styles.heartIcon}>
                 <Ionicons name="heart-outline" size={20} color="#333" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
             <View style={styles.cardWrapper}>
                 <Image source={{ uri: product.imageUrl }} style={styles.image} />
                 {/* <Text style={styles.brandText}>{product.brand}</Text> */}
@@ -225,8 +225,8 @@ const styles = StyleSheet.create({
         display: 'flex',
         justifyContent: 'center',
         fontSize: 14,
-        fontWeight: '700',
-        fontFamily: 'SFPro',
+        fontWeight: '500',
+        fontFamily: 'SF-Pro',
         color: '#181b19',
         lineHeight: 18,
         minHeight: 45, // 3 lines * 18px line height
@@ -276,7 +276,7 @@ const styles = StyleSheet.create({
         paddingTop: -2,
         paddingHorizontal: 8,
         paddingVertical: 2,
-        fontWeight: '500',
+        fontWeight: '400',
     },
     mrpEtaColumn: {
         flexDirection: 'column',
