@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Dimensions, Image, StyleSheet } from 'react-native';
+import { View, Dimensions, Image, StyleSheet, Platform } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 const { width } = Dimensions.get('window');
 
@@ -22,9 +22,19 @@ const WallpaperCarousel = () => {
                 autoPlay
                 loop
                 scrollAnimationDuration={1000}
+                autoPlayInterval={3000}
+                pagingEnabled={true}
+                snapEnabled={true}
                 onSnapToItem={(index) => setActiveIndex(index)}
                 renderItem={({ item }) => (
-                    <Image source={item.image} style={styles.image} resizeMode="contain" />
+                    <View style={styles.imageContainer}>
+                        <Image 
+                            source={item.image} 
+                            style={styles.image} 
+                            resizeMode="cover"
+                            fadeDuration={Platform.OS === 'ios' ? 0 : 300}
+                        />
+                    </View>
                 )}
             />
 
@@ -48,10 +58,22 @@ const styles = StyleSheet.create({
         marginTop: 8,
         paddingHorizontal: 10,
     },
-    image: {
+    imageContainer: {
         width: width - 20,
         height: 200,
         borderRadius: 12,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 12,
+        ...(Platform.OS === 'ios' && {
+            transform: [{ scale: 1 }], // Force hardware acceleration on iOS
+        }),
     },
     dotsContainer: {
         flexDirection: 'row',
