@@ -8,12 +8,20 @@ import {
     Easing,
     Image,
     ActivityIndicator,
+    Platform,
 } from 'react-native';
 import WallpaperCarousel from './WallpaperCarousel';
 
+// Safari-compatible image sources
+const isSafari = Platform.OS === 'web' && 
+    (typeof navigator !== 'undefined' && 
+     (/^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
+      /iPad|iPhone|iPod/.test(navigator.userAgent)));
+
 const bblogo = require('../assets/images/bblogo.png');
 const instamartLogo = require('../assets/images/instamartlogo.jpeg');
-const zeptoLogo = require('../assets/images/zeptoicon.webp');
+// Use PNG fallback for WebP in Safari
+const zeptoLogo = isSafari ? require('../assets/images/zepto.png') : require('../assets/images/zeptoicon.webp');
 const blinkitLogo = require('../assets/images/blinkitlogo.png');
 
 type ComparingScreenProps = {
@@ -36,6 +44,22 @@ const ComparingScreen = ({
     const imageSources = [
         bblogo, instamartLogo, zeptoLogo, blinkitLogo
     ];
+
+    // Pre-load images for Safari compatibility
+    useEffect(() => {
+        if (isSafari && Platform.OS === 'web') {
+            console.log('Safari detected, pre-loading images...');
+            imageSources.forEach((source, index) => {
+                const img = document.createElement('img');
+                const resolved = Image.resolveAssetSource(source);
+                if (resolved && resolved.uri) {
+                    img.src = resolved.uri;
+                    img.onload = () => console.log(`Safari: Image ${index} preloaded`);
+                    img.onerror = (e) => console.warn(`Safari: Image ${index} failed to preload`, e);
+                }
+            });
+        }
+    }, []);
 
     const IMAGE_WIDTH = 140;
     const ITEM_SPACING = 10;
@@ -213,18 +237,40 @@ const ComparingScreen = ({
                 </View>
                 <View style={styles.carouselContainer}>
                     {[0, 1, 2].map((i) => (
-                        <Animated.Image
+                        <Animated.View
                             key={i}
-                            source={carouselImages[i]}
                             style={[
-                                styles.animatedImage,
+                                styles.animatedImageContainer,
                                 {
                                     transform: [{ translateX: positions[i] }, { scale: scales[i] }],
                                     zIndex: i === 1 ? 2 : 1,
                                     opacity: opacities[i],
                                 },
-                            ]}
-                        />
+                            ]}>
+                            <Image
+                                source={carouselImages[i]}
+                                style={styles.animatedImage}
+                                resizeMode="contain"
+                                onError={(error) => {
+                                    console.warn('Safari image load error:', error);
+                                    // Force re-render on error for Safari
+                                    if (isSafari) {
+                                        setTimeout(() => {
+                                            setCarouselImages([...carouselImages]);
+                                        }, 100);
+                                    }
+                                }}
+                                onLoad={() => {
+                                    console.log(`Safari: Image ${i} loaded successfully`);
+                                }}
+                                // Safari-specific props
+                                {...(isSafari && {
+                                    fadeDuration: 0,
+                                })}
+                                // Force unique key for Safari to prevent caching issues
+                                key={`safari-image-${i}-${Date.now()}`}
+                            />
+                        </Animated.View>
                     ))}
                     <View style={styles.scannerFrameOverlay}>
                         <Animated.View
@@ -287,11 +333,18 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         overflow: 'hidden',
     },
-    animatedImage: {
+    animatedImageContainer: {
         width: 150,
         height: 90,
-        resizeMode: 'contain',
         position: 'absolute',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'transparent',
+    },
+    animatedImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'contain',
     },
     scannerFrameOverlay: {
         position: 'absolute',
