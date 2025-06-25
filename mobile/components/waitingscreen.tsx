@@ -45,19 +45,10 @@ const ComparingScreen = ({
         bblogo, instamartLogo, zeptoLogo, blinkitLogo
     ];
 
-    // Pre-load images for Safari compatibility
+    // Safari compatibility logging
     useEffect(() => {
         if (isSafari && Platform.OS === 'web') {
-            console.log('Safari detected, pre-loading images...');
-            imageSources.forEach((source, index) => {
-                const img = document.createElement('img');
-                const resolved = Image.resolveAssetSource(source);
-                if (resolved && resolved.uri) {
-                    img.src = resolved.uri;
-                    img.onload = () => console.log(`Safari: Image ${index} preloaded`);
-                    img.onerror = (e) => console.warn(`Safari: Image ${index} failed to preload`, e);
-                }
-            });
+            console.log('Safari detected in waiting screen - using Safari-optimized rendering');
         }
     }, []);
 
@@ -267,8 +258,6 @@ const ComparingScreen = ({
                                 {...(isSafari && {
                                     fadeDuration: 0,
                                 })}
-                                // Force unique key for Safari to prevent caching issues
-                                key={`safari-image-${i}-${Date.now()}`}
                             />
                         </Animated.View>
                     ))}

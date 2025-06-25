@@ -18,24 +18,11 @@ const carouselData = [
 
 const WallpaperCarousel = () => {
     const [activeIndex, setActiveIndex] = useState(0);
-    const [imageLoadError, setImageLoadError] = useState<Set<string>>(new Set());
 
-    // Pre-load images for Safari compatibility
+    // Safari compatibility logging
     useEffect(() => {
         if (isSafari && Platform.OS === 'web') {
-            console.log('Safari detected in WallpaperCarousel, pre-loading images...');
-            carouselData.forEach((item, index) => {
-                const img = document.createElement('img');
-                const resolved = Image.resolveAssetSource(item.image);
-                if (resolved && resolved.uri) {
-                    img.src = resolved.uri;
-                    img.onload = () => console.log(`Safari: Carousel image ${index} preloaded`);
-                    img.onerror = (e) => {
-                        console.warn(`Safari: Carousel image ${index} failed to preload`, e);
-                        setImageLoadError(prev => new Set(prev).add(item.id));
-                    };
-                }
-            });
+            console.log('Safari detected in WallpaperCarousel - using Safari-optimized rendering');
         }
     }, []);
 
@@ -54,37 +41,23 @@ const WallpaperCarousel = () => {
                 onSnapToItem={(index) => setActiveIndex(index)}
                 renderItem={({ item, index }) => (
                     <View style={styles.imageContainer}>
-                        {!imageLoadError.has(item.id) ? (
-                            <Image 
-                                source={item.image} 
-                                style={styles.image} 
-                                resizeMode="cover"
-                                onError={(error) => {
-                                    console.warn('Safari carousel image load error:', error);
-                                    setImageLoadError(prev => new Set(prev).add(item.id));
-                                }}
-                                onLoad={() => {
-                                    console.log(`Safari: Carousel image ${index} loaded successfully`);
-                                    // Remove from error set if it loads successfully
-                                    setImageLoadError(prev => {
-                                        const newSet = new Set(prev);
-                                        newSet.delete(item.id);
-                                        return newSet;
-                                    });
-                                }}
-                                // Safari-specific props
-                                {...(isSafari && {
-                                    fadeDuration: 0,
-                                })}
-                                // Unique key for Safari to prevent caching issues
-                                key={`safari-carousel-${index}-${item.id}`}
-                            />
-                        ) : (
-                            // Fallback view for failed images
-                            <View style={[styles.image, styles.fallbackContainer]}>
-                                <View style={styles.fallbackPlaceholder} />
-                            </View>
-                        )}
+                        <Image 
+                            source={item.image} 
+                            style={styles.image} 
+                            resizeMode="cover"
+                            onError={(error) => {
+                                console.warn('Safari carousel image load error:', error);
+                            }}
+                            onLoad={() => {
+                                console.log(`Safari: Carousel image ${index} loaded successfully`);
+                            }}
+                            // Safari-specific props
+                            {...(isSafari && {
+                                fadeDuration: 0,
+                            })}
+                            // Unique key for Safari to prevent caching issues
+                            key={`safari-carousel-${index}-${item.id}`}
+                        />
                     </View>
                 )}
             />
@@ -135,17 +108,6 @@ const styles = StyleSheet.create({
             objectFit: 'cover',
             imageRendering: 'auto',
         }),
-    },
-    fallbackContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#e0e0e0',
-    },
-    fallbackPlaceholder: {
-        width: 50,
-        height: 50,
-        backgroundColor: '#c0c0c0',
-        borderRadius: 8,
     },
     dotsContainer: {
         flexDirection: 'row',
