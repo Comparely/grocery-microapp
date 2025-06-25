@@ -9,10 +9,11 @@ import {
     TextInput,
     Alert,
     Animated,
+    ActivityIndicator,
 } from 'react-native';
 import Header from '../components/Header';
 import PriceSection from '../components/PriceSection';
-import { fetchHomePageData } from '@/api/common';
+import { fetchHomePageData, fetchHomePageDatav2 } from '@/api/common';
 import { Product } from '@/types/Product';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/ui/Text';
@@ -22,7 +23,9 @@ import VideoSection from '@/components/videoads';
 import SeparatorLine from '@/components/seperator';
 import DeliveryTags from '@/components/Deliverytags';
 import Footer from '@/components/Footer';
-import { useRouter } from 'expo-router'; // Import useRouter
+import { useRouter } from 'expo-router';
+import WallpaperCarousel from '@/components/WallpaperCarousel';
+import FeaturedProductsSection from '@/components/FeatureProducts';
 
 const isWeb = Platform.OS === 'web';
 const isIos = Platform.OS === 'ios';
@@ -31,13 +34,30 @@ const HomeScreen = () => {
     const { session, location, locationDenied, requestLocationPermission } = useSession();
     const [categories, setCategories] = useState<Category[]>([]);
     const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+    const [featuredProductsv2, setFeaturedProductsv2] = useState<Product[]>([]);
+    const [loadingProducts, setLoadingProducts] = useState(true);
     const [email, setEmail] = useState<string>('');
 
     const wiggleAnim = useRef(new Animated.Value(0)).current;
-    const router = useRouter(); // Initialize useRouter
+    const router = useRouter();
 
     useEffect(() => {
-        // wiggle animation
+        fetchHomePageDatav2(
+            session?.lat !== undefined ? Number(session.lat) : undefined,
+            session?.lng !== undefined ? Number(session.lng) : undefined,
+        )
+            .then((products) => {
+                setFeaturedProductsv2(products);
+            })
+            .catch((error) => {
+                console.error('Failed to load homepage products:', error);
+            })
+            .finally(() => {
+                setLoadingProducts(false); // Stop loading regardless of success/failure
+            });
+    }, []);
+
+    useEffect(() => {
         Animated.loop(
             Animated.sequence([
                 Animated.timing(wiggleAnim, { toValue: 1, duration: 100, useNativeDriver: true }),
@@ -46,7 +66,6 @@ const HomeScreen = () => {
             ]),
         ).start();
 
-        // fetch featured data
         const { featuredProducts, featuredCategories } = fetchHomePageData();
         setFeaturedProducts(featuredProducts);
         setCategories(featuredCategories);
@@ -54,7 +73,6 @@ const HomeScreen = () => {
 
     const handleWhatsappRedirect = () => {
         const message = encodeURIComponent("Hi, I'm interested in Comparely!");
-
         const webUrl = `https://api.whatsapp.com/send?phone=${process.env.EXPO_PUBLIC_SUPPORT_WA_NUMBER}&text=${message}`;
 
         if (Platform.OS === 'web') {
@@ -86,17 +104,15 @@ const HomeScreen = () => {
     };
 
     const handleSocialMediaRedirect = (
-        platform: 'instagram' | 'twitter' | 'facebook' | 'linkedin',
+        platform: 'instagram' | 'twitter' | 'linkedin' | 'youtube',
     ) => {
-        // Define your social media URLs
         const socialMediaUrls: Record<string, string> = {
             instagram: 'https://www.instagram.com/comparelyy',
             twitter: 'https://twitter.com',
-            facebook: 'https://www.facebook.com',
             linkedin: 'https://www.linkedin.com',
+            youtube: 'https://www.youtube.com/@comparely', // ✅ Replace with actual
         };
 
-        // Validate platform before using it
         if (!socialMediaUrls[platform]) {
             console.error(`Invalid platform: ${platform}`);
             Alert.alert('Error', `Invalid platform selected: ${platform}.`);
@@ -123,9 +139,8 @@ const HomeScreen = () => {
         }
     };
 
-    // New function to navigate to the location picker
     const navigateToLocationPicker = () => {
-        router.push('/location-picker'); // Use router.push with the file path
+        router.push('/location-picker');
     };
 
     const rotate = wiggleAnim.interpolate({
@@ -160,7 +175,10 @@ const HomeScreen = () => {
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}>
                 {session && featuredProducts.length > 0 ? (
-                    <PriceSection session={session} products={featuredProducts} />
+                    <>
+                        <WallpaperCarousel />
+                        <PriceSection session={session} products={featuredProducts} />
+                    </>
                 ) : (
                     <View style={styles.emptySection}>
                         <Text style={styles.emptyText}>{'No featured products available.'}</Text>
@@ -196,24 +214,37 @@ const HomeScreen = () => {
 
                                 <TouchableOpacity
                                     style={styles.socialButton}
-                                    onPress={() => handleSocialMediaRedirect('facebook')}>
-                                    <Ionicons name="logo-facebook" size={30} color="#004738" />
+                                    onPress={() => handleSocialMediaRedirect('linkedin')}>
+                                    <Ionicons name="logo-linkedin" size={30} color="#004738" />
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={styles.socialButton}
-                                    onPress={() => handleSocialMediaRedirect('linkedin')}>
-                                    <Ionicons name="logo-linkedin" size={30} color="#004738" />
+                                    onPress={() => handleSocialMediaRedirect('youtube')}>
+                                    <Ionicons name="logo-youtube" size={30} color="#004738" />
                                 </TouchableOpacity>
                             </View>
                         </View>
                     </View>
                 )}
                 <SeparatorLine />
-                <VideoSection />
+                {/* <VideoSection /> */}
                 <SeparatorLine />
                 <DeliveryTags />
-                <Footer />
+                <View style={styles.textCt}>
+                    <Text style={styles.waitText}>{`Maybe you’ll like this....`}</Text>
+                </View>
+                {loadingProducts ? (
+                    <View style={{ paddingVertical: 20 }}>
+                        <ActivityIndicator size="large" color="green" />
+                    </View>
+                ) : (
+                    featuredProductsv2.length > 0 && (
+                        <FeaturedProductsSection featuredProducts={featuredProductsv2} />
+                    )
+                )}
+
+                {isWeb && <Footer />}
             </ScrollView>
 
             <Animated.View style={[styles.floatingWhatsapp]}>
@@ -226,7 +257,9 @@ const HomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-    // -------------------------------------------APP COMMING SOON STYLE---------------------------------------------------
+    scrollContent: {
+        paddingBottom: 0, // ✅ Removed extra padding at the bottom
+    },
     appComingSoonContainer: {
         marginHorizontal: 20,
         marginBottom: 30,
@@ -280,19 +313,15 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginHorizontal: 10,
     },
-    // --------------------------------------------------------------------------------------------------------------------
     container: {
         flex: 1,
         backgroundColor: '#004738',
     },
     scrollView: {
         flex: 1,
-        backgroundColor: '#fffaf0',
+        backgroundColor: '#ffffff',
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
-    },
-    scrollContent: {
-        paddingBottom: 20,
     },
     deniedContainer: {
         flex: 1,
@@ -329,17 +358,6 @@ const styles = StyleSheet.create({
         color: '#cbd402',
         fontSize: 16,
         fontWeight: '600',
-    },
-    loadingContainer: {
-        flex: 1,
-        backgroundColor: '#004738',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    loadingText: {
-        color: '#fff',
-        fontSize: 20,
-        fontWeight: '500',
     },
     emptySection: {
         padding: 20,
@@ -412,6 +430,17 @@ const styles = StyleSheet.create({
         marginHorizontal: 10,
         opacity: 0.5,
     },
+    textCt: {
+        marginBottom: 5,
+    },
+    waitText: {
+        fontSize: 20,
+        color: 'rgba(0, 71, 56, 1)',
+        fontWeight: 'bold',
+        paddingHorizontal: 20,
+        marginVertical: 5,
+        lineHeight: 32,
+    },
     floatingWhatsapp: {
         position: 'absolute',
         right: 20,
@@ -419,7 +448,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#25D366',
         borderRadius: 35,
         padding: 6,
-        // elevation: 5,
     },
 });
 

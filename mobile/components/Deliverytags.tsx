@@ -1,17 +1,16 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Image, StyleSheet, Animated, Easing, Dimensions } from 'react-native';
 
-// Import your local images
-import Image1 from '../assets/images/blinkitmins.png';
-import Image2 from '../assets/images/zeptomins.png';
-import Image3 from '../assets/images/swiggymins.png';
-import Image4 from '../assets/images/bbmins.png';
+import Image1 from '../assets/images/blink.png';
+import Image2 from '../assets/images/zept.png';
+import Image3 from '../assets/images/instam.png';
+import Image4 from '../assets/images/bbmin.png';
 
 const { width: screenWidth } = Dimensions.get('window');
 
-const IMAGE_WIDTH = 120; // width of each image
-const SPACING = 20; // space between images
-const VISIBLE_IMAGES = 3; // how many images visible in the row
+const IMAGE_WIDTH = 120;
+const IMAGE_SPACING = 25; // increased spacing
+const VISIBLE_IMAGES = 3;
 
 const images = [Image1, Image2, Image3, Image4];
 
@@ -19,19 +18,19 @@ const DeliveryImagesScroller = () => {
     const scrollX = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        const totalWidth = (IMAGE_WIDTH + SPACING) * images.length;
+        const totalWidth = (IMAGE_WIDTH + IMAGE_SPACING) * images.length;
 
         Animated.loop(
             Animated.timing(scrollX, {
                 toValue: totalWidth,
-                duration: 8000,
+                duration: 6000,
                 easing: Easing.linear,
                 useNativeDriver: true,
-            }),
+            })
         ).start();
     }, [scrollX]);
 
-    const scrollImages = [...images, ...images]; // duplicate for seamless looping
+    const scrollImages = [...images, ...images];
 
     return (
         <View style={styles.container}>
@@ -42,15 +41,23 @@ const DeliveryImagesScroller = () => {
                         transform: [
                             {
                                 translateX: scrollX.interpolate({
-                                    inputRange: [0, (IMAGE_WIDTH + SPACING) * images.length],
-                                    outputRange: [0, -(IMAGE_WIDTH + SPACING) * images.length],
+                                    inputRange: [0, (IMAGE_WIDTH + IMAGE_SPACING) * images.length],
+                                    outputRange: [0, -((IMAGE_WIDTH + IMAGE_SPACING) * images.length)],
                                 }),
                             },
                         ],
                     },
-                ]}>
+                ]}
+            >
                 {scrollImages.map((img, idx) => (
-                    <Image key={idx} source={img} style={styles.image} />
+                    <View
+                        key={idx}
+                        style={{
+                            marginRight: idx === scrollImages.length - 1 ? 0 : IMAGE_SPACING,
+                        }}
+                    >
+                        <Image source={img} style={styles.image} />
+                    </View>
                 ))}
             </Animated.View>
         </View>
@@ -61,18 +68,17 @@ export default DeliveryImagesScroller;
 
 const styles = StyleSheet.create({
     container: {
-        marginHorizontal: 20,
-        marginTop: 20,
+        marginHorizontal: 0,
+        marginTop: 0,
         overflow: 'hidden',
-        width: (IMAGE_WIDTH + SPACING) * VISIBLE_IMAGES - SPACING,
+        width: IMAGE_WIDTH * VISIBLE_IMAGES + IMAGE_SPACING * (VISIBLE_IMAGES - 1),
     },
     scrollContainer: {
         flexDirection: 'row',
     },
     image: {
         width: IMAGE_WIDTH,
-        height: 80,
-        marginRight: SPACING,
+        height: IMAGE_WIDTH,
         resizeMode: 'contain',
     },
 });

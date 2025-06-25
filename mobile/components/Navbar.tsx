@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
         fontWeight: '600',
     },
     placeholder: {
-        width: 24, // Matches the icon size for symmetry
+        width: 10, // Matches the icon size for symmetry
     },
 });
 
