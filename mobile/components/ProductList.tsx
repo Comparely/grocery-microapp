@@ -5,6 +5,7 @@ import type { Product } from '../types/Product';
 import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
 import { ProductCard } from './ProductCard';
+import FeaturedProductsSection from './FeatureProducts';
 
 interface ProductListProps {
     session: Session;
@@ -45,7 +46,7 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 
     return (
         <View style={styles.wrapper1}>
-            <FlatList
+            {/* <FlatList
                 data={products}
                 numColumns={2}
                 renderItem={({ item }) => (
@@ -60,7 +61,8 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
                     paddingTop: 16,
                 }}
                 style={styles.list}
-            />
+            /> */}
+            <FeaturedProductsSection featuredProducts={products} />
         </View>
     );
 };
@@ -68,10 +70,12 @@ export const ProductList: React.FC<ProductListProps> = ({ session, products, isL
 const styles = StyleSheet.create({
     wrapper1: {
         flex: 1,
-        backgroundColor: '#fffaf0',
+        backgroundColor: '#ffffff',
     },
     list: {
-        flex: 1,
+        display: 'flex',
+        borderWidth: 1,
+        borderColor: 'red',
     },
     columnWrapper: {
         justifyContent: 'space-between',
@@ -79,13 +83,13 @@ const styles = StyleSheet.create({
     },
     emptyContainer: {
         flex: 1,
-        backgroundColor: '#fffaf0',
+        backgroundColor: '#ffffff',
         borderRadius: 24,
         padding: 16,
         margin: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        minHeight: 700,
+        minHeight: 600,
     },
     emptyText: {
         fontSize: 16,

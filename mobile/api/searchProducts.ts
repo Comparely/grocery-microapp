@@ -89,7 +89,7 @@ export async function fetchAndConvertProducts(
             }
 
             return {
-                id: index + 1,
+                id: `${query}-${index + 1}`,
                 name: item.name,
                 brand: item.brand,
                 weight: '',
