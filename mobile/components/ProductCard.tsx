@@ -88,7 +88,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                       : styles.container
             }>
             <TouchableOpacity style={styles.heartIcon}>
-                <Ionicons name="heart-outline" size={20} color="#333" />
+                {/* <Ionicons name="heart-outline" size={20} color="#333" /> */}
             </TouchableOpacity>
             <View style={styles.cardWrapper}>
                 <Image source={{ uri: product.imageUrl }} style={styles.image} />

@@ -338,7 +338,7 @@ export default function FeaturedProductsSection({
                 return require('@/assets/images/instamartv2.png');
             default:
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return require('@/assets/images/bbnow.webp');
+                return require('@/assets/images/bblogo.png');
         }
     };
 
@@ -369,9 +369,9 @@ export default function FeaturedProductsSection({
 
         return (
             <TouchableOpacity onPress={handleCardPress} style={styles.card}>
-                <TouchableOpacity style={styles.heartIcon}>
+                {/* <TouchableOpacity style={styles.heartIcon}>
                     <Ionicons name="heart-outline" size={20} color="#333" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
                 <Image source={{ uri: item.imageUrl }} style={styles.image} />
                 <Text style={styles.name} numberOfLines={2}>
@@ -472,20 +472,22 @@ const styles = StyleSheet.create({
     },
 
     platformIconSmall: {
-        width: 18,
-        height: 18,
+        width: 20,
+        height: 20,
         resizeMode: 'contain',
     },
 
     name: {
-        fontWeight: '600',
-        marginTop: 5,
+        fontWeight: '510',
+        marginTop: 3,
         fontSize: 14,
         lineHeight: 27,
         height: 54, // Enforce 2 lines space (2 * lineHeight)
     },
 
     weight: {
+        marginTop: 5,
+        fontWeight: '400',
         color: '#555',
         fontSize: 13,
     },
@@ -503,8 +505,8 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     platformIcon: {
-        width: 16,
-        height: 16,
+        width: 20,
+        height: 20,
         resizeMode: 'contain',
     },
     price: {
