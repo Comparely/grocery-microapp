@@ -87,8 +87,6 @@ export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<P
                 return data;
             }
         }
-export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<Product[]> => {
-    try {
         const queries = [
             'Chocolate',
             'Pasta',
