@@ -8,8 +8,15 @@ import {
     Easing,
     Image,
     ActivityIndicator,
+    Platform,
 } from 'react-native';
 import WallpaperCarousel from './WallpaperCarousel';
+
+// Safari detection
+const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+const isSafari =
+    Platform.OS === 'web' &&
+    (/^((?!chrome|android).)*safari/i.test(userAgent) || /iPad|iPhone|iPod/.test(userAgent));
 
 type ComparingScreenProps = {
     itemName?: string;
@@ -25,15 +32,12 @@ const ComparingScreen = ({
     const fadeOutAnim = useRef(new Animated.Value(1)).current;
 
     const [loadingComplete, setLoadingComplete] = useState(false);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const fadeAnim = useRef(new Animated.Value(1)).current;
-
-    const imageSources = [
+    const [carouselImages, setCarouselImages] = useState([
         require('../assets/images/bblogo.png'),
         require('../assets/images/instamartlogo.jpeg'),
         require('../assets/images/zeptoicon.webp'),
         require('../assets/images/blinkitlogo.png'),
-    ];
+    ]);
 
     const IMAGE_WIDTH = 140;
     const ITEM_SPACING = 10;
@@ -55,30 +59,28 @@ const ComparingScreen = ({
         useRef(new Animated.Value(0.7)).current,
     ];
 
-    const [carouselImages, setCarouselImages] = useState(imageSources);
-
     useEffect(() => {
         Animated.loop(
             Animated.sequence([
                 Animated.timing(scannerAnim, {
                     toValue: 1,
-                    duration: 1500, // Increased duration for slower animation
+                    duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.linear,
                 }),
                 Animated.timing(scannerAnim, {
                     toValue: 0,
-                    duration: 1500, // Increased duration for slower animation
+                    duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.linear,
                 }),
-            ]),
+            ])
         ).start();
 
         progressAnim.setValue(0);
         Animated.timing(progressAnim, {
             toValue: 1,
-            duration: 8000, // Slightly increased overall duration
+            duration: 8000,
             useNativeDriver: false,
         }).start(() => {
             setLoadingComplete(true);
@@ -87,9 +89,7 @@ const ComparingScreen = ({
                 duration: 500,
                 useNativeDriver: true,
             }).start(() => {
-                if (onAnimationComplete) {
-                    onAnimationComplete();
-                }
+                onAnimationComplete?.();
             });
         });
 
@@ -99,71 +99,42 @@ const ComparingScreen = ({
             const slideAnimations = positions.map((pos, index) =>
                 Animated.timing(pos, {
                     toValue: (index - 1) * IMAGE_SPACING,
-                    duration: 2000, // Increased duration for slower slide
+                    duration: 2000,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
-                }),
+                })
             );
 
-            const scaleDownLeft = Animated.timing(scales[0], {
-                toValue: 1,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-            const scaleUpCenter = Animated.timing(scales[1], {
-                toValue: 1.3,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
+            const scaleAnimations = [
+                Animated.timing(scales[0], { toValue: 1, duration: 1200, useNativeDriver: true }),
+                Animated.timing(scales[1], { toValue: 1.3, duration: 1200, useNativeDriver: true }),
+                Animated.timing(scales[2], { toValue: 1, duration: 1200, useNativeDriver: true }),
+            ];
 
-            const scaleDownRight = Animated.timing(scales[2], {
-                toValue: 1,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
+            const fadeAnimations = [
+                Animated.timing(opacities[0], { toValue: 0.7, duration: 1200, useNativeDriver: true }),
+                Animated.sequence([
+                    Animated.timing(opacities[1], {
+                        toValue: 0.9,
+                        duration: 800,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(opacities[1], {
+                        toValue: 1,
+                        duration: 800,
+                        easing: Easing.inOut(Easing.quad),
+                        useNativeDriver: true,
+                    }),
+                ]),
+                Animated.timing(opacities[2], { toValue: 0.7, duration: 1200, useNativeDriver: true }),
+            ];
 
-            const fadeOutLeft = Animated.timing(opacities[0], {
-                toValue: 0.7,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            const fadeInCenter = Animated.sequence([
-                Animated.timing(opacities[1], {
-                    toValue: 0.9,
-                    duration: 800, // Adjusted duration
-                    useNativeDriver: true,
-                }),
-                Animated.timing(opacities[1], {
-                    toValue: 1,
-                    duration: 800, // Adjusted duration
-                    easing: Easing.inOut(Easing.quad),
-                    useNativeDriver: true,
-                }),
-            ]);
-
-            const fadeOutRight = Animated.timing(opacities[2], {
-                toValue: 0.7,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            Animated.parallel([
-                ...slideAnimations,
-                scaleDownLeft,
-                scaleUpCenter,
-                scaleDownRight,
-                fadeOutLeft,
-                fadeInCenter,
-                fadeOutRight,
-            ]).start(() => {
+            Animated.parallel([...slideAnimations, ...scaleAnimations, ...fadeAnimations]).start(() => {
                 currentImages = [...currentImages.slice(1), currentImages[0]];
                 setCarouselImages(currentImages);
 
                 setTimeout(() => {
-                    positions.forEach((pos, index) => {
-                        pos.setValue((index - 1) * IMAGE_SPACING);
-                    });
+                    positions.forEach((pos, index) => pos.setValue((index - 1) * IMAGE_SPACING));
                     scales[0].setValue(1);
                     scales[1].setValue(1.3);
                     scales[2].setValue(1);
@@ -172,7 +143,7 @@ const ComparingScreen = ({
                     opacities[2].setValue(0.7);
 
                     animateCarousel();
-                }, 1500); // Increased delay before next animation
+                }, 1500);
             });
         };
 
@@ -198,30 +169,46 @@ const ComparingScreen = ({
     return (
         <Animated.View style={[styles.container, { opacity: loadingComplete ? fadeOutAnim : 1 }]}>
             <View style={styles.content}>
-                {/* <Text style={styles.title}>{'Comparely'}</Text> */}
                 <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 30 }}>
                     <ActivityIndicator size="small" color="white" />
                     <Text
                         style={[
                             styles.subtitle,
                             { marginBottom: 0, marginLeft: 8, textAlign: 'left' },
-                        ]}>
+                        ]}
+                    >
                         We are finding you the best deals...
                     </Text>
                 </View>
                 <View style={styles.carouselContainer}>
                     {[0, 1, 2].map((i) => (
                         <Animated.Image
-                            key={i}
+                            key={`carousel-img-${i}`}
                             source={carouselImages[i]}
+                            resizeMode="contain"
                             style={[
                                 styles.animatedImage,
                                 {
                                     transform: [{ translateX: positions[i] }, { scale: scales[i] }],
                                     zIndex: i === 1 ? 2 : 1,
                                     opacity: opacities[i],
+                                    ...(isSafari && {
+                                        willChange: 'transform',
+                                        backfaceVisibility: 'hidden',
+                                        imageRendering: 'auto',
+                                    }),
                                 },
                             ]}
+                            onError={(e) => {
+                                if (__DEV__ && isSafari) {
+                                    console.warn('Safari image load error:', e.nativeEvent);
+                                }
+                            }}
+                            onLoad={() => {
+                                if (__DEV__ && isSafari) {
+                                    console.log(`Safari: Carousel image ${i} loaded`);
+                                }
+                            }}
                         />
                     ))}
                     <View style={styles.scannerFrameOverlay}>
@@ -244,6 +231,7 @@ const ComparingScreen = ({
                     <Text style={styles.cancelText}>{'Cancel'}</Text>
                 </TouchableOpacity>
             </View>
+
             <View style={styles.wallpaperCarouselContainer}>
                 <WallpaperCarousel />
             </View>
@@ -257,19 +245,10 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#004738',
-        // paddingTop: 10,
         justifyContent: 'space-between',
     },
     content: {
         alignItems: 'center',
-    },
-    title: {
-        fontSize: 46,
-        fontFamily: 'Sora',
-        color: '#CBD402',
-        marginBottom: 10,
-        marginTop: 30,
-        textAlign: 'center',
     },
     subtitle: {
         color: '#fff',
@@ -288,8 +267,12 @@ const styles = StyleSheet.create({
     animatedImage: {
         width: 150,
         height: 90,
-        resizeMode: 'contain',
         position: 'absolute',
+        ...(isSafari && {
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+            imageRendering: 'auto',
+        }),
     },
     scannerFrameOverlay: {
         position: 'absolute',
@@ -313,8 +296,6 @@ const styles = StyleSheet.create({
         zIndex: 4,
     },
     progressBarBackground: {
-        // marginTop: 30,
-        // marginBottom: 10,
         width: '80%',
         height: 6,
         borderRadius: 3,

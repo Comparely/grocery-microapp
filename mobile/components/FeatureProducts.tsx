@@ -335,10 +335,10 @@ export default function FeaturedProductsSection({
                 return require('@/assets/images/zeptov2.png');
             case 'instamart':
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return require('@/assets/images/instamartv2.png');
+                return require('@/assets/images/instamartv3.png');
             default:
                 // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return require('@/assets/images/bblogo.png');
+                return require('@/assets/images/bbv3.png');
         }
     };
 
@@ -452,15 +452,14 @@ const styles = StyleSheet.create({
     },
     otherPriceContainer: {
         flexDirection: 'row',
-        // flexWrap: 'wrap', // if needed, otherwise use `noWrap` for scroll
-        gap: 10,
-        marginTop: 8,
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
     },
 
     otherPriceRow: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 2,
+        width: '48%', // Two items per row
     },
 
     platformPill: {
@@ -469,11 +468,12 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         justifyContent: 'center',
         alignItems: 'center',
+        marginRight: 3,
     },
 
     platformIconSmall: {
-        width: 20,
-        height: 20,
+        width: 23,
+        height: 25,
         resizeMode: 'contain',
     },
 
@@ -505,8 +505,8 @@ const styles = StyleSheet.create({
         gap: 4,
     },
     platformIcon: {
-        width: 20,
-        height: 20,
+        width: 30,
+        height: 25,
         resizeMode: 'contain',
     },
     price: {

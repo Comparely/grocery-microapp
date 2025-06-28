@@ -26,6 +26,7 @@ import Footer from '@/components/Footer';
 import { useRouter } from 'expo-router';
 import WallpaperCarousel from '@/components/WallpaperCarousel';
 import FeaturedProductsSection from '@/components/FeatureProducts';
+import DeliveryBadges from '@/components/DeliveryBadges';
 
 const isWeb = Platform.OS === 'web';
 const isIos = Platform.OS === 'ios';
@@ -42,6 +43,7 @@ const HomeScreen = () => {
     const router = useRouter();
 
     useEffect(() => {
+        console.log(session);
         fetchHomePageDatav2(
             session?.lat !== undefined ? Number(session.lat) : undefined,
             session?.lng !== undefined ? Number(session.lng) : undefined,
@@ -230,7 +232,8 @@ const HomeScreen = () => {
                 <SeparatorLine />
                 {/* <VideoSection /> */}
                 <SeparatorLine />
-                <DeliveryTags />
+                {/* <DeliveryTags /> */}
+                <DeliveryBadges />
                 <View style={styles.textCt}>
                     <Text style={styles.waitText}>{`Maybe you’ll like this....`}</Text>
                 </View>
