@@ -15,6 +15,6 @@ export function Text({ style, children, ...props }: TextProps) {
 
 const styles = StyleSheet.create({
     base: {
-        fontFamily: 'Sora',
+        fontFamily: 'SF-Pro',
     },
 });

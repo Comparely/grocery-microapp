@@ -470,10 +470,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginRight: 3,
     },
-
     platformIconSmall: {
-        width: 23,
-        height: 25,
+        width: 18,
+        height: 18,
         resizeMode: 'contain',
     },
 

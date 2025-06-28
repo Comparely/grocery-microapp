@@ -47,7 +47,6 @@ export function shuffleArray<T extends { priceOptions: any[] }>(array: T[]): T[]
         })
         .map(({ value }) => value);
 }
-
 // export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<Product[]> => {
 //     try {
 //         const queries = [
@@ -88,7 +87,8 @@ export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<P
                 return data;
             }
         }
-
+export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<Product[]> => {
+    try {
         const queries = [
             'Chocolate',
             'Pasta',
@@ -113,7 +113,6 @@ export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<P
             CACHE_KEY,
             JSON.stringify({ data: shuffled, timestamp: Date.now() }),
         );
-
         return shuffled;
     } catch (error) {
         console.error('Failed to fetch homepage data:', error);

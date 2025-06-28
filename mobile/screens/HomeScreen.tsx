@@ -43,7 +43,6 @@ const HomeScreen = () => {
     const router = useRouter();
 
     useEffect(() => {
-        console.log(session);
         fetchHomePageDatav2(
             session?.lat !== undefined ? Number(session.lat) : undefined,
             session?.lng !== undefined ? Number(session.lng) : undefined,

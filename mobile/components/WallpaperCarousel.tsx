@@ -1,7 +1,13 @@
-import React, { useState } from 'react';
-import { View, Dimensions, Image, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Dimensions, Image, StyleSheet, Platform } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
 const { width } = Dimensions.get('window');
+
+// Safari detection for web compatibility
+const isSafari = Platform.OS === 'web' && 
+    (typeof navigator !== 'undefined' && 
+     (/^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
+      /iPad|iPhone|iPod/.test(navigator.userAgent)));
 
 const carouselData = [
     { id: '1', image: require('@/assets/images/crousel/i1.png') },
@@ -13,18 +19,46 @@ const carouselData = [
 const WallpaperCarousel = () => {
     const [activeIndex, setActiveIndex] = useState(0);
 
+    // Safari compatibility logging
+    useEffect(() => {
+        if (isSafari && Platform.OS === 'web') {
+            console.log('Safari detected in WallpaperCarousel - using Safari-optimized rendering');
+        }
+    }, []);
+
     return (
         <View style={styles.container}>
             <Carousel
                 width={width}
                 height={200}
                 data={carouselData}
-                autoPlay
+                autoPlay={!isSafari} // Disable autoplay in Safari to prevent rendering issues
                 loop
-                scrollAnimationDuration={1000}
+                scrollAnimationDuration={isSafari ? 500 : 1000} // Faster animation for Safari
+                autoPlayInterval={3000}
+                pagingEnabled={true}
+                snapEnabled={true}
                 onSnapToItem={(index) => setActiveIndex(index)}
-                renderItem={({ item }) => (
-                    <Image source={item.image} style={styles.image} resizeMode="contain" />
+                renderItem={({ item, index }) => (
+                    <View style={styles.imageContainer}>
+                        <Image 
+                            source={item.image} 
+                            style={styles.image} 
+                            resizeMode="cover"
+                            onError={(error) => {
+                                console.warn('Safari carousel image load error:', error);
+                            }}
+                            onLoad={() => {
+                                console.log(`Safari: Carousel image ${index} loaded successfully`);
+                            }}
+                            // Safari-specific props
+                            {...(isSafari && {
+                                fadeDuration: 0,
+                            })}
+                            // Unique key for Safari to prevent caching issues
+                            key={`safari-carousel-${index}-${item.id}`}
+                        />
+                    </View>
                 )}
             />
 
@@ -48,10 +82,32 @@ const styles = StyleSheet.create({
         marginTop: 8,
         paddingHorizontal: 10,
     },
-    image: {
+    imageContainer: {
         width: width - 20,
         height: 200,
         borderRadius: 12,
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#f0f0f0',
+        // Safari-specific optimizations
+        ...(isSafari && {
+            willChange: 'transform',
+            backfaceVisibility: 'hidden',
+        }),
+    },
+    image: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 12,
+        ...(Platform.OS === 'ios' && {
+            transform: [{ scale: 1 }], // Force hardware acceleration on iOS
+        }),
+        // Additional Safari optimizations
+        ...(isSafari && {
+            objectFit: 'cover',
+            imageRendering: 'auto',
+        }),
     },
     dotsContainer: {
         flexDirection: 'row',
