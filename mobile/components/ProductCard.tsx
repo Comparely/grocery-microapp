@@ -87,9 +87,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                       ? styles.homeCard
                       : styles.container
             }>
-            {/* <TouchableOpacity style={styles.heartIcon}>
-                <Ionicons name="heart-outline" size={20} color="#333" />
-            </TouchableOpacity> */}
+            <TouchableOpacity style={styles.heartIcon}>
+                {/* <Ionicons name="heart-outline" size={20} color="#333" /> */}
+            </TouchableOpacity>
             <View style={styles.cardWrapper}>
                 <Image source={{ uri: product.imageUrl }} style={styles.image} />
                 {/* <Text style={styles.brandText}>{product.brand}</Text> */}
@@ -101,9 +101,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                     {'MRP ₹'}
                     {product.mrp}
                 </Text> */}
-                <Text style={styles.nameText} numberOfLines={2}>
-                    {product.name}
-                </Text>
+                <View style={styles.nameText}>
+                    <Text style={styles.productName} numberOfLines={2}>{product.name}</Text>
+                </View>
                 <Text style={styles.weightText}>{product.weight}</Text>
                 <View style={styles.priceOptionsColumn}>
                     {sortedPriceOptions.length === 0 ? (
@@ -222,14 +222,19 @@ const styles = StyleSheet.create({
         marginBottom: 2,
     },
     nameText: {
-        display: 'flex',
-        justifyContent: 'center',
-        fontSize: 14,
-        fontWeight: '500',
-        fontFamily: 'SF-Pro',
-        color: '#181b19',
-        lineHeight: 18,
-        minHeight: 45, // 3 lines * 18px line height
+        // display: 'flex',
+        // justifyContent: 'center',
+        // fontSize: 14,
+        // borderWidth: 2,
+        // borderColor: '#f0f0f0',
+        fontFamily: 'SFPro',
+        // color: '#181b19',
+        marginTop: 4,
+        lineHeight: 16,
+        minHeight: 48, // 3 lines * 16px line height
+    },
+    productName: {
+        fontWeight: 'bold',
     },
     priceOptionsColumn: {
         flexDirection: 'column',
@@ -271,10 +276,9 @@ const styles = StyleSheet.create({
     },
     weightText: {
         fontSize: 12,
-        color: 'black',
+        color: '#000000',
         borderRadius: 12,
-        paddingTop: -2,
-        paddingHorizontal: 8,
+        marginTop: -10,
         paddingVertical: 2,
         fontWeight: '400',
     },

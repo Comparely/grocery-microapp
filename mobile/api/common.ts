@@ -13,6 +13,7 @@
 import { Product } from '@/types/Product';
 import homepageData from '../homepage.json';
 import { fetchAndConvertProducts } from './searchProducts';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const fetchHomePageData = () => {
     try {
@@ -46,9 +47,46 @@ export function shuffleArray<T extends { priceOptions: any[] }>(array: T[]): T[]
         })
         .map(({ value }) => value);
 }
+// export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<Product[]> => {
+//     try {
+//         const queries = [
+//             'Chocolate',
+//             'Pasta',
+//             'Lipstick',
+//             'Nail Paint',
+//             'Chips',
+//             'Ice Cream',
+//             'Onion',
+//             'Bread',
+//         ];
+
+//         const allResults: Product[] = [];
+
+//         for (const query of queries) {
+//             const results = await fetchAndConvertProducts(query, lat, lng);
+//             allResults.push(...results.slice(0, 2));
+//         }
+
+//         const shuffled = shuffleArray(allResults);
+//         return shuffled;
+//     } catch (error) {
+//         console.error('Failed to fetch homepage data:', error);
+//         return [];
+//     }
+// };
+
+const CACHE_KEY = 'homepage_products_v2';
+const CACHE_TTL = 3 * 60 * 60 * 1000; // 3 hours in ms
 
 export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<Product[]> => {
     try {
+        const cacheRaw = await AsyncStorage.getItem(CACHE_KEY);
+        if (cacheRaw) {
+            const { data, timestamp } = JSON.parse(cacheRaw);
+            if (Date.now() - timestamp < CACHE_TTL) {
+                return data;
+            }
+        }
         const queries = [
             'Chocolate',
             'Pasta',
@@ -68,6 +106,11 @@ export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<P
         }
 
         const shuffled = shuffleArray(allResults);
+
+        await AsyncStorage.setItem(
+            CACHE_KEY,
+            JSON.stringify({ data: shuffled, timestamp: Date.now() }),
+        );
         return shuffled;
     } catch (error) {
         console.error('Failed to fetch homepage data:', error);

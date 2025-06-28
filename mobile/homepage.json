@@ -1,6 +1,30 @@
 {
   "featuredProducts": [
-  
+    {
+      "id": 4,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/app/assets/products/sliding_images/jpeg/34a57eca-4bda-47c3-838b-5fe0d348db35.jpg?ts=1724241358",
+      "weight": "350 g",
+      "brand": "The Health Factory",
+      "name": "Zero Maida Bread - 100% Whole Wheat",
+      "mrp": 75,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 58,
+          "deeplink": "https://www.zeptonow.com/pn/the-health-factory-zero-maida-bread-100-whole-wheat/pvid/58bd25ce-8f73-4031-96ed-7a1278834d2b"
+        },
+        {
+          "platform": "instamart",
+          "price": 58,
+          "deeplink": "https://www.swiggy.com/instamart/item/UZ3C4E0RVS?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 75,
+          "deeplink": "https://blinkit.com/prn/the-health-factory-zero-maida-multigrain-bread/prid/564615"
+        }
+      ]
+    },
     {
       "id": 1,
       "imageUrl": "https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg",
@@ -23,6 +47,31 @@
           "platform": "blinkit",
           "price": 71,
           "deeplink": "https://blinkit.com/prn/amul-taaza-homogenised-toned-milk/prid/176"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/da/cms-assets/cms/product/d478ee1d-78f0-444b-b7a4-f53fdedecff9.jpg?ts=1737973320",
+      "weight": "100 g",
+      "brand": "Hide & Seek",
+      "name": "Hide & Seek Chocolate Cookies",
+      "mrp": 30,
+      "priceOptions": [
+        {
+          "platform": "zepto",
+          "price": 30,
+          "deeplink": "https://www.zeptonow.com/pn/parle-hide-seek-chocolate-biscuits/pvid/efd2cdcb-00e4-4dd7-b2c4-6634af3bf529"
+        },
+        {
+          "platform": "instamart",
+          "price": 28,
+          "deeplink": "https://www.swiggy.com/instamart/item/8RWTUPOJ9U?storeId=1399346"
+        },
+        {
+          "platform": "blinkit",
+          "price": 30,
+          "deeplink": "https://blinkit.com/prn/hide-seek-chocolate-chip-cookies-100-g/prid/11102"
         }
       ]
     },
@@ -77,31 +126,6 @@
       ]
     },
     {
-      "id": 4,
-      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/app/assets/products/sliding_images/jpeg/34a57eca-4bda-47c3-838b-5fe0d348db35.jpg?ts=1724241358",
-      "weight": "350 g",
-      "brand": "The Health Factory",
-      "name": "Zero Maida Bread - 100% Whole Wheat",
-      "mrp": 75,
-      "priceOptions": [
-        {
-          "platform": "zepto",
-          "price": 58,
-          "deeplink": "https://www.zeptonow.com/pn/the-health-factory-zero-maida-bread-100-whole-wheat/pvid/58bd25ce-8f73-4031-96ed-7a1278834d2b"
-        },
-        {
-          "platform": "instamart",
-          "price": 58,
-          "deeplink": "https://www.swiggy.com/instamart/item/UZ3C4E0RVS?storeId=1399346"
-        },
-        {
-          "platform": "blinkit",
-          "price": 75,
-          "deeplink": "https://blinkit.com/prn/the-health-factory-zero-maida-multigrain-bread/prid/564615"
-        }
-      ]
-    },
-    {
       "id": 5,
       "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/app/assets/products/sliding_images/jpeg/6ae62ec2-3b13-4fff-b052-2ff3d4ef2d16.jpg?ts=1726473593",
       "weight": "400 g",
@@ -126,31 +150,6 @@
         }
       ]
     },
-    {
-      "id": 6,
-      "imageUrl": "https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/da/cms-assets/cms/product/d478ee1d-78f0-444b-b7a4-f53fdedecff9.jpg?ts=1737973320",
-      "weight": "100 g",
-      "brand": "Hide & Seek",
-      "name": "Hide & Seek Chocolate Cookies",
-      "mrp": 30,
-      "priceOptions": [
-        {
-          "platform": "zepto",
-          "price": 30,
-          "deeplink": "https://www.zeptonow.com/pn/parle-hide-seek-chocolate-biscuits/pvid/efd2cdcb-00e4-4dd7-b2c4-6634af3bf529"
-        },
-        {
-          "platform": "instamart",
-          "price": 28,
-          "deeplink": "https://www.swiggy.com/instamart/item/8RWTUPOJ9U?storeId=1399346"
-        },
-        {
-          "platform": "blinkit",
-          "price": 30,
-          "deeplink": "https://blinkit.com/prn/hide-seek-chocolate-chip-cookies-100-g/prid/11102"
-        }
-      ]
-    }
   ],
   "categories": [
     {

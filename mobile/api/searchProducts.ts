@@ -92,7 +92,7 @@ export async function fetchAndConvertProducts(
                 id: `${query}-${index + 1}`,
                 name: item.name,
                 brand: item.brand,
-                weight: '',
+                weight: priceOptions[0]?.weight,
                 mrp,
                 imageUrl,
                 isNewPack: false,
