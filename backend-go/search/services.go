@@ -9,10 +9,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sort"
 	"strconv"
@@ -30,6 +32,25 @@ import (
 	"github.com/go-redis/redis/v8"
 	"github.com/google/uuid"
 )
+
+// WeightInfo represents parsed weight information
+type WeightInfo struct {
+	Value    float64
+	Unit     string
+	Type     string // "weight", "volume", "count", "pack"
+	Original string
+}
+
+// VariantMappingQuality represents the quality assessment of variant mapping
+type VariantMappingQuality struct {
+	Score            float64 `json:"score"`
+	WeightMatch      bool    `json:"weight_match"`
+	BrandMatch       bool    `json:"brand_match"`
+	MRPMatch         bool    `json:"mrp_match"`
+	Confidence       string  `json:"confidence"`
+	VariantMatched   bool    `json:"variant_matched"`
+	WeightDifference string  `json:"weight_difference,omitempty"`
+}
 
 func mapBlinkit(data map[string]interface{}) []Product {
 	var products []Product
@@ -61,12 +82,13 @@ func mapBlinkit(data map[string]interface{}) []Product {
 				productID := strconv.Itoa(int(vm["product_id"].(float64)))
 				imageURL, _ := vm["image_url"].(string)
 				unit, _ := vm["unit"].(string)
+				normalizedWeight := extractAndNormalizeWeight(unit)
 				variant := Variant{
 					OriginalPrice:   mrp,
 					DiscountedPrice: price,
 					Deeplink:        fmt.Sprintf("https://blinkit.com/prn/x/prid/%s", productID),
 					ImageURL:        imageURL,
-					Weight:          unit,
+					Weight:          normalizedWeight,
 				}
 				variants = append(variants, variant)
 			}
@@ -158,12 +180,13 @@ func mapInstamart(data map[string]interface{}) []Product {
 				imageURL = formatSwiggyImages(imgs[0].(string))
 			}
 			unit, _ := vm["sku_quantity_with_combo"].(string)
+			normalizedWeight := extractAndNormalizeWeight(unit)
 			variant := Variant{
 				OriginalPrice:   mrp,
 				DiscountedPrice: discounted,
 				Deeplink:        fmt.Sprintf("https://www.swiggy.com/stores/instamart/item/%s", productID),
 				ImageURL:        imageURL,
-				Weight:          unit,
+				Weight:          normalizedWeight,
 			}
 			variants = append(variants, variant)
 		}
@@ -262,7 +285,7 @@ func mapZepto(data map[string]interface{}) []Product {
 		deeplink := fmt.Sprintf("https://www.zeptonow.com/pn/x/pvid/%s", variantData["id"].(string))
 		var varWeight string
 		if variWt, ok := variantData["formattedPacksize"].(string); ok {
-			varWeight = variWt
+			varWeight = extractAndNormalizeWeight(variWt)
 		}
 		variant := Variant{
 			OriginalPrice:   mrp,
@@ -326,6 +349,7 @@ func mapBBRawProduct(raw map[string]interface{}) (Product, error) {
 		unit := fmt.Sprint(raw["unit"])
 		weight = mag + unit
 	}
+	normalizedWeight := extractAndNormalizeWeight(weight)
 
 	imageURL := ""
 	if imgs, ok := raw["images"].([]interface{}); ok && len(imgs) > 0 {
@@ -363,7 +387,7 @@ func mapBBRawProduct(raw map[string]interface{}) (Product, error) {
 					DiscountedPrice: sp,
 					Deeplink:        deeplink,
 					ImageURL:        imageURL,
-					Weight:          weight,
+					Weight:          normalizedWeight,
 				}
 
 				prices = append(prices, PriceOption{
@@ -703,8 +727,6 @@ func fetchZeptoProductsV3(query string, lat, lng string) (map[string]interface{}
 	bodyFunc := func() string {
 		b, _ := json.Marshal(map[string]interface{}{
 			"query": query,
-			"lat":   lat,
-			"lng":   lng,
 		})
 		return string(b)
 	}
@@ -1365,185 +1387,366 @@ func SearchProductsV3(appState config.AppState, query string, deviceID string) (
 	return mergedProducts, nil
 }
 
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
+// Enhanced weight normalization to handle all unit types
+func normalizeWeight(weightStr string) WeightInfo {
+	info := WeightInfo{
+		Original: weightStr,
+		Value:    0,
+		Unit:     "",
+		Type:     "unknown",
 	}
-	return false
+
+	if weightStr == "" {
+		return info
+	}
+
+	weightStr = strings.ToLower(strings.TrimSpace(weightStr))
+
+	// Handle pack variations first
+	if packInfo := parsePackWeight(weightStr); packInfo.Type != "unknown" {
+		return packInfo
+	}
+
+	// Handle piece/count variations
+	if pieceInfo := parsePieceWeight(weightStr); pieceInfo.Type != "unknown" {
+		return pieceInfo
+	}
+
+	// Handle weight/volume variations
+	if massInfo := parseMassWeight(weightStr); massInfo.Type != "unknown" {
+		return massInfo
+	}
+
+	return info
 }
 
-// ZeptoSuggestions fetches product suggestions from Zepto based on a query
+// Parse pack-related weights (pack of 3, 6 pack, etc.)
+func parsePackWeight(weightStr string) WeightInfo {
+	info := WeightInfo{Original: weightStr, Type: "pack"}
 
-func ZeptoSuggestions(appState config.AppState, query string, deviceID string) ([]string, error) {
-	var storeID, sessionID, cookie, xsrfToken, lat, lng string
+	packPatterns := []string{
+		`pack\s+of\s+(\d+)`,      // "pack of 3"
+		`(\d+)\s*pack`,           // "3 pack", "3pack"
+		`(\d+)\s*packs`,          // "3 packs"
+		`(\d+)\s*pc\s+pack`,      // "6 pc pack"
+		`pack\s*\((\d+)\)`,       // "pack (3)"
+		`(\d+)\s*pieces?\s+pack`, // "3 pieces pack"
+	}
 
-	// Fetch session
-	if deviceID != "" {
-		ctx := context.Background()
-		sess, err := sessions.GetSession(ctx, appState, deviceID)
-		if err == nil {
-			storeID = sess.MarketPlaceAttributes.ZeptoStoreAttributes.StoreID
-			sessionID = sess.ZeptoAuth.SessionID
-			cookie = sess.ZeptoAuth.Cookie
-			xsrfToken = sess.ZeptoAuth.XSRFToken
-			lat = sess.Lat
-			lng = sess.Lng
-			log.Printf("Using session - StoreID: %s, SessionID: %s, Lat: %s, Lng: %s", storeID, sessionID, lat, lng)
+	for _, pattern := range packPatterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindStringSubmatch(weightStr)
+		if len(matches) >= 2 {
+			if value, err := strconv.ParseFloat(matches[1], 64); err == nil {
+				info.Value = value
+				info.Unit = "pack"
+				info.Type = "pack"
+				return info
+			}
+		}
+	}
 
-			if !sess.MarketPlaceAttributes.ZeptoStoreAttributes.Serviceable {
-				log.Printf("Session store not serviceable, refreshing session")
-				storeAttributes, authData, err := sessions.FetchZeptoStoreDetails(lat, lng)
-				if err != nil {
-					log.Printf("Failed to refresh Zepto session: %v", err)
+	return WeightInfo{Original: weightStr, Type: "unknown"}
+}
+
+// Parse piece/count variations
+func parsePieceWeight(weightStr string) WeightInfo {
+	info := WeightInfo{Original: weightStr, Type: "count"}
+
+	piecePatterns := []string{
+		`(\d+)\s*pieces?`, // "3 pieces", "1 piece"
+		`(\d+)\s*pcs?`,    // "3 pcs", "1 pc"
+		`(\d+)\s*nos?`,    // "3 nos", "1 no"
+		`(\d+)\s*units?`,  // "3 units", "1 unit"
+		`(\d+)\s*count`,   // "3 count"
+		`count\s*(\d+)`,   // "count 3"
+		`(\d+)\s*ea`,      // "3 ea" (each)
+		`(\d+)\s*each`,    // "3 each"
+	}
+
+	for _, pattern := range piecePatterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindStringSubmatch(weightStr)
+		if len(matches) >= 2 {
+			if value, err := strconv.ParseFloat(matches[1], 64); err == nil {
+				info.Value = value
+				info.Unit = "pieces"
+				info.Type = "count"
+				return info
+			}
+		}
+	}
+
+	return WeightInfo{Original: weightStr, Type: "unknown"}
+}
+
+// Parse mass/volume weights
+func parseMassWeight(weightStr string) WeightInfo {
+	info := WeightInfo{Original: weightStr, Type: "weight"}
+
+	// Enhanced patterns for weight/volume
+	patterns := map[string]float64{
+		// Weight units (convert to grams)
+		`(\d+(?:\.\d+)?)\s*(?:kg|kilograms?|kilog)`: 1000,
+		`(\d+(?:\.\d+)?)\s*(?:g|gms?|grams?)`:       1,
+		`(\d+(?:\.\d+)?)\s*(?:mg|milligrams?)`:      0.001,
+
+		// Volume units (convert to ml)
+		`(\d+(?:\.\d+)?)\s*(?:l|ltr|liters?|litres?)`: 1000,
+		`(\d+(?:\.\d+)?)\s*(?:ml|milliliters?)`:       1,
+	}
+
+	for pattern, multiplier := range patterns {
+		re := regexp.MustCompile(pattern)
+		matches := re.FindStringSubmatch(weightStr)
+		if len(matches) >= 2 {
+			if value, err := strconv.ParseFloat(matches[1], 64); err == nil {
+				info.Value = value * multiplier
+
+				// Set appropriate unit
+				if multiplier >= 1000 {
+					info.Unit = "g" // Normalize to grams
+					info.Type = "weight"
+				} else if multiplier == 1 && strings.Contains(weightStr, "ml") {
+					info.Unit = "ml"
+					info.Type = "volume"
 				} else {
-					sess.MarketPlaceAttributes.ZeptoStoreAttributes = storeAttributes
-					sess.ZeptoAuth = authData
-					err = sessions.SaveSession(ctx, appState, &sess)
-					if err != nil {
-						log.Printf("Failed to save refreshed session: %v", err)
-					}
-					storeID = sess.MarketPlaceAttributes.ZeptoStoreAttributes.StoreID
-					sessionID = sess.ZeptoAuth.SessionID
-					cookie = sess.ZeptoAuth.Cookie
-					xsrfToken = sess.ZeptoAuth.XSRFToken
+					info.Unit = "g"
+					info.Type = "weight"
 				}
+
+				return info
 			}
-		} else {
-			log.Printf("Session not found for deviceID %s: %v, using defaults", deviceID, err)
 		}
 	}
 
-	// Fallback defaults
-	if storeID == "" {
-		storeID = "fa5e892d-65d7-4da6-9bde-e1f22deb7b6f"
-	}
-	if sessionID == "" {
-		sessionID = uuid.New().String()
-	}
-	if lat == "" {
-		lat = "12.975060"
-	}
-	if lng == "" {
-		lng = "77.604691"
-	}
-
-	// Headers
-	headers := map[string]string{
-		"accept":           "application/json, text/plain, */*",
-		"accept-language":  "en-US,en;q=0.9",
-		"app_sub_platform": "WEB",
-		"app_version":      "12.64.0",
-		"appversion":       "12.64.0",
-		//"auth_revamp_flow":      "v2",
-		//"compatible_components": "CONVENIENCE_FEE,RAIN_FEE,EXTERNAL_COUPONS,STANDSTILL,BUNDLE,MULTI_SELLER_ENABLED,PIP_V1,ROLLUPS,SCHEDULED_DELIVERY,SAMPLING_ENABLED,ETA_NORMAL_WITH_149_DELIVERY,ETA_NORMAL_WITH_199_DELIVERY,HOMEPAGE_V2,NEW_ETA_BANNER,VERTICAL_FEED_PRODUCT_GRID,AUTOSUGGESTION_PAGE_ENABLED,AUTOSUGGESTION_PIP,AUTOSUGGESTION_AD_PIP,BOTTOM_NAV_FULL_ICON,COUPON_WIDGET_CART_REVAMP,DELIVERY_UPSELLING_WIDGET,MARKETPLACE_CATEGORY_GRID,NO_PLATFORM_CHECK_ENABLED_V2,SUPER_SAVER:1,SUPERSTORE_V1,PROMO_CASH:0,24X7_ENABLED_V1,TABBED_CAROUSEL_V2,HP_V4_FEED,NEW_ROLLUPS_ENABLED,RERANKING_QCL_RELATED_PRODUCTS,PLP_ON_SEARCH,PAAN_BANNER_WIDGETIZED,ROLLUPS_UOM,DYNAMIC_FILTERS,PHARMA_ENABLED,AUTOSUGGESTION_RECIPE_PIP,SEARCH_FILTERS_V1,QUERY_DESCRIPTION_WIDGET,MEDS_WITH_SIMILAR_SALT_WIDGET,NEW_FEE_STRUCTURE,NEW_BILL_INFO,RE_PROMISE_ETA_ORDER_SCREEN_ENABLED,SUPERSTORE_V1,MANUALLY_APPLIED_DELIVERY_FEE_RECEIVABLE,MARKETPLACE_REPLACEMENT,ZEPTO_PASS,ZEPTO_PASS:1,ZEPTO_PASS:2,ZEPTO_PASS_RENEWAL,CART_REDESIGN_ENABLED,SHIPMENT_WIDGETIZATION_ENABLED,TABBED_CAROUSEL_V2,24X7_ENABLED_V1,PROMO_CASH:0,HOMEPAGE_V2,SUPER_SAVER:1,NO_PLATFORM_CHECK_ENABLED_V2",
-		"content-type":     "application/json",
-		"marketplace_type": "ZEPTO_NOW",
-		//"origin":                "https://www.zeptonow.com",
-		//"platform":              "WEB",
-		//"referer":               "https://www.zeptonow.com/",
-		//"session_id":            sessionID,
-		"requestid":         sessionID,
-		"storeid":           storeID,
-		"request-signature": "c030cf594f9d17a528909874ab4c490bf898510bd94ca31783c9a29599db49ed",
-		"tenant":            "ZEPTO",
-		"user-agent":        "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
-	}
-	if cookie != "" {
-		headers["Cookie"] = cookie
-	}
-	if xsrfToken != "" {
-		//headers["X-XSRF-TOKEN"] = xsrfToken
-	}
-
-	// Payload
-	payload := map[string]interface{}{
-		"query":         url.QueryEscape(query),
-		"pageNumber":    0,
-		"mode":          "AUTOSUGGEST",
-		"intentId":      uuid.New().String(),
-		"userSessionId": sessionID,
-		"store_etas":    map[string]int{storeID: -1},
-		"store_ids":     storeID,
-	}
-
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		return nil, fmt.Errorf("failed to marshal payload: %v", err)
-	}
-
-	// Make API call
-	result, err := fetchJSON("https://api.zeptonow.com/api/v3/search", "POST", headers, string(payloadBytes))
-	if err != nil {
-		return nil, fmt.Errorf("failed to fetch suggestions: %v", err)
-	}
-
-	// Extract suggestions from PRODUCT_GRID widgets
-	suggestions := []string{}
-	seen := make(map[string]bool) // To avoid duplicates
-	if layout, ok := result["layout"].([]interface{}); ok {
-		for i, widget := range layout {
-			widgetMap, ok := widget.(map[string]interface{})
-			if !ok {
-				log.Printf("Layout item %d is not a map", i)
-				continue
-			}
-			widgetID, _ := widgetMap["widgetId"].(string)
-			widgetName, _ := widgetMap["widgetName"].(string)
-			log.Printf("Processing widget - ID: %s, Name: %s", widgetID, widgetName)
-
-			if widgetID == "PRODUCT_GRID" {
-				if data, ok := widgetMap["data"].(map[string]interface{}); ok {
-					if resolver, ok := data["resolver"].(map[string]interface{}); ok {
-						if resolverData, ok := resolver["data"].(map[string]interface{}); ok {
-							if items, ok := resolverData["items"].([]interface{}); ok {
-								log.Printf("Found %d items in widget %s", len(items), widgetName)
-								for j, item := range items {
-									itemMap, ok := item.(map[string]interface{})
-									if !ok {
-										log.Printf("Item %d in widget %s is not a map", j, widgetName)
-										continue
-									}
-									productResponse, ok := itemMap["productResponse"].(map[string]interface{})
-									if !ok {
-										log.Printf("productResponse missing in item %d of widget %s", j, widgetName)
-										continue
-									}
-									name, ok := productResponse["name"].(string)
-									if !ok {
-										if product, ok := productResponse["product"].(map[string]interface{}); ok {
-											name, ok = product["name"].(string)
-											if !ok {
-												log.Printf("Name missing in product of item %d in widget %s", j, widgetName)
-												continue
-											}
-										} else {
-											log.Printf("product missing in item %d of widget %s", j, widgetName)
-											continue
-										}
-									}
-									if !seen[name] {
-										suggestions = append(suggestions, name)
-										seen[name] = true
-									}
-								}
-							} else {
-								log.Printf("Items missing or not an array in widget %s", widgetName)
-							}
-						}
-					}
+	// Handle combinations like "500g x 3"
+	comboRe := regexp.MustCompile(`(\d+(?:\.\d+)?)\s*(?:g|ml)\s*x\s*(\d+)`)
+	matches := comboRe.FindStringSubmatch(weightStr)
+	if len(matches) >= 3 {
+		if value, err := strconv.ParseFloat(matches[1], 64); err == nil {
+			if count, err := strconv.ParseFloat(matches[2], 64); err == nil {
+				info.Value = value * count
+				if strings.Contains(weightStr, "ml") {
+					info.Unit = "ml"
+					info.Type = "volume"
+				} else {
+					info.Unit = "g"
+					info.Type = "weight"
 				}
+				return info
 			}
 		}
+	}
+
+	return WeightInfo{Original: weightStr, Type: "unknown"}
+}
+
+// Enhanced weight compatibility check
+func isVariantWeightCompatible(variantWeight, itemWeight string) bool {
+	if variantWeight == "" || itemWeight == "" {
+		return variantWeight == itemWeight // Only match if both empty
+	}
+
+	info1 := normalizeWeight(variantWeight)
+	info2 := normalizeWeight(itemWeight)
+
+	// Both must be parseable
+	if info1.Type == "unknown" || info2.Type == "unknown" {
+		return false
+	}
+
+	// Must be same type (weight, volume, count, pack)
+	if info1.Type != info2.Type {
+		return false
+	}
+
+	// Handle different matching logic based on type
+	switch info1.Type {
+	case "count", "pack":
+		// Exact match for count/pieces/packs
+		return info1.Value == info2.Value
+
+	case "weight", "volume":
+		// Tolerance-based matching for weight/volume
+		return isWithinTolerance(info1.Value, info2.Value, 0.2)
+
+	default:
+		return false
+	}
+}
+
+// Check if two values are within tolerance
+func isWithinTolerance(val1, val2, tolerance float64) bool {
+	if val1 == 0 || val2 == 0 {
+		return false
+	}
+
+	diff := math.Abs(val1 - val2)
+	maxVal := math.Max(val1, val2)
+
+	return (diff / maxVal) <= tolerance
+}
+
+// Enhanced weight extraction
+func extractAndNormalizeWeight(rawWeight interface{}) string {
+	if rawWeight == nil {
+		return ""
+	}
+
+	weightStr, ok := rawWeight.(string)
+	if !ok {
+		return ""
+	}
+
+	weightStr = strings.TrimSpace(weightStr)
+	if weightStr == "" {
+		return ""
+	}
+
+	// Clean up common variations
+	cleanWeight := cleanWeightString(weightStr)
+
+	// Validate that we can parse it
+	info := normalizeWeight(cleanWeight)
+	if info.Type == "unknown" {
+		return weightStr // Return original if can't parse
+	}
+
+	return cleanWeight
+}
+
+// Clean weight string for better parsing
+func cleanWeightString(weightStr string) string {
+	// Remove extra spaces
+	cleaned := regexp.MustCompile(`\s+`).ReplaceAllString(weightStr, " ")
+	cleaned = strings.TrimSpace(cleaned)
+
+	// Standardize common abbreviations
+	replacements := map[string]string{
+		"gms":       "g",
+		"kgs":       "kg",
+		"kilog":     "kg",
+		"grams":     "g",
+		"kilograms": "kg",
+		"litres":    "l",
+		"liters":    "l",
+		"litre":     "l",
+		"liter":     "l",
+		"pieces":    "pieces",
+		"piece":     "pieces",
+		"pcs":       "pieces",
+		"pc":        "pieces",
+		" x ":       "x",
+		" X ":       "x",
+	}
+
+	result := strings.ToLower(cleaned)
+	for old, new := range replacements {
+		result = strings.ReplaceAll(result, old, new)
+	}
+
+	return result
+}
+
+// Find variant with compatible weight across all price options
+func findCompatibleVariant(product Product, item PendingMappingItem) (int, int) {
+	if item.Weight == "" {
+		return -1, -1 // Create new variant if no weight info
+	}
+
+	for priceIdx, priceOption := range product.Prices {
+		for variantIdx, variant := range priceOption.Variants {
+			if isVariantWeightCompatible(variant.Weight, item.Weight) {
+				return priceIdx, variantIdx
+			}
+		}
+	}
+
+	return -1, -1 // No compatible variant found
+}
+
+// Brand compatibility check
+func isBrandCompatible(brand1, brand2 string) bool {
+	if brand1 == "" || brand2 == "" {
+		return true // Allow if brand info is missing
+	}
+
+	// Normalize brands for comparison
+	norm1 := strings.ToLower(strings.TrimSpace(brand1))
+	norm2 := strings.ToLower(strings.TrimSpace(brand2))
+
+	// Exact match
+	if norm1 == norm2 {
+		return true
+	}
+
+	// Simple fuzzy match - check if one contains the other
+	return strings.Contains(norm1, norm2) || strings.Contains(norm2, norm1)
+}
+
+// MRP compatibility check
+func isMRPCompatible(mrp1, mrp2 float64) bool {
+	if mrp1 <= 0 || mrp2 <= 0 {
+		return true // Allow if MRP info is missing/invalid
+	}
+
+	// Exact match
+	if mrp1 == mrp2 {
+		return true
+	}
+
+	// 15% tolerance
+	tolerance := 0.15
+	diff := math.Abs(mrp1 - mrp2)
+	avgMRP := (mrp1 + mrp2) / 2
+
+	return (diff / avgMRP) <= tolerance
+}
+
+// Assess variant mapping quality
+func assessVariantMappingQuality(prod Product, item PendingMappingItem) VariantMappingQuality {
+	quality := VariantMappingQuality{}
+	score := 0.0
+
+	// Find best matching variant by weight
+	priceIdx, variantIdx := findCompatibleVariant(prod, item)
+
+	// Variant weight matching (50% weight - most important for variants)
+	if priceIdx >= 0 && variantIdx >= 0 {
+		quality.WeightMatch = true
+		quality.VariantMatched = true
+		score += 0.5
+
+		// Calculate weight difference for debugging
+		existingWeight := prod.Prices[priceIdx].Variants[variantIdx].Weight
+		quality.WeightDifference = fmt.Sprintf("%s vs %s", existingWeight, item.Weight)
+	}
+
+	// Brand matching (25% weight)
+	if isBrandCompatible(prod.Brand, item.Brand) {
+		quality.BrandMatch = true
+		score += 0.25
+	}
+
+	// MRP matching (25% weight)
+	if isMRPCompatible(prod.MRP, item.Mrp) {
+		quality.MRPMatch = true
+		score += 0.25
+	}
+
+	quality.Score = score
+
+	// Set confidence level based on variant matching
+	if score >= 0.75 && quality.VariantMatched {
+		quality.Confidence = "high"
+	} else if score >= 0.5 {
+		quality.Confidence = "medium"
 	} else {
-		log.Printf("Layout missing or not an array in response")
+		quality.Confidence = "low"
 	}
 
-	if len(suggestions) == 0 {
-		log.Printf("No suggestions extracted. Query: %s", query)
-	}
-	return suggestions, nil
+	return quality
 }
 
 func fetchJSON(url string, method string, headers map[string]string, body string) (map[string]interface{}, error) {
@@ -1622,8 +1825,22 @@ func applyPendingMappings(
 }
 
 // mergeOneMapping adds the new variant from PendingMappingItem into prod.Prices,
-// creating a new PriceOption if needed, and deduplicating by Deeplink.
+// creating a new PriceOption if needed, and using enhanced weight-based variant matching.
 func mergeOneMapping(prod Product, item PendingMappingItem) Product {
+	// Assess mapping quality first
+	quality := assessVariantMappingQuality(prod, item)
+
+	// Log mapping decision
+	log.Printf("Mapping quality for %s: score=%.2f, variant_matched=%v, confidence=%s",
+		prod.Name, quality.Score, quality.VariantMatched, quality.Confidence)
+
+	// Only merge if quality score is above threshold
+	if quality.Score < 0.5 {
+		log.Printf("Rejecting mapping for %s due to low quality score: %.2f (weight_diff: %s)",
+			prod.Name, quality.Score, quality.WeightDifference)
+		return prod
+	}
+
 	v := Variant{
 		OriginalPrice:   item.Mrp,
 		DiscountedPrice: item.Mrp,
@@ -1635,12 +1852,35 @@ func mergeOneMapping(prod Product, item PendingMappingItem) Product {
 	// look for an existing PriceOption on item.Source
 	for pi, po := range prod.Prices {
 		if po.Source == item.Source {
-			// dedupe by Deeplink
+			// dedupe by Deeplink first
 			for _, existing := range po.Variants {
 				if existing.Deeplink == v.Deeplink {
 					return prod
 				}
 			}
+
+			// Check for compatible weight variant to merge with
+			priceIdx, variantIdx := findCompatibleVariant(prod, item)
+			if priceIdx == pi && variantIdx >= 0 {
+				// Merge with existing compatible variant (keep better price)
+				existingVariant := &prod.Prices[pi].Variants[variantIdx]
+
+				if item.Mrp < existingVariant.OriginalPrice {
+					existingVariant.OriginalPrice = item.Mrp
+					existingVariant.DiscountedPrice = item.Mrp
+					existingVariant.Deeplink = item.Deeplink
+				}
+
+				// Keep the more detailed weight info
+				if len(item.Weight) > len(existingVariant.Weight) {
+					existingVariant.Weight = item.Weight
+				}
+
+				log.Printf("Merged variant for %s with existing weight-compatible variant", prod.Name)
+				return prod
+			}
+
+			// Add as new variant if no compatible weight found
 			prod.Prices[pi].Variants = append(prod.Prices[pi].Variants, v)
 			return prod
 		}

@@ -3,3 +3,4 @@ uvicorn[standard]
 redis
 fuzzywuzzy
 sentence-transformers
+pydantic-core==2.33.2

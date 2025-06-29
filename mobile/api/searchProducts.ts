@@ -29,72 +29,106 @@ export async function fetchAndConvertProducts(
         const products: Product[] = data.map((item: ProductAPIResp, index: number) => {
             const priceMap: Record<
                 string,
-                { price: number; image_url: string; deeplink: string; weight: string }
+                { 
+                    price: number; 
+                    originalPrice: number;
+                    image_url: string; 
+                    deeplink: string; 
+                    weight: string;
+                    discountPercentage?: number;
+                }
             > = {};
 
             item.prices.forEach((priceEntry: PriceOptionAPIResp) => {
                 const platform = priceEntry.source;
+                
+                // Find the cheapest variant for this platform
                 const lowestVariant: PriceOptionVariantsAPIResp | undefined =
                     priceEntry.variants.reduce(
                         (
                             min: PriceOptionVariantsAPIResp | undefined,
                             variant: PriceOptionVariantsAPIResp,
                         ) => {
-                            return !min || variant.discounted_price < min.discounted_price
-                                ? variant
-                                : min;
+                            // Ensure we have valid prices before comparing
+                            const currentPrice = Number(variant.discounted_price) || 0;
+                            const minPrice = min ? Number(min.discounted_price) || 0 : Infinity;
+                            
+                            return !min || currentPrice < minPrice ? variant : min;
                         },
                         undefined,
                     );
 
                 if (lowestVariant) {
+                    const discountedPrice = Number(lowestVariant.discounted_price) || 0;
+                    const originalPrice = Number(lowestVariant.original_price) || 0;
+
+                    // Calculate discount percentage
+                    const discountPercentage = originalPrice > 0 
+                        ? Math.round(((originalPrice - discountedPrice) / originalPrice) * 100)
+                        : 0;
+
+                    // Only update if this is the first entry for this platform or if we found a cheaper variant
                     if (
                         !priceMap[platform] ||
-                        lowestVariant.discounted_price < priceMap[platform].price
+                        discountedPrice < priceMap[platform].price
                     ) {
                         priceMap[platform] = {
-                            price: lowestVariant.discounted_price,
+                            price: discountedPrice,
+                            originalPrice: originalPrice,
                             image_url: lowestVariant.image_url,
                             deeplink: lowestVariant.deeplink,
                             weight: lowestVariant.weight,
+                            discountPercentage: discountPercentage > 0 ? discountPercentage : undefined,
                         };
                     }
                 }
             });
 
             let priceOptionId = 1;
-            const priceOptions: PriceOption[] = Object.entries(priceMap).map(
-                ([platform, value]) => ({
+            const priceOptions: PriceOption[] = Object.entries(priceMap)
+                .map(([platform, value]) => ({
                     id: priceOptionId++,
                     platform,
                     price: value.price,
+                    originalPrice: value.originalPrice,
                     deliveryTime: 0,
                     deeplink: value.deeplink,
                     weight: value.weight,
-                }),
-            );
+                }))
+                .sort((a, b) => (a.price || 0) - (b.price || 0)); // Sort by price, cheapest first
 
+            // Find the overall lowest MRP and best image from all variants
             let mrp = Infinity;
             let imageUrl = '';
+            let bestImageUrl = '';
+            
             item.prices.forEach((priceEntry: PriceOptionAPIResp) => {
                 priceEntry.variants.forEach((variant: PriceOptionVariantsAPIResp) => {
-                    if (variant.original_price < mrp) {
-                        mrp = variant.original_price;
+                    const originalPrice = Number(variant.original_price) || 0;
+                    
+                    if (originalPrice > 0 && originalPrice < mrp) {
+                        mrp = originalPrice;
+                        bestImageUrl = variant.image_url;
+                    }
+                    
+                    // Fallback to any available image
+                    if (!imageUrl && variant.image_url) {
                         imageUrl = variant.image_url;
                     }
                 });
             });
+            
             if (mrp === Infinity) {
                 mrp = 0;
             }
 
             return {
-                id: `${query}-${index + 1}`,
+                id: index + 1,
                 name: item.name,
                 brand: item.brand,
-                weight: priceOptions[0]?.weight,
+                weight: item.weight || priceOptions[0]?.weight || '',
                 mrp,
-                imageUrl,
+                imageUrl: bestImageUrl || imageUrl,
                 isNewPack: false,
                 priceOptions,
             };

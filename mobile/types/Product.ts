@@ -37,7 +37,7 @@ export interface PriceOptionAPIResp {
 
 export interface PriceOptionVariantsAPIResp {
     original_price: number;
-    discounted_price: 33;
+    discounted_price: number;
     deeplink: string;
     image_url: string;
     weight: string;

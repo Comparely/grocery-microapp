@@ -84,27 +84,27 @@ func main() {
 		c.JSON(http.StatusOK, products)
 	})
 
-	router.POST("/suggestions", func(c *gin.Context) {
-		var input struct {
-			Query    string `json:"query"`
-			DeviceID string `json:"deviceId"`
-		}
-		if err := c.ShouldBindJSON(&input); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
-			return
-		}
-		if input.Query == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Query is required"})
-			return
-		}
-		suggestions, err := search.ZeptoSuggestions(appState, input.Query, input.DeviceID)
-		if err != nil {
-			log.Println("Error fetching suggestions:", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch suggestions"})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"suggestions": suggestions})
-	})
+	// router.POST("/suggestions", func(c *gin.Context) {
+	// 	var input struct {
+	// 		Query    string `json:"query"`
+	// 		DeviceID string `json:"deviceId"`
+	// 	}
+	// 	if err := c.ShouldBindJSON(&input); err != nil {
+	// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+	// 		return
+	// 	}
+	// 	if input.Query == "" {
+	// 		c.JSON(http.StatusBadRequest, gin.H{"error": "Query is required"})
+	// 		return
+	// 	}
+	// 	suggestions, err := search.ZeptoSuggestions(appState, input.Query, input.DeviceID)
+	// 	if err != nil {
+	// 		log.Println("Error fetching suggestions:", err)
+	// 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch suggestions"})
+	// 		return
+	// 	}
+	// 	c.JSON(http.StatusOK, gin.H{"suggestions": suggestions})
+	// })
 
 	// Endpoint: Fetch all queries with pending mappings
 	router.GET("/admin/pending-queries", func(c *gin.Context) {

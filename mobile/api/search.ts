@@ -78,26 +78,36 @@ export async function searchProducts(
 
             const priceOptions: PriceOption[] = (item.prices || []).map(
                 (priceInfo: PriceOptionAPIResp, i: number) => {
+                    // Find the cheapest variant for this source
                     const lowest =
                         priceInfo.variants && priceInfo.variants.length > 0
                             ? priceInfo.variants.reduce(
                                   (
                                       prev: PriceOptionVariantsAPIResp,
                                       curr: PriceOptionVariantsAPIResp,
-                                  ) =>
-                                      Number(curr.discounted_price) < Number(prev.discounted_price)
-                                          ? curr
-                                          : prev,
+                                  ) => {
+                                      const prevPrice = Number(prev.discounted_price) || 0;
+                                      const currPrice = Number(curr.discounted_price) || 0;
+                                      
+                                      return currPrice < prevPrice ? curr : prev;
+                                  },
                               )
                             : null;
+                    
+                    const discountedPrice = lowest ? Number(lowest.discounted_price) || 0 : 0;
+                    const originalPrice = lowest ? Number(lowest.original_price) || 0 : 0;
+
                     return {
                         id: i + 1,
                         platform: priceInfo.source,
-                        price: lowest ? Number(lowest.discounted_price) : 0,
+                        price: discountedPrice,
+                        originalPrice: originalPrice,
                         deliveryTime: 0, // Default since we don't have delivery time info
+                        deeplink: lowest?.deeplink || '',
+                        weight: lowest?.weight || '',
                     };
                 },
-            );
+            ).sort((a, b) => (a.price || 0) - (b.price || 0)); // Sort by price, cheapest first
 
             return {
                 id: index + 1, // Simple numeric id; adjust as needed.

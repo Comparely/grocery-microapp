@@ -14,6 +14,14 @@ import numpy as np
 import os
 
 @dataclass
+class WeightInfo:
+    """Weight information parsed from variant weight strings"""
+    value: float = 0.0
+    unit: str = ""
+    weight_type: str = "unknown"  # "weight", "volume", "count", "pack"
+    original: str = ""
+
+@dataclass
 class PendingMappingItem:
     id: str
     name: str
@@ -85,6 +93,166 @@ class TextUtils:
             cleaned_name = cleaned_name[:42] + name_hash
         return f"product:{cleaned_name}:{source}"
 
+class WeightParser:
+    """Enhanced weight parsing utilities for comprehensive weight handling"""
+    
+    @staticmethod
+    def normalize_weight_info(weight_str: str) -> WeightInfo:
+        """Enhanced weight normalization handling all unit types"""
+        if not weight_str:
+            return WeightInfo()
+        
+        weight_str = weight_str.lower().strip()
+        
+        # Try pack parsing first
+        pack_info = WeightParser.parse_pack_weight(weight_str)
+        if pack_info.weight_type != "unknown":
+            return pack_info
+        
+        # Try piece parsing
+        piece_info = WeightParser.parse_piece_weight(weight_str)
+        if piece_info.weight_type != "unknown":
+            return piece_info
+        
+        # Try mass/volume parsing
+        mass_info = WeightParser.parse_mass_weight(weight_str)
+        if mass_info.weight_type != "unknown":
+            return mass_info
+        
+        return WeightInfo(original=weight_str)
+    
+    @staticmethod
+    def parse_pack_weight(weight_str: str) -> WeightInfo:
+        """Parse pack-related weights"""
+        pack_patterns = [
+            r'pack\s+of\s+(\d+)',           # "pack of 3"
+            r'(\d+)\s*pack',                # "3 pack"
+            r'(\d+)\s*packs',               # "3 packs"
+            r'(\d+)\s*pc\s+pack',           # "6 pc pack"
+            r'pack\s*\((\d+)\)',            # "pack (3)"
+            r'(\d+)\s*pieces?\s+pack',      # "3 pieces pack"
+        ]
+        
+        for pattern in pack_patterns:
+            match = re.search(pattern, weight_str)
+            if match:
+                try:
+                    value = float(match.group(1))
+                    return WeightInfo(value=value, unit="pack", weight_type="pack", original=weight_str)
+                except ValueError:
+                    continue
+        
+        return WeightInfo(original=weight_str)
+    
+    @staticmethod
+    def parse_piece_weight(weight_str: str) -> WeightInfo:
+        """Parse piece/count variations"""
+        piece_patterns = [
+            r'(\d+)\s*pieces?',             # "3 pieces"
+            r'(\d+)\s*pcs?',                # "3 pcs"
+            r'(\d+)\s*nos?',                # "3 nos"
+            r'(\d+)\s*units?',              # "3 units"
+            r'(\d+)\s*count',               # "3 count"
+            r'count\s*(\d+)',               # "count 3"
+            r'(\d+)\s*ea',                  # "3 ea"
+            r'(\d+)\s*each',                # "3 each"
+        ]
+        
+        for pattern in piece_patterns:
+            match = re.search(pattern, weight_str)
+            if match:
+                try:
+                    value = float(match.group(1))
+                    return WeightInfo(value=value, unit="pieces", weight_type="count", original=weight_str)
+                except ValueError:
+                    continue
+        
+        return WeightInfo(original=weight_str)
+    
+    @staticmethod
+    def parse_mass_weight(weight_str: str) -> WeightInfo:
+        """Parse mass/volume weights"""
+        patterns = {
+            # Weight units (convert to grams)
+            r'(\d+(?:\.\d+)?)\s*(?:kg|kilograms?|kilog)': (1000, "g", "weight"),
+            r'(\d+(?:\.\d+)?)\s*(?:g|gms?|grams?)': (1, "g", "weight"),
+            r'(\d+(?:\.\d+)?)\s*(?:mg|milligrams?)': (0.001, "g", "weight"),
+            
+            # Volume units (convert to ml)
+            r'(\d+(?:\.\d+)?)\s*(?:l|ltr|liters?|litres?)': (1000, "ml", "volume"),
+            r'(\d+(?:\.\d+)?)\s*(?:ml|milliliters?)': (1, "ml", "volume"),
+        }
+        
+        for pattern, (multiplier, unit, weight_type) in patterns.items():
+            match = re.search(pattern, weight_str)
+            if match:
+                try:
+                    value = float(match.group(1)) * multiplier
+                    return WeightInfo(value=value, unit=unit, weight_type=weight_type, original=weight_str)
+                except ValueError:
+                    continue
+        
+        # Handle combinations like "500g x 3"
+        combo_match = re.search(r'(\d+(?:\.\d+)?)\s*(?:g|ml)\s*x\s*(\d+)', weight_str)
+        if combo_match:
+            try:
+                base_value = float(combo_match.group(1))
+                count = float(combo_match.group(2))
+                total_value = base_value * count
+                unit = "g" if "g" in weight_str else "ml"
+                weight_type = "weight" if unit == "g" else "volume"
+                return WeightInfo(value=total_value, unit=unit, weight_type="weight_pack", original=weight_str)
+            except ValueError:
+                pass
+        
+        return WeightInfo(original=weight_str)
+    
+    @staticmethod
+    def weight_match(weight1: str, weight2: str, tolerance: float = 0.2) -> bool:
+        """Enhanced weight matching with support for all unit types"""
+        if not weight1 or not weight2:
+            return True  # Allow if weight info is missing
+        
+        info1 = WeightParser.normalize_weight_info(weight1)
+        info2 = WeightParser.normalize_weight_info(weight2)
+        
+        # Both must be parseable
+        if info1.weight_type == "unknown" or info2.weight_type == "unknown":
+            return True  # Allow if can't parse
+        
+        # Must be same type
+        if info1.weight_type != info2.weight_type:
+            return False
+        
+        # Handle different matching logic based on type
+        if info1.weight_type in ["count", "pack"]:
+            # Exact match for count/pieces/packs
+            return info1.value == info2.value
+        elif info1.weight_type in ["weight", "volume", "weight_pack"]:
+            # Tolerance-based matching for weight/volume
+            if info1.value == 0 or info2.value == 0:
+                return False
+            
+            diff_ratio = abs(info1.value - info2.value) / max(info1.value, info2.value)
+            return diff_ratio <= tolerance
+        
+        return False
+    
+    @staticmethod
+    def extract_variant_weights(product: dict) -> List[str]:
+        """Extract all variant weights from a product"""
+        weights = []
+        
+        if 'prices' in product:
+            for price in product['prices']:
+                if 'variants' in price:
+                    for variant in price['variants']:
+                        weight = variant.get('weight', '')
+                        if weight:
+                            weights.append(weight)
+        
+        return weights
+
 class EnhancedSearchIntelligence:
     """Improved search intelligence with product-level caching and cross-query reusability"""
     
@@ -142,36 +310,75 @@ class EnhancedSearchIntelligence:
         return f"{cleaned_name} {product['mrp']}"
 
     # ------------------------- Enhanced Matching Helpers ------------------------- #
-    def mrp_match(self, a: float, b: float, error: float = 4) -> bool:
-        """Enhanced MRP matching with better tolerance handling"""
-        if abs(a - b) <= error:
+    def mrp_match(self, mrp1: float, mrp2: float, tolerance: float = 0.15) -> bool:
+        """Enhanced MRP matching with configurable tolerance"""
+        if mrp1 <= 0 or mrp2 <= 0:
+            return True  # Allow if MRP info is missing/invalid
+        
+        # Exact match
+        if mrp1 == mrp2:
             return True
-        smaller, larger = min(a, b), max(a, b)
-        if smaller == 0:
-            return False
-        candidate_multiple = round(larger / smaller)
-        return abs(candidate_multiple * smaller - larger) <= error
+        
+        # Percentage difference
+        diff = abs(mrp1 - mrp2)
+        avg_mrp = (mrp1 + mrp2) / 2
+        
+        return (diff / avg_mrp) <= tolerance
 
-    def fuzzy_brand_match(self, brand1: str, brand2: str, threshold: int = 70) -> bool:
-        """Enhanced brand matching with better normalization"""
+    def fuzzy_brand_match(self, brand1: str, brand2: str, threshold: int = 80) -> bool:
+        """Enhanced fuzzy brand matching with normalization"""
         if not brand1 or not brand2:
-            return False
+            return True  # Allow if brand info is missing
         
         # Normalize brands
-        b1 = TextUtils.normalize_text(brand1)
-        b2 = TextUtils.normalize_text(brand2)
+        brand1 = self._normalize_brand(brand1)
+        brand2 = self._normalize_brand(brand2)
         
-        # Check exact match first
-        if b1 == b2:
+        # Exact match after normalization
+        if brand1 == brand2:
             return True
-            
+        
         # Check if one brand is contained in another (for cases like "Amul" vs "Amul Dairy")
-        if b1 in b2 or b2 in b1:
+        if brand1 in brand2 or brand2 in brand1:
             return True
             
         # Fuzzy match
-        score = fuzz.token_set_ratio(b1, b2)
+        score = fuzz.token_set_ratio(brand1, brand2)
         return score >= threshold
+    
+    def _normalize_brand(self, brand: str) -> str:
+        """Normalize brand name for better matching"""
+        if not brand:
+            return ""
+        
+        brand = brand.lower().strip()
+        
+        # Remove common suffixes/prefixes
+        brand = re.sub(r'\b(pvt\.?|ltd\.?|limited|private|company|co\.?|inc\.?)\b', '', brand)
+        
+        # Remove special characters
+        brand = re.sub(r'[^\w\s]', '', brand)
+        
+        # Remove extra whitespace
+        brand = re.sub(r'\s+', ' ', brand).strip()
+        
+        return brand
+
+    def variant_weights_compatible(self, prod1: dict, prod2: dict, tolerance: float = 0.2) -> bool:
+        """Check if variants from two products have compatible weights"""
+        prod1_weights = WeightParser.extract_variant_weights(prod1)
+        prod2_weights = WeightParser.extract_variant_weights(prod2)
+        
+        if not prod1_weights or not prod2_weights:
+            return True  # Allow if no weight info available
+        
+        # Check if any variant weights are compatible
+        for w1 in prod1_weights:
+            for w2 in prod2_weights:
+                if WeightParser.weight_match(w1, w2, tolerance):
+                    return True
+        
+        return False
 
     # ------------------------- Product-Level Caching ------------------------- #
     def store_product_mapping(self, product_item: dict, mapped_items: List[dict], query: str):
@@ -319,6 +526,10 @@ class EnhancedSearchIntelligence:
                     continue
                     
                 if not self.mrp_match(prod1['mrp'], prod2['mrp']):
+                    continue
+                
+                # CHECK VARIANT WEIGHT COMPATIBILITY
+                if not self.variant_weights_compatible(prod1, prod2):
                     continue
                 
                 # Calculate semantic similarity

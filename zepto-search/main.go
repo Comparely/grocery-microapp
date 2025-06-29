@@ -116,7 +116,6 @@ func fetchZeptoProductsV2(query, lat, lng string) (map[string]interface{}, error
 		emulation.SetGeolocationOverride().WithAccuracy(100).WithLatitude(latF).WithLongitude(lngF),
 		chromedp.Navigate(fmt.Sprintf("https://www.zeptonow.com/search?query=%s", query)),
 		chromedp.Sleep(2*time.Second), // wait for JS
-		chromedp.FullScreenshot(&buf, 90),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			select {
 			case b := <-respCh:
@@ -168,7 +167,10 @@ func DisableImageLoad(ctx context.Context) func(event interface{}) {
 				c := chromedp.FromContext(ctx)
 				ctx := cdp.WithExecutor(ctx, c.Target)
 
-				if ev.ResourceType == network.ResourceTypeImage {
+				if ev.ResourceType == network.ResourceTypeImage ||
+					ev.ResourceType == network.ResourceTypeFont ||
+					ev.ResourceType == network.ResourceTypeMedia ||
+					ev.ResourceType == network.ResourceTypeStylesheet {
 					fetch.FailRequest(ev.RequestID, network.ErrorReasonBlockedByClient).Do(ctx)
 				} else {
 					fetch.ContinueRequest(ev.RequestID).Do(ctx)
