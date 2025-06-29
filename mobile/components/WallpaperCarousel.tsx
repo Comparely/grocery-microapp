@@ -1,13 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Dimensions, Image, StyleSheet, Platform } from 'react-native';
+import { View, useWindowDimensions, Image, StyleSheet, Platform } from 'react-native';
 import Carousel from 'react-native-reanimated-carousel';
-const { width } = Dimensions.get('window');
 
-// Safari detection for web compatibility
-const isSafari = Platform.OS === 'web' && 
-    (typeof navigator !== 'undefined' && 
-     (/^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
-      /iPad|iPhone|iPod/.test(navigator.userAgent)));
+const MAX_DESIGN_WIDTH = 768; // ← matches your global CSS rule
 
 const carouselData = [
     { id: '1', image: require('@/assets/images/crousel/i1.png') },
@@ -16,81 +11,81 @@ const carouselData = [
     { id: '4', image: require('@/assets/images/crousel/i2.png') },
 ];
 
-const WallpaperCarousel = () => {
-    const [activeIndex, setActiveIndex] = useState(0);
+const isSafari =
+    Platform.OS === 'web' &&
+    typeof navigator !== 'undefined' &&
+    (/^((?!chrome|android).)*safari/i.test(navigator.userAgent) ||
+        /iPad|iPhone|iPod/.test(navigator.userAgent));
 
-    // Safari compatibility logging
+export default function WallpaperCarousel() {
+    const { width: windowWidth } = useWindowDimensions();
+    const [active, setActive] = useState(0);
+    const carouselWidth =
+        Platform.OS === 'web'
+            ? Math.min(windowWidth, MAX_DESIGN_WIDTH) // never exceed 768
+            : windowWidth;
+    const carouselHeight = Platform.OS === 'web' ? carouselWidth / 2 : 200;
     useEffect(() => {
         if (isSafari && Platform.OS === 'web') {
-            console.log('Safari detected in WallpaperCarousel - using Safari-optimized rendering');
+            console.log('Safari detected in WallpaperCarousel – using Safari-optimised rendering');
         }
     }, []);
 
     return (
-        <View style={styles.container}>
+        <View style={styles.wrapper}>
             <Carousel
-                width={width}
-                height={200}
+                width={carouselWidth}
+                height={carouselHeight}
                 data={carouselData}
-                autoPlay={!isSafari} // Disable autoplay in Safari to prevent rendering issues
+                autoPlay={!isSafari}
                 loop
-                scrollAnimationDuration={isSafari ? 500 : 1000} // Faster animation for Safari
+                scrollAnimationDuration={isSafari ? 500 : 1000}
                 autoPlayInterval={3000}
-                pagingEnabled={true}
-                snapEnabled={true}
-                onSnapToItem={(index) => setActiveIndex(index)}
+                pagingEnabled
+                snapEnabled
+                onSnapToItem={setActive}
                 renderItem={({ item, index }) => (
                     <View style={styles.imageContainer}>
-                        <Image 
-                            source={item.image} 
-                            style={styles.image} 
-                            resizeMode="cover"
-                            onError={(error) => {
-                                console.warn('Safari carousel image load error:', error);
-                            }}
-                            onLoad={() => {
-                                console.log(`Safari: Carousel image ${index} loaded successfully`);
-                            }}
-                            // Safari-specific props
-                            {...(isSafari && {
-                                fadeDuration: 0,
-                            })}
-                            // Unique key for Safari to prevent caching issues
-                            key={`safari-carousel-${index}-${item.id}`}
+                        <Image
+                            source={item.image}
+                            style={styles.image}
+                            onError={(e) => console.warn('image load error', e)}
+                            {...(isSafari && { fadeDuration: 0 })}
+                            key={`safari-${index}-${item.id}`}
                         />
                     </View>
                 )}
             />
 
-            <View style={styles.dotsContainer}>
-                {carouselData.map((_, index) => (
+            <View style={styles.dots}>
+                {carouselData.map((_, i) => (
                     <View
-                        key={index}
-                        style={[
-                            styles.dot,
-                            activeIndex === index ? styles.activeDot : styles.inactiveDot,
-                        ]}
+                        key={i}
+                        style={[styles.dot, active === i ? styles.dotActive : styles.dotInactive]}
                     />
                 ))}
             </View>
         </View>
     );
-};
+}
 
 const styles = StyleSheet.create({
-    container: {
+    wrapper: {
         marginTop: 8,
-        paddingHorizontal: 10,
+        width: '100%',
+        ...(Platform.OS === 'web' && {
+            maxWidth: MAX_DESIGN_WIDTH, // <- exactly the same cap as body
+            alignSelf: 'center',
+        }),
     },
     imageContainer: {
-        width: width - 20,
-        height: 200,
-        borderRadius: 12,
+        width: '100%',
+        height: '100%',
+        borderRadius: 13,
+        padding: 4,
         overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#f0f0f0',
-        // Safari-specific optimizations
         ...(isSafari && {
             willChange: 'transform',
             backfaceVisibility: 'hidden',
@@ -99,7 +94,8 @@ const styles = StyleSheet.create({
     image: {
         width: '100%',
         height: '100%',
-        borderRadius: 12,
+        resizeMode: 'contain',
+        ...(Platform.OS === 'web' && { objectFit: 'cover' }),
         ...(Platform.OS === 'ios' && {
             transform: [{ scale: 1 }], // Force hardware acceleration on iOS
         }),
@@ -109,10 +105,10 @@ const styles = StyleSheet.create({
             imageRendering: 'auto',
         }),
     },
-    dotsContainer: {
+    dots: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 10,
+        marginTop: 2,
     },
     dot: {
         width: 8,
@@ -120,12 +116,6 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         marginHorizontal: 4,
     },
-    activeDot: {
-        backgroundColor: '#333',
-    },
-    inactiveDot: {
-        backgroundColor: '#bbb',
-    },
+    dotActive: { backgroundColor: '#333' },
+    dotInactive: { backgroundColor: '#bbb' },
 });
-
-export default WallpaperCarousel;

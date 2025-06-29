@@ -92,7 +92,15 @@ const DeliveryBadges = () => {
                         <Text style={styles.bolt}>
                             <Feather name="zap" size={16} color="#181b19" />
                         </Text>
-                        <Text style={styles.time}>{service.time}</Text>
+                        <Text
+                            style={[
+                                styles.time,
+                                (service.name === 'zepto' || service.name === 'instamart') && {
+                                    color: 'white',
+                                },
+                            ]}>
+                            {service.time}
+                        </Text>
                         <View style={styles.logoBadge}>
                             <Image
                                 source={service.logo}
