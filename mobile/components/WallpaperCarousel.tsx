@@ -119,3 +119,5 @@ const styles = StyleSheet.create({
     dotActive: { backgroundColor: '#333' },
     dotInactive: { backgroundColor: '#bbb' },
 });
+
+export default WallpaperCarousel;
