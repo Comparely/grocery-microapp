@@ -1,568 +1,263 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, TouchableOpacity, Linking } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import QuantitySelector from './QuantitySelector';
-import { useCart } from '@/context/CartContext';
-import { useWebViews } from '@/context/WebViewContext';
-import { injectSingleProductScript_zepto } from '@/script/injectionScript_zepto';
-import { getNavigationScript, injectSingleProductScript } from '@/script/injectionScript_blinkit';
+import React from 'react';
+import {
+  View,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+  Linking,
+  Dimensions,
+} from 'react-native';
 import { useRouter } from 'expo-router';
+import { Text } from '@/ui/Text';
+import { Ionicons } from '@expo/vector-icons';
+import { Session } from '@/types/Session';
+import { Product } from '@/types/Product';
+import { useSession } from '@/context/SessionContext';
 
-interface PriceOption {
-    id?: number;
-    platform?: string;
-    price?: number;
-    originalPrice?: number;
-    deliveryTime?: number;
-    deeplink?: string;
-    weight?: string;
-}
-
-interface Product {
-    id: number;
-    name: string;
-    brand: string;
-    weight: string;
-    mrp: number;
-    imageUrl: string;
-    isNewPack?: boolean;
-    priceOptions: PriceOption[];
-}
+const { width } = Dimensions.get('window');
+const CARD_WIDTH = (width - 12 * 2 - 12) / 2;
 
 interface FeaturedProductsSectionProps {
-    featuredProducts: Product[];
+  featuredProducts: Product[];
 }
 
 export default function FeaturedProductsSection({
-    featuredProducts,
+  featuredProducts
 }: FeaturedProductsSectionProps) {
-    // const [featuredProducts, setFeaturedProducts] = useState<Product[]>([
-    //     {
-    //         id: 1,
-    //         name: 'The Health Factory Zero Multigrain Bread',
-    //         brand: 'The Health Factory',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.grofers.com/cdn-cgi/image/f=auto,fit=scale-down,q=85,metadata=none,w=120,h=120/app/assets/products/sliding_images/jpeg/34a57eca-4bda-47c3-838b-5fe0d348db35.jpg?ts=1724241358',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    //     {
-    //         id: 2,
-    //         name: 'Potato (Aloo)',
-    //         brand: 'Local',
-    //         weight: '375 g',
-    //         mrp: 85,
-    //         imageUrl:
-    //             'https://cdn.zeptonow.com/production/ik-seo/tr:w-1200,ar-1200-1200,pr-true,f-auto,q-80/cms/product_variant/654e3c68-865e-42b0-ae12-8467c583cfaf/Amul-Taaza-Homogenised-Toned-Milk-Tetra-Pack-.jpeg',
-    //         priceOptions: [
-    //             { platform: 'blinkit', price: 65, originalPrice: 85 },
-    //             { platform: 'zepto', price: 68, originalPrice: 85 },
-    //         ],
-    //     },
-    // ]);
+  const router = useRouter();
+  const session = useSession();
 
-    const getPlatformLogo = (platform?: string) => {
-        switch (platform) {
-            case 'blinkit':
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return require('@/assets/images/blinkitv2.png');
-            case 'zepto':
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return require('@/assets/images/zeptov2.png');
-            case 'instamart':
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return require('@/assets/images/instamartv3.png');
-            default:
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-                return require('@/assets/images/bbv3.png');
-        }
+  const getPlatformLogo = (platform?: string) => {
+    switch (platform?.toLowerCase()) {
+      case 'blinkit':
+        return require('@/assets/images/blinkitv2.png');
+      case 'zepto':
+        return require('@/assets/images/zeptov2.png');
+      case 'instamart':
+        return require('@/assets/images/instamartv3.png');
+      default:
+        return require('@/assets/images/bbv3.png');
+    }
+  };
+
+  const getPlatformBg = (platform?: string) => {
+    switch (platform?.toLowerCase()) {
+      case 'blinkit': return '#E6FFF4';
+      case 'zepto': return '#F3E8FF';
+      case 'instamart': return '#FFF4E6';
+      default: return '#F8F9FA';
+    }
+  };
+
+  const calculateSavings = (mrp: number, price?: number) =>
+    mrp && price ? mrp - price : 0;
+
+  const renderCard = ({ item }: { item: Product }) => {
+    const sorted = [...item.priceOptions]
+      .filter(o => o.price != null)
+      .sort((a, b) => (a.price! - b.price!));
+    const primary = sorted[0];
+    const others = sorted.slice(1, 4);
+    const platform = primary?.platform;
+
+    const onCardPress = () => {
+      router.push({ pathname: '/product', params: { product: JSON.stringify(item) } });
     };
-
-    const router = useRouter();
-
-    const renderProductCard = ({ item }: { item: Product }) => {
-        const sortedOptions = [...item.priceOptions].sort(
-            (a, b) => (a.price ?? Infinity) - (b.price ?? Infinity),
-        );
-        const [bestOption, ...otherOptions] = sortedOptions;
-
-        const handleCardPress = () => {
-            router.push({
-                pathname: '/product',
-                params: { product: JSON.stringify(item) },
-            });
-        };
-
-        const handleDeepLink = async (url: string) => {
-            try {
-                const supported = await Linking.canOpenURL(url);
-                if (supported) await Linking.openURL(url);
-                else console.log("Can't open URL: " + url);
-            } catch (err) {
-                console.log(err);
-            }
-        };
-
-        return (
-            <TouchableOpacity onPress={handleCardPress} style={styles.card}>
-                {/* <TouchableOpacity style={styles.heartIcon}>
-                    <Ionicons name="heart-outline" size={20} color="#333" />
-                </TouchableOpacity> */}
-
-                <Image source={{ uri: item.imageUrl }} style={styles.image} />
-                <Text style={styles.name} numberOfLines={2}>
-                    {item.name}
-                </Text>
-                <Text style={styles.weight}>{item.weight}</Text>
-                {bestOption && (
-                    <TouchableOpacity
-                        // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                        onPress={() => handleDeepLink(bestOption.deeplink ?? '')}
-                        style={styles.bestPriceBox}>
-                        <View style={styles.bestPriceLeft}>
-                            <Image
-                                source={getPlatformLogo(bestOption.platform)}
-                                style={styles.platformIcon}
-                            />
-                            <Text style={styles.price}>
-                                {'₹'}
-                                {bestOption.price}
-                            </Text>
-                        </View>
-                        {/* <QuantitySelector quantity={quantity} onChange={handleChangeQuantity} /> */}
-                    </TouchableOpacity>
-                )}
-                <View style={styles.divider} />
-                {/* Other platform prices below */}
-                {otherOptions.length > 0 && (
-                    <View style={styles.otherPriceContainer}>
-                        {otherOptions.map((option, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={styles.otherPriceRow}
-                                // eslint-disable-next-line @typescript-eslint/no-misused-promises
-                                onPress={() => handleDeepLink(option.deeplink ?? '')}>
-                                <View style={styles.platformPill}>
-                                    <Image
-                                        source={getPlatformLogo(option.platform)}
-                                        style={styles.platformIconSmall}
-                                    />
-                                </View>
-                                <Text style={styles.price}>₹{option.price}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
-            </TouchableOpacity>
-        );
+    const onDeepLink = async (url?: string) => {
+      if (!url) return;
+      try {
+        const ok = await Linking.canOpenURL(url);
+        if (ok) await Linking.openURL(url);
+      } catch {}
     };
 
     return (
-        <View style={{ marginVertical: 16, paddingHorizontal: 12 }}>
-            <FlatList
-                data={featuredProducts}
-                keyExtractor={(item) => item.id.toString()}
-                numColumns={2}
-                columnWrapperStyle={{ justifyContent: 'space-between' }}
-                renderItem={renderProductCard}
-                contentContainerStyle={{ gap: 12 }}
-            />
+      <TouchableOpacity style={styles.card} onPress={onCardPress} activeOpacity={0.9}>
+        {/* <TouchableOpacity style={styles.heartIcon}>
+          <Ionicons name="heart-outline" size={18} color="#666" />
+        </TouchableOpacity> */}
+
+        <Image source={{ uri: item.imageUrl }} style={styles.image} />
+        <View style={styles.info}>
+          <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+          <Text style={styles.brand}>{item.brand}</Text>
+          {item.mrp != null && (
+            <Text style={styles.mrp}>MRP ₹{item.mrp}</Text>
+          )}
         </View>
+
+        {primary && (
+          <TouchableOpacity
+            style={[styles.primaryOption, { backgroundColor: getPlatformBg(platform) }]}
+            onPress={() => onDeepLink(primary.deeplink)}
+          >
+            <View style={styles.primaryRow}>
+              <Image source={getPlatformLogo(platform)} style={styles.platformLogo} />
+              <View style={styles.primaryPriceCol}>
+                <Text style={styles.primaryPrice}>₹{primary.price}</Text>
+                <Text style={styles.primaryWeight}>{item.weight}</Text>
+              </View>
+            </View>
+            <Text style={styles.primaryEta}>{primary.deliveryTime || '10 mins'}</Text>
+          </TouchableOpacity>
+        )}
+
+        {others.length > 0 && (
+          <>
+            <View style={styles.divider} />
+            {others.map((opt, i) => {
+              const plat = opt.platform?.toLowerCase() || '';
+              return (
+                <TouchableOpacity
+                  key={`${plat}-${i}`}
+                  onPress={() => onDeepLink(opt.deeplink || '')}
+                  style={styles.comparisonOption}
+                >
+                  <View style={styles.comparisonOptionCol}>
+                    <Image
+                      source={getPlatformLogo(plat)}
+                      style={styles.comparisonLogo}
+                    />
+                    <Text style={styles.comparisonOptionColSubtitle}>{opt.weight}</Text>
+                  </View>
+                  <View style={styles.comparisonOptionCol}>
+                    <Text style={styles.comparisonPrice}>₹{opt.price}</Text>
+                    <Text style={styles.comparisonOptionColSubtitle}>
+                      {session.session?.marketplaceAttributes?.[`${plat}StoreAttributes`]?.eta || '10 mins'}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              );
+            })}
+          </>
+        )}
+      </TouchableOpacity>
     );
+  };
+
+  return (
+    <FlatList
+      data={featuredProducts}
+      keyExtractor={p => p.id.toString()}
+      numColumns={2}
+      columnWrapperStyle={{ justifyContent: 'space-between' }}
+      renderItem={renderCard}
+      contentContainerStyle={{ padding: 12, paddingBottom: 24, gap: 12 }}
+    />
+  );
 }
 
 const styles = StyleSheet.create({
-    card: {
-        width: '48%',
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 10,
-        padding: 10,
-        backgroundColor: '#fff',
-        position: 'relative',
-    },
-    image: {
-        width: '100%',
-        height: 100,
-        resizeMode: 'contain',
-    },
-    otherPriceContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
-    },
-
-    otherPriceRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        width: '48%', // Two items per row
-    },
-
-    platformPill: {
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: 3,
-    },
-    platformIconSmall: {
-        width: 18,
-        height: 18,
-        resizeMode: 'contain',
-    },
-
-    name: {
-        fontWeight: '510',
-        marginTop: 3,
-        fontSize: 14,
-        lineHeight: 27,
-        height: 54, // Enforce 2 lines space (2 * lineHeight)
-    },
-
-    weight: {
-        marginTop: 5,
-        fontWeight: '400',
-        color: '#555',
-        fontSize: 13,
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#e6e6e6',
-        marginVertical: 8,
-        marginHorizontal: -10, // cancel out the card's horizontal padding
-    },
-
-    priceRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 4,
-        gap: 4,
-    },
-    platformIcon: {
-        width: 30,
-        height: 25,
-        resizeMode: 'contain',
-    },
-    price: {
-        fontWeight: 'bold',
-        fontSize: 14,
-        color: '#000',
-    },
-    originalPrice: {
-        textDecorationLine: 'line-through',
-        color: '#888',
-        fontSize: 12,
-    },
-    bestPriceBox: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        backgroundColor: '#fef8ef',
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 6,
-        marginTop: 6,
-    },
-
-    bestPriceLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-    },
-
-    addButtonCompact: {
-        backgroundColor: 'green',
-        borderRadius: 12,
-        width: 24,
-        height: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    addButton: {
-        position: 'absolute',
-        right: 10,
-        bottom: 10,
-        backgroundColor: '#0a0',
-        borderRadius: 15,
-        width: 28,
-        height: 28,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    addText: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    heartIcon: {
-        position: 'absolute',
-        top: 10,
-        right: 10,
-        zIndex: 1,
-    },
+  card: {
+    width: CARD_WIDTH,
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
+    position: 'relative',
+  },
+  heartIcon: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+    padding: 4,
+  },
+  image: {
+    width: '100%',
+    height: 100,
+    resizeMode: 'contain',
+    marginBottom: 8,
+  },
+  info: {
+    marginBottom: 8,
+  },
+  name: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#1F2937',
+    lineHeight: 18,
+    marginBottom: 2,
+  },
+  brand: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginBottom: 2,
+  },
+  mrp: {
+    fontSize: 10,
+    color: '#9CA3AF',
+    textDecorationLine: 'line-through',
+  },
+  primaryOption: {
+    borderRadius: 12,
+    padding: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  primaryRow: { flexDirection: 'row', alignItems: 'center' },
+  platformLogo: { width: 32, height: 24, resizeMode: 'contain', marginRight: 8 },
+  primaryPriceCol: { flex: 1 },
+  primaryPrice: { fontSize: 16, fontWeight: '700', color: '#1F2937' },
+  primaryWeight: { fontSize: 12, color: '#6B7280' },
+  primaryEta: { fontSize: 10, color: '#6B7280' },
+  otherContainer: { 
+    flexDirection: 'column',
+    marginBottom: 8,
+  },
+  otherRow: { 
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  otherLogo: { width: 24, height: 18, resizeMode: 'contain', marginRight: 4 },
+  otherPrice: { fontSize: 12, fontWeight: '600', color: '#374151', marginRight: 4 },
+  otherEta: { fontSize: 10, color: '#6B7280' },
+  bottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  savings: { fontSize: 12, fontWeight: '600', color: '#059669' },
+  addBtn: {
+    backgroundColor: '#059669',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  addTxt: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: 8,
+  },
+  comparisonOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  comparisonLogo: {
+    width: 32,
+    height: 24,
+    resizeMode: 'contain',
+    marginBottom: 4,
+  },
+  comparisonPrice: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  comparisonOptionColSubtitle: {
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  comparisonOptionCol: {
+    flexDirection: 'column',
+  },
 });

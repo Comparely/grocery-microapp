@@ -3,6 +3,7 @@ type StoreAttrs = {
 };
 
 type marketplaceAttributes = {
+    [key: string]: any;
     blinkitStoreAttributes: StoreAttrs;
     zeptoStoreAttributes: StoreAttrs;
     instamartStoreAttributes: StoreAttrs;

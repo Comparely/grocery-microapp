@@ -4,7 +4,6 @@ import ComparingScreen from './waitingscreen';
 import type { Product } from '../types/Product';
 import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
-import { ProductCard } from './ProductCard';
 import FeaturedProductsSection from './FeatureProducts';
 
 interface ProductListProps {
