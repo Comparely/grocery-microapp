@@ -16,6 +16,7 @@ const DeliveryBadges = () => {
             color: '#FECF2D',
             logo: require('../assets/images/blinkitv3.png'),
             fallbackEta: '6 mins',
+            textColor: "#000"
         },
         {
             name: 'instamart',
@@ -23,6 +24,7 @@ const DeliveryBadges = () => {
             color: '#F95C0B',
             logo: require('../assets/images/instamartv3.png'),
             fallbackEta: '8 mins',
+            textColor: "#fff"
         },
         {
             name: 'zepto',
@@ -30,6 +32,7 @@ const DeliveryBadges = () => {
             color: '#8C38D6',
             logo: require('../assets/images/zeptov3.png'),
             fallbackEta: '13 mins',
+            textColor: "#fff"
         },
         {
             name: 'bigbasket',
@@ -37,6 +40,7 @@ const DeliveryBadges = () => {
             color: '#A8D34F',
             logo: require('../assets/images/bbv3.png'),
             fallbackEta: '12 mins',
+            textColor: "#000"
         },
     ];
 
@@ -55,6 +59,7 @@ const DeliveryBadges = () => {
             time: eta,
             color: svc.color,
             logo: svc.logo,
+            textColor: svc.textColor
         };
     });
 
@@ -92,7 +97,8 @@ const DeliveryBadges = () => {
                         <Text style={styles.bolt}>
                             <Feather name="zap" size={16} color="#181b19" />
                         </Text>
-                        <Text style={styles.time}>{service.time}</Text>
+                        
+                        <Text style={[{color: service.textColor}, styles.time]}>{service.time}</Text>
                         <View style={styles.logoBadge}>
                             <Image
                                 source={service.logo}
@@ -137,7 +143,6 @@ const styles = StyleSheet.create({
     time: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#000',
         paddingRight: 40,
     },
     logoBadge: {

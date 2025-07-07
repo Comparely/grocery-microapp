@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   fullWidthContainer: {
-    width: width * 0.6,
+    width: 300,
     alignSelf: 'center',
   },
   homeCard: {

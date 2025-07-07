@@ -16,7 +16,7 @@ import { Product } from '@/types/Product';
 import { useSession } from '@/context/SessionContext';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 12 * 2 - 12) / 2;
+const CARD_WIDTH = '49%';
 
 interface FeaturedProductsSectionProps {
   featuredProducts: Product[];
