@@ -23,7 +23,7 @@ interface FeaturedProductsSectionProps {
 }
 
 export default function FeaturedProductsSection({
-  featuredProducts
+  featuredProducts,
 }: FeaturedProductsSectionProps) {
   const router = useRouter();
   const session = useSession();
@@ -43,15 +43,16 @@ export default function FeaturedProductsSection({
 
   const getPlatformBg = (platform?: string) => {
     switch (platform?.toLowerCase()) {
-      case 'blinkit': return '#E6FFF4';
-      case 'zepto': return '#F3E8FF';
-      case 'instamart': return '#FFF4E6';
-      default: return '#F8F9FA';
+      case 'blinkit':
+        return '#E6FFF4';
+      case 'zepto':
+        return '#F3E8FF';
+      case 'instamart':
+        return '#FFF4E6';
+      default:
+        return '#F8F9FA';
     }
   };
-
-  const calculateSavings = (mrp: number, price?: number) =>
-    mrp && price ? mrp - price : 0;
 
   const renderCard = ({ item }: { item: Product }) => {
     const sorted = [...item.priceOptions]
@@ -64,6 +65,7 @@ export default function FeaturedProductsSection({
     const onCardPress = () => {
       router.push({ pathname: '/product', params: { product: JSON.stringify(item) } });
     };
+
     const onDeepLink = async (url?: string) => {
       if (!url) return;
       try {
@@ -74,17 +76,13 @@ export default function FeaturedProductsSection({
 
     return (
       <TouchableOpacity style={styles.card} onPress={onCardPress} activeOpacity={0.9}>
-        {/* <TouchableOpacity style={styles.heartIcon}>
-          <Ionicons name="heart-outline" size={18} color="#666" />
-        </TouchableOpacity> */}
-
         <Image source={{ uri: item.imageUrl }} style={styles.image} />
         <View style={styles.info}>
-          <Text style={styles.name} numberOfLines={2}>{item.name}</Text>
+          <Text style={styles.name} numberOfLines={2}>
+            {item.name}
+          </Text>
           <Text style={styles.brand}>{item.brand}</Text>
-          {item.mrp != null && (
-            <Text style={styles.mrp}>MRP ₹{item.mrp}</Text>
-          )}
+          {item.mrp != null && <Text style={styles.mrp}>MRP ₹{item.mrp}</Text>}
         </View>
 
         {primary && (
@@ -99,7 +97,9 @@ export default function FeaturedProductsSection({
                 <Text style={styles.primaryWeight}>{item.weight}</Text>
               </View>
             </View>
-            <Text style={styles.primaryEta}>{primary.deliveryTime || '10 mins'}</Text>
+            <Text style={styles.primaryEta} numberOfLines={1} ellipsizeMode="tail">
+              {primary.deliveryTime || '10 mins'}
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -119,12 +119,18 @@ export default function FeaturedProductsSection({
                       source={getPlatformLogo(plat)}
                       style={styles.comparisonLogo}
                     />
-                    <Text style={styles.comparisonOptionColSubtitle}>{opt.weight}</Text>
+                    <Text style={styles.comparisonOptionColSubtitle}>
+                      {opt.weight}
+                    </Text>
                   </View>
                   <View style={styles.comparisonOptionCol}>
                     <Text style={styles.comparisonPrice}>₹{opt.price}</Text>
                     <Text style={styles.comparisonOptionColSubtitle}>
-                      {session.session?.marketplaceAttributes?.[`${plat}StoreAttributes`]?.eta || '10 mins'}
+                      {
+                        session.session?.marketplaceAttributes?.[
+                          `${plat}StoreAttributes`
+                        ]?.eta || '10 mins'
+                      }
                     </Text>
                   </View>
                 </TouchableOpacity>
@@ -163,13 +169,6 @@ const styles = StyleSheet.create({
     elevation: 3,
     position: 'relative',
   },
-  heartIcon: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    zIndex: 1,
-    padding: 4,
-  },
   image: {
     width: '100%',
     height: 100,
@@ -198,39 +197,43 @@ const styles = StyleSheet.create({
   },
   primaryOption: {
     borderRadius: 12,
-    padding: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  primaryRow: { flexDirection: 'row', alignItems: 'center' },
-  platformLogo: { width: 32, height: 24, resizeMode: 'contain', marginRight: 8 },
-  primaryPriceCol: { flex: 1 },
-  primaryPrice: { fontSize: 16, fontWeight: '700', color: '#1F2937' },
-  primaryWeight: { fontSize: 12, color: '#6B7280' },
-  primaryEta: { fontSize: 10, color: '#6B7280' },
-  otherContainer: { 
-    flexDirection: 'column',
-    marginBottom: 8,
-  },
-  otherRow: { 
+  primaryRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    flexShrink: 1,
   },
-  otherLogo: { width: 24, height: 18, resizeMode: 'contain', marginRight: 4 },
-  otherPrice: { fontSize: 12, fontWeight: '600', color: '#374151', marginRight: 4 },
-  otherEta: { fontSize: 10, color: '#6B7280' },
-  bottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  savings: { fontSize: 12, fontWeight: '600', color: '#059669' },
-  addBtn: {
-    backgroundColor: '#059669',
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+  platformLogo: {
+    width: 28,
+    height: 20,
+    resizeMode: 'contain',
+    marginRight: 6,
   },
-  addTxt: { color: '#fff', fontSize: 12, fontWeight: '600' },
+  primaryPriceCol: {
+    flexShrink: 1,
+    maxWidth: 100,
+  },
+  primaryPrice: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#1F2937',
+  },
+  primaryWeight: {
+    fontSize: 11,
+    color: '#6B7280',
+  },
+  primaryEta: {
+    fontSize: 10,
+    color: '#6B7280',
+    marginLeft: 8,
+    flexShrink: 0,
+  },
   divider: {
     height: 1,
     backgroundColor: '#E5E7EB',
