@@ -100,10 +100,12 @@ export const fetchHomePageDatav2 = async (lat?: number, lng?: number): Promise<P
 
         const allResults: Product[] = [];
 
-        for (const query of queries) {
-            const results = await fetchAndConvertProducts(query, lat, lng);
-            allResults.push(...results.slice(0, 2));
-        }
+        await Promise.all(
+            queries.map(async query => {
+                const results = await fetchAndConvertProducts(query, lat, lng);
+                allResults.push(...results.slice(0, 2));
+            })
+        );
 
         const shuffled = shuffleArray(allResults);
 
