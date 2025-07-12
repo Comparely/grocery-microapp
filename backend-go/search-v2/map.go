@@ -17,7 +17,7 @@ func mergeProducts(rawProducts []RawProduct) []Product {
 	// 1) cluster by “similar” name
 	groups := [][]RawProduct{}
 	labels := []string{}
-	const threshold = 0.2
+	const threshold = 0.4
 
 	for _, rp := range rawProducts {
 		matched := false
