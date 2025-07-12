@@ -35,6 +35,17 @@ func mergeProducts(rawProducts []RawProduct) []Product {
 	}
 
 	// 2) collapse clusters into Products
+	products := collapseClusters(groups)
+
+	// 3) sort by how many platforms each product appears on (desc)
+	sort.Slice(products, func(i, j int) bool {
+		return len(products[i].Prices) > len(products[j].Prices)
+	})
+
+	return products
+}
+
+func collapseClusters(groups [][]RawProduct) []Product {
 	products := make([]Product, 0, len(groups))
 	for _, grp := range groups {
 		first := grp[0]
@@ -88,12 +99,6 @@ func mergeProducts(rawProducts []RawProduct) []Product {
 			Prices:   priceOpts,
 		})
 	}
-
-	// 3) sort by how many platforms each product appears on (desc)
-	sort.Slice(products, func(i, j int) bool {
-		return len(products[i].Prices) > len(products[j].Prices)
-	})
-
 	return products
 }
 
