@@ -16,7 +16,7 @@ const Navbar: React.FC = () => {
                 <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.title}>{'Comparely'}</Text>
-            <View style={styles.placeholder} /> {/* Balances the layout */}
+            <View style={styles.placeholder} />{/* Balances the layout */}
         </View>
     );
 };
