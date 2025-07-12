@@ -57,15 +57,15 @@ export const GroceryComparisonScreen: React.FC = () => {
     // );
 
     const fetchProducts = useCallback(
-        async (query: string) => {
-            if (!query.trim()) {
+        async () => {
+            if (!searchQuery.trim()) {
                 setProducts([]);
                 return;
             }
             setIsLoading(true);
             try {
                 const result = await fetchAndConvertProducts(
-                    query,
+                    searchQuery,
                     location.lat || undefined,
                     location.lng || undefined,
                 );
@@ -77,7 +77,7 @@ export const GroceryComparisonScreen: React.FC = () => {
                 setIsLoading(false);
             }
         },
-        [location],
+        [searchQuery],
     );
 
     // const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 300), [fetchSuggestions]);
@@ -100,13 +100,13 @@ export const GroceryComparisonScreen: React.FC = () => {
         suggestionSelectedRef.current = true;
         setSearchQuery(suggestion);
         setSuggestions([]);
-        void fetchProducts(suggestion);
+        void fetchProducts();
     };
 
     // Handle search submission (e.g., pressing Enter or the keyboard's search button)
     const handleSubmit = () => {
         setSuggestions([]);
-        void fetchProducts(searchQuery); // Fetch products immediately
+        void fetchProducts(); // Fetch products immediately
     };
 
     // Handle when the search input loses focus
