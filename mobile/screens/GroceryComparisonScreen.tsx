@@ -9,10 +9,6 @@ import { fetchAndConvertProducts } from '../api/searchProducts';
 import Navbar from '@/components/Navbar';
 import { useSession } from '@/context/SessionContext';
 import { FlatList } from 'react-native-gesture-handler';
-import { AntDesign } from '@expo/vector-icons';
-import FeaturedProductsSection from '@/components/FeatureProducts';
-
-import * as Location from 'expo-location';
 
 export const GroceryComparisonScreen: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState<string>('');
@@ -59,15 +55,15 @@ export const GroceryComparisonScreen: React.FC = () => {
     // );
 
     const fetchProducts = useCallback(
-        async (query: string) => {
-            if (!query.trim()) {
+        async () => {
+            if (!searchQuery.trim()) {
                 setProducts([]);
                 return;
             }
             setIsLoading(true);
             try {
                 const result = await fetchAndConvertProducts(
-                    query,
+                    searchQuery,
                     location.lat || undefined,
                     location.lng || undefined,
                 );
@@ -79,7 +75,7 @@ export const GroceryComparisonScreen: React.FC = () => {
                 setIsLoading(false);
             }
         },
-        [location],
+        [searchQuery],
     );
 
     // const debouncedFetchSuggestions = useCallback(debounce(fetchSuggestions, 300), [fetchSuggestions]);
@@ -102,13 +98,13 @@ export const GroceryComparisonScreen: React.FC = () => {
         suggestionSelectedRef.current = true;
         setSearchQuery(suggestion);
         setSuggestions([]);
-        void fetchProducts(suggestion);
+        void fetchProducts();
     };
 
     // Handle search submission (e.g., pressing Enter or the keyboard's search button)
     const handleSubmit = () => {
         setSuggestions([]);
-        void fetchProducts(searchQuery); // Fetch products immediately
+        void fetchProducts(); // Fetch products immediately
     };
 
     // Handle when the search input loses focus

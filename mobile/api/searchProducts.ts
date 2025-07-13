@@ -33,8 +33,10 @@ export async function fetchAndConvertProducts(
             > = {};
 
             item.prices.forEach((priceEntry: PriceOptionAPIResp) => {
+            let lowestVariant: PriceOptionVariantsAPIResp | undefined = undefined;
                 const platform = priceEntry.source;
-                const lowestVariant: PriceOptionVariantsAPIResp | undefined =
+                try{
+                    lowestVariant =
                     priceEntry.variants.reduce(
                         (
                             min: PriceOptionVariantsAPIResp | undefined,
@@ -46,6 +48,10 @@ export async function fetchAndConvertProducts(
                         },
                         undefined,
                     );
+                }catch(err){
+                    console.log("no lowest variant")
+                }
+                
 
                 if (lowestVariant) {
                     if (
@@ -76,7 +82,9 @@ export async function fetchAndConvertProducts(
 
             let mrp = Infinity;
             let imageUrl = '';
+            if(!item.prices) item.prices = []
             item.prices.forEach((priceEntry: PriceOptionAPIResp) => {
+                if (!priceEntry.variants) priceEntry.variants = []
                 priceEntry.variants.forEach((variant: PriceOptionVariantsAPIResp) => {
                     if (variant.original_price < mrp) {
                         mrp = variant.original_price;

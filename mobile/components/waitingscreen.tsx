@@ -13,16 +13,20 @@ import {
 import WallpaperCarousel from './WallpaperCarousel';
 
 // Safari-compatible image sources
-const isSafari = Platform.OS === 'web' && 
-    (typeof navigator !== 'undefined' && 
-     (/^((?!chrome|android).)*safari/i.test(navigator.userAgent) || 
-      /iPad|iPhone|iPod/.test(navigator.userAgent)));
+const isSafari = Platform.OS === 'web' &&
+    (typeof navigator !== 'undefined' &&
+        (/^((?!chrome|android).)*safari/i.test(navigator.userAgent) ||
+            /iPad|iPhone|iPod/.test(navigator.userAgent)));
 
 const bblogo = require('../assets/images/bblogo.png');
 const instamartLogo = require('../assets/images/instamartlogo.jpeg');
 // Use PNG fallback for WebP in Safari
 const zeptoLogo = isSafari ? require('../assets/images/zepto.png') : require('../assets/images/zeptoicon.webp');
 const blinkitLogo = require('../assets/images/blinkitlogo.png');
+
+// Banner images
+const banner1 = require('../assets/images/crousel/i1.png');
+const banner2 = require('../assets/images/crousel/i2.png');
 
 type ComparingScreenProps = {
     itemName?: string;
@@ -38,12 +42,7 @@ const ComparingScreen = ({
     const fadeOutAnim = useRef(new Animated.Value(1)).current;
 
     const [loadingComplete, setLoadingComplete] = useState(false);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const fadeAnim = useRef(new Animated.Value(1)).current;
-
-    const imageSources = [
-        bblogo, instamartLogo, zeptoLogo, blinkitLogo
-    ];
+    const [carouselImages, setCarouselImages] = useState([bblogo, instamartLogo, zeptoLogo, blinkitLogo]);
 
     // Safari compatibility logging
     useEffect(() => {
@@ -72,30 +71,28 @@ const ComparingScreen = ({
         useRef(new Animated.Value(0.7)).current,
     ];
 
-    const [carouselImages, setCarouselImages] = useState(imageSources);
-
     useEffect(() => {
         Animated.loop(
             Animated.sequence([
                 Animated.timing(scannerAnim, {
                     toValue: 1,
-                    duration: 1500, // Increased duration for slower animation
+                    duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.linear,
                 }),
                 Animated.timing(scannerAnim, {
                     toValue: 0,
-                    duration: 1500, // Increased duration for slower animation
+                    duration: 1500,
                     useNativeDriver: true,
                     easing: Easing.linear,
                 }),
-            ]),
+            ])
         ).start();
 
         progressAnim.setValue(0);
         Animated.timing(progressAnim, {
             toValue: 1,
-            duration: 8000, // Slightly increased overall duration
+            duration: 8000,
             useNativeDriver: false,
         }).start(() => {
             setLoadingComplete(true);
@@ -104,9 +101,7 @@ const ComparingScreen = ({
                 duration: 500,
                 useNativeDriver: true,
             }).start(() => {
-                if (onAnimationComplete) {
-                    onAnimationComplete();
-                }
+                if (onAnimationComplete) onAnimationComplete();
             });
         });
 
@@ -116,80 +111,42 @@ const ComparingScreen = ({
             const slideAnimations = positions.map((pos, index) =>
                 Animated.timing(pos, {
                     toValue: (index - 1) * IMAGE_SPACING,
-                    duration: 2000, // Increased duration for slower slide
+                    duration: 2000,
                     easing: Easing.out(Easing.quad),
                     useNativeDriver: true,
-                }),
+                })
             );
-
-            const scaleDownLeft = Animated.timing(scales[0], {
-                toValue: 1,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-            const scaleUpCenter = Animated.timing(scales[1], {
-                toValue: 1.3,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            const scaleDownRight = Animated.timing(scales[2], {
-                toValue: 1,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            const fadeOutLeft = Animated.timing(opacities[0], {
-                toValue: 0.7,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
-
-            const fadeInCenter = Animated.sequence([
-                Animated.timing(opacities[1], {
-                    toValue: 0.9,
-                    duration: 800, // Adjusted duration
-                    useNativeDriver: true,
-                }),
-                Animated.timing(opacities[1], {
-                    toValue: 1,
-                    duration: 800, // Adjusted duration
-                    easing: Easing.inOut(Easing.quad),
-                    useNativeDriver: true,
-                }),
-            ]);
-
-            const fadeOutRight = Animated.timing(opacities[2], {
-                toValue: 0.7,
-                duration: 1200, // Adjusted duration
-                useNativeDriver: true,
-            });
 
             Animated.parallel([
                 ...slideAnimations,
-                scaleDownLeft,
-                scaleUpCenter,
-                scaleDownRight,
-                fadeOutLeft,
-                fadeInCenter,
-                fadeOutRight,
+                Animated.timing(scales[0], { toValue: 1, duration: 1200, useNativeDriver: true }),
+                Animated.timing(scales[1], { toValue: 1.3, duration: 1200, useNativeDriver: true }),
+                Animated.timing(scales[2], { toValue: 1, duration: 1200, useNativeDriver: true }),
+                Animated.timing(opacities[0], { toValue: 0.7, duration: 1200, useNativeDriver: true }),
+                Animated.sequence([
+                    Animated.timing(opacities[1], { toValue: 0.9, duration: 800, useNativeDriver: true }),
+                    Animated.timing(opacities[1], {
+                        toValue: 1,
+                        duration: 800,
+                        easing: Easing.inOut(Easing.quad),
+                        useNativeDriver: true,
+                    }),
+                ]),
+                Animated.timing(opacities[2], { toValue: 0.7, duration: 1200, useNativeDriver: true }),
             ]).start(() => {
                 currentImages = [...currentImages.slice(1), currentImages[0]];
                 setCarouselImages(currentImages);
 
                 setTimeout(() => {
-                    positions.forEach((pos, index) => {
-                        pos.setValue((index - 1) * IMAGE_SPACING);
-                    });
+                    positions.forEach((pos, index) => pos.setValue((index - 1) * IMAGE_SPACING));
                     scales[0].setValue(1);
                     scales[1].setValue(1.3);
                     scales[2].setValue(1);
                     opacities[0].setValue(0.7);
                     opacities[1].setValue(1);
                     opacities[2].setValue(0.7);
-
                     animateCarousel();
-                }, 1500); // Increased delay before next animation
+                }, 1500);
             });
         };
 
@@ -215,17 +172,13 @@ const ComparingScreen = ({
     return (
         <Animated.View style={[styles.container, { opacity: loadingComplete ? fadeOutAnim : 1 }]}>
             <View style={styles.content}>
-                {/* <Text style={styles.title}>{'Comparely'}</Text> */}
-                <View style={{ flexDirection: 'row', justifyContent: 'center', marginBottom: 30 }}>
+                <View style={styles.loadingRow}>
                     <ActivityIndicator size="small" color="white" />
-                    <Text
-                        style={[
-                            styles.subtitle,
-                            { marginBottom: 0, marginLeft: 8, textAlign: 'left' },
-                        ]}>
+                    <Text style={styles.subtitle}>
                         We are finding you the best deals...
                     </Text>
                 </View>
+
                 <View style={styles.carouselContainer}>
                     {[0, 1, 2].map((i) => (
                         <Animated.View
@@ -237,7 +190,8 @@ const ComparingScreen = ({
                                     zIndex: i === 1 ? 2 : 1,
                                     opacity: opacities[i],
                                 },
-                            ]}>
+                            ]}
+                        >
                             <Image
                                 source={carouselImages[i]}
                                 style={styles.animatedImage}
@@ -263,10 +217,7 @@ const ComparingScreen = ({
                     ))}
                     <View style={styles.scannerFrameOverlay}>
                         <Animated.View
-                            style={[
-                                styles.scannerLine,
-                                { transform: [{ translateY: scanTranslateY }] },
-                            ]}
+                            style={[styles.scannerLine, { transform: [{ translateY: scanTranslateY }] }]}
                         />
                     </View>
                 </View>
@@ -278,11 +229,16 @@ const ComparingScreen = ({
                 </View>
                 <Text style={styles.itemName}>{itemName}</Text>
                 <TouchableOpacity style={styles.cancelButton} onPress={() => {}}>
-                    <Text style={styles.cancelText}>{'Cancel'}</Text>
+                    <Text style={styles.cancelText}>Cancel</Text>
                 </TouchableOpacity>
-            </View>
-            <View style={styles.wallpaperCarouselContainer}>
-                <WallpaperCarousel />
+
+                <View style={styles.bannerContainer}>
+                    <Image source={banner1} style={styles.largeBanner} resizeMode="cover" />
+                    <View style={styles.smallBannerRow}>
+                        <Image source={banner2} style={styles.smallBanner} resizeMode="cover" />
+                        <Image source={banner2} style={styles.smallBanner} resizeMode="cover" />
+                    </View>
+                </View>
             </View>
         </Animated.View>
     );
@@ -294,25 +250,22 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#004738',
-        // paddingTop: 10,
-        justifyContent: 'space-between',
     },
     content: {
         alignItems: 'center',
+        paddingTop: 10, // extended green background
+        paddingBottom: 24, // spacing before white panel
     },
-    title: {
-        fontSize: 46,
-        fontFamily: 'SF-Pro',
-        color: '#CBD402',
-        marginBottom: 10,
-        marginTop: 30,
-        textAlign: 'center',
+    loadingRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 30,
     },
     subtitle: {
         color: '#fff',
         fontSize: 16,
-        marginBottom: 30,
-        textAlign: 'center',
+        marginLeft: 8,
     },
     carouselContainer: {
         width: '100%',
@@ -357,13 +310,12 @@ const styles = StyleSheet.create({
         zIndex: 4,
     },
     progressBarBackground: {
-        // marginTop: 30,
-        // marginBottom: 10,
         width: '80%',
         height: 6,
         borderRadius: 3,
         backgroundColor: '#EBE6DD',
         overflow: 'hidden',
+        marginBottom: 14,
     },
     progressBarFill: {
         height: '100%',
@@ -373,15 +325,12 @@ const styles = StyleSheet.create({
     bottomPanel: {
         width: '100%',
         backgroundColor: '#FFFAF0',
-        marginTop: 15,
-        padding: 60,
+        paddingTop: 40,
+        paddingBottom: 30,
+        paddingHorizontal: 30,
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -3 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
     },
     itemName: {
         fontSize: 23,
@@ -395,18 +344,33 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         paddingHorizontal: 40,
         borderRadius: 12,
+        marginTop: 10,
     },
     cancelText: {
         fontWeight: 'bold',
         fontSize: 20,
         color: '#004738',
     },
-    wallpaperCarouselContainer: {
-        display: 'flex',
-        backgroundColor: '#FFFAF0',
-        justifyContent: 'center',
-        alignItems: 'center',
+    bannerContainer: {
+        width: '100%',
+        marginTop: 28,
+        paddingHorizontal: 20,
+    },
+    largeBanner: {
+        width: '100%',
+        height: 350,
+        borderRadius: 12,
+        marginBottom: 20,
         overflow: 'hidden',
-        marginRight: -20,
+    },
+    smallBannerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    smallBanner: {
+        width: '48%',
+        height: 160,
+        borderRadius: 12,
+        overflow: 'hidden',
     },
 });

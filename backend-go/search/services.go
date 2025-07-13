@@ -388,9 +388,9 @@ func mapBBRawProduct(raw map[string]interface{}) (Product, error) {
 }
 
 // fetchBlinkitProducts fetches up to 5 pages from Blinkit.
-func fetchBlinkitProducts(query string, lat string, lng string) ([]interface{}, error) {
+func fetchBlinkitProducts(query string, lat string, lng string) ([]Product, error) {
 	baseUrl := "https://blinkit.com"
-	url := fmt.Sprintf("%s/v6/search/products?q=%s", baseUrl, query)
+	url := fmt.Sprintf("%s/v1/layout/search?q=%s", baseUrl, query)
 	headers := map[string]string{
 		"accept":       "*/*",
 		"content-type": "application/json",
@@ -400,27 +400,30 @@ func fetchBlinkitProducts(query string, lat string, lng string) ([]interface{}, 
 		"user-agent":   "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
 		"User-Agent":   "Mozilla/5.0 (Linux; Android 13; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Mobile Safari/537.36 Edg/133.0.0.0",
 	}
-	allProducts := make([]interface{}, 0)
+	allProducts := make([]Product, 0)
 	count := 0
 	for url != "" && count < 5 {
-		result, err := fetchJSON(url, "GET", headers, "")
+		result, err := fetchJSON(url, "POST", headers, "")
 		if err != nil {
 			return allProducts, err
 		}
-		if prods, ok := result["products"].([]interface{}); ok {
-			allProducts = append(allProducts, prods...)
-		}
-		if pag, ok := result["pagination"].(map[string]interface{}); ok {
-			if next, ok := pag["next_url"].(string); ok && next != "" {
-				url = baseUrl + next
-			} else {
-				url = ""
-			}
-		} else {
-			url = ""
-		}
+		blinkitProds, err := ParseBlinkit(result)
+		allProducts = append(allProducts, blinkitProds...)
+		// if prods, ok := result["products"].([]interface{}); ok {
+		// 	allProducts = append(allProducts, prods...)
+		// }
+		// if pag, ok := result["pagination"].(map[string]interface{}); ok {
+		// 	if next, ok := pag["next_url"].(string); ok && next != "" {
+		// 		url = baseUrl + next
+		// 	} else {
+		// 		url = ""
+		// 	}
+		// } else {
+		// 	url = ""
+		// }
 		count++
 	}
+	log.Printf("blinkit size %d", len(allProducts))
 	return allProducts, nil
 }
 
@@ -1003,7 +1006,7 @@ func SearchProducts(appState config.AppState, query string, deviceID string) ([]
 			log.Printf("Blinkit fetch failed for query '%s': %v", query, err)
 			return
 		}
-		blinkitProducts = mapBlinkit(map[string]interface{}{"products": blinkitRaw})
+		blinkitProducts = blinkitRaw
 	}()
 
 	// Fetch from Instamart
@@ -1139,7 +1142,7 @@ func SearchProductsV2(appState config.AppState, query string, deviceID string) (
 			log.Printf("Blinkit fetch failed for query '%s': %v", query, err)
 			return
 		}
-		blinkitProducts = mapBlinkit(map[string]interface{}{"products": blinkitRaw})
+		blinkitProducts = blinkitRaw
 	}()
 
 	go func() {
@@ -1295,12 +1298,14 @@ func SearchProductsV3(appState config.AppState, query string, deviceID string) (
 	go func() {
 		defer wg.Done()
 		blinkitRaw, err := fetchBlinkitProducts(url.QueryEscape(query), lat, lng)
+		log.Printf("Total blinkit prods %d", len(blinkitRaw))
+		log.Println("Blinkit prods", blinkitRaw)
 		if err != nil {
 			errBlinkit = err
 			log.Printf("Blinkit fetch failed for query '%s': %v", query, err)
 			return
 		}
-		blinkitProducts = mapBlinkit(map[string]interface{}{"products": blinkitRaw})
+		blinkitProducts = blinkitRaw
 	}()
 
 	go func() {
@@ -1363,9 +1368,11 @@ func SearchProductsV3(appState config.AppState, query string, deviceID string) (
 		return []Product{}, nil
 	}
 
+	//mergedSlice := append(append(append(blinkitProducts, bigbasketProducts...), instamartProducts...), zeptoProducts...)
+
 	mergedProducts := mergeProductsFromCacheAndPatch(appState, availableProducts, query)
 
-	// Send unmapped to Ginger (only for fresh fetches)
+	//Send unmapped to Ginger (only for fresh fetches)
 	unmapped := []Product{}
 	for _, prod := range mergedProducts {
 		if len(prod.Prices) == 1 {

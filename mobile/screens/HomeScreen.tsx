@@ -247,13 +247,15 @@ const HomeScreen = () => {
                 )}
 
                 {isWeb && <Footer />}
+                
             </ScrollView>
 
-            <Animated.View style={[styles.floatingWhatsapp]}>
-                <TouchableOpacity onPress={handleWhatsappRedirect}>
+            <Animated.View style={[styles.floatingWhatsapp, { transform: [{ rotate }] }]}>
+                 <TouchableOpacity onPress={handleWhatsappRedirect}>
                     <Ionicons name="logo-whatsapp" size={40} color="#fff" />
                 </TouchableOpacity>
             </Animated.View>
+
         </View>
     );
 };
@@ -452,6 +454,7 @@ const styles = StyleSheet.create({
         borderRadius: 35,
         padding: 6,
     },
+    
 });
 
 export default HomeScreen;
