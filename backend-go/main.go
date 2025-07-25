@@ -174,6 +174,7 @@ func main() {
 		predictions, err := client.GetPlacePredictions(query)
 		if err != nil {
 			log.Fatal("Autocomplete error:", err)
+			return
 		}
 
 		places := make([]places.Place, 0, len(predictions))
