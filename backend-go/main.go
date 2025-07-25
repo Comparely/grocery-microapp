@@ -173,7 +173,7 @@ func main() {
 
 		predictions, err := client.GetPlacePredictions(query)
 		if err != nil {
-			log.Fatal("Autocomplete error:", err)
+			log.Println("Autocomplete error:", err)
 			return
 		}
 

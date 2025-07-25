@@ -74,7 +74,7 @@ const HomeScreen = () => {
 
     const handleWhatsappRedirect = () => {
         const message = encodeURIComponent("Hi, I'm interested in Comparely!");
-        const webUrl = `https://api.whatsapp.com/send?phone=${process.env.EXPO_PUBLIC_SUPPORT_WA_NUMBER}&text=${message}`;
+        const webUrl = `https://chat.whatsapp.com/Kfa92e0JFTECE0RsVuqMUJ?mode=ac_t`;
 
         if (Platform.OS === 'web') {
             try {
@@ -141,7 +141,7 @@ const HomeScreen = () => {
     };
 
     const navigateToLocationPicker = () => {
-        router.push('/location-picker');
+        //router.push('/location-picker');
     };
 
     const rotate = wiggleAnim.interpolate({
@@ -162,7 +162,7 @@ const HomeScreen = () => {
                 <TouchableOpacity
                     style={[styles.retryButton, styles.secondaryButton]}
                     onPress={navigateToLocationPicker}>
-                    <Text style={styles.secondaryButtonText}>{'Select Location Manually'}</Text>
+                    <Text style={styles.secondaryButtonText}>{'Select Location Manually(In maintenance)'}</Text>
                 </TouchableOpacity>
             </View>
         );

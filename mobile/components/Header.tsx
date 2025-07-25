@@ -73,7 +73,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
     };
 
     const handleLocationPress = () => {
-        router.push('/location-picker');
+        //router.push('/location-picker');
     };
 
     return (
