@@ -3,6 +3,7 @@ package places
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"time"
@@ -10,6 +11,7 @@ import (
 
 const autocompleteURL = "https://maps.googleapis.com/maps/api/place/autocomplete/json"
 const detailsURL = "https://maps.googleapis.com/maps/api/place/details/json"
+const autocompleteURLOla = "https://api.olamaps.io/places/v1/autocomplete"
 
 func NewClient(apiKey string) *Client {
 	return &Client{
@@ -94,4 +96,55 @@ func (c *Client) GetPlaceDetails(placeID string) (Place, error) {
 		Lat:     result.Result.Geometry.Location.Lat,
 		Lng:     result.Result.Geometry.Location.Lng,
 	}, nil
+}
+
+func (c *Client) GetPlacePredictionsOla(query string) ([]Place, error) {
+	params := url.Values{}
+	params.Add("input", query)
+	params.Add("api_key", c.APIKey)
+
+	url := fmt.Sprintf("%s?%s", autocompleteURLOla, params.Encode())
+	resp, err := c.HTTPClient.Get(url)
+	if err != nil {
+		return []Place{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("unexpected status: %d body: %s", resp.StatusCode, string(body))
+	}
+
+	var raw struct {
+		ErrorMessage string `json:"error_message"`
+		Status       string `json:"status"`
+		Predictions  []struct {
+			Description string `json:"description"`
+			Geometry    struct {
+				Location struct {
+					Lat float64 `json:"lat"`
+					Lng float64 `json:"lng"`
+				} `json:"location"`
+			} `json:"geometry"`
+		} `json:"predictions"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+		return nil, err
+	}
+
+	if raw.Status != "ok" {
+		return nil, fmt.Errorf("api returned status: %s error: %s", raw.Status, raw.ErrorMessage)
+	}
+
+	places := make([]Place, 0, len(raw.Predictions))
+	for _, p := range raw.Predictions {
+		places = append(places, Place{
+			Address: p.Description,
+			Lat:     p.Geometry.Location.Lat,
+			Lng:     p.Geometry.Location.Lng,
+		})
+	}
+
+	return places, nil
 }

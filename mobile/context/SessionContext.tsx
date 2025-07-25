@@ -11,6 +11,7 @@ interface SessionContextData {
     error: string | null;
     locationDenied: boolean;
     requestLocationPermission: () => void;
+    manualLocationUpdate: (lat: number, lng: number) => void;
 }
 
 const FALLBACK_COORDS = { lat: 28.4595, lng: 77.0266 }; // Gurugram
@@ -26,7 +27,8 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 
     // common fallback
     const fallback = () => {
-        setLocationDenied(true);
+        console.log("Fallback")
+        setLocationDenied(false);
         initiateSessionForUser(FALLBACK_COORDS.lat, FALLBACK_COORDS.lng)
             .then((sess: Session) => {
                 setSession(sess);
@@ -90,9 +92,29 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
 
     // exposed to let the user retry
     const requestLocationPermission = () => {
+        if(locationDenied){
+            alert("You have previously disabled location for Comparely. Go to Site Settings to enable it now or enter manually.")
+            return
+        }
         setLoading(true);
         void initGeolocation();
     };
+
+    const manualLocationUpdate = (lat: number, lng: number) => {
+        setLocation({
+            lat: lat, lng: lng
+        })
+        setLocationDenied(false)
+        initiateSessionForUser(lat, lng)
+            .then((sess: Session) => {
+                setSession(sess);
+                setLoading(false);
+            })
+            .catch((err) => {
+                console.log('Sess Err', err);
+                setError('Sess Err' + err);
+            });
+    }
 
     return (
         <SessionContext.Provider
@@ -103,6 +125,7 @@ export const SessionProvider = ({ children }: { children: ReactNode }) => {
                 error,
                 locationDenied,
                 requestLocationPermission,
+                manualLocationUpdate,
             }}>
             {children}
         </SessionContext.Provider>

@@ -6,31 +6,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { SearchBar } from './SearchBar';
 import { Session } from '@/types/Session';
 import { Text } from '@/ui/Text';
+import { useSession } from '@/context/SessionContext';
 
 interface HeaderProps {
     session: Session | undefined;
 }
 
-const Header: React.FC<HeaderProps> = ({ session }) => {
+const Header: React.FC<HeaderProps> = (_) => {
     const router = useRouter();
-    const [storedLocation, setStoredLocation] = useState<string | null>(null);
-
-    // Reload location every time screen is focused
-    useFocusEffect(
-        useCallback(() => {
-            const loadLocation = async () => {
-                try {
-                    const saved = await AsyncStorage.getItem('selected_location');
-                    if (saved) {
-                        setStoredLocation(saved);
-                    }
-                } catch (e) {
-                    console.error('Failed to load location', e);
-                }
-            };
-            void loadLocation();
-        }, []),
-    );
+    const { session, location, locationDenied, requestLocationPermission } = useSession();
 
     const findLeastTimeStore = () => {
         const blinkitETA = parseFloat(
@@ -73,7 +57,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
     };
 
     const handleLocationPress = () => {
-        //router.push('/location-picker');
+        router.push('/location-picker');
     };
 
     return (
@@ -94,7 +78,7 @@ const Header: React.FC<HeaderProps> = ({ session }) => {
 
                         <Text style={styles.addressText}>
                             {trimIfNeeded(
-                                storedLocation ?? session?.address ?? 'Tap to set location',
+                                session?.address ?? 'Tap to set location',
                             )}
                         </Text>
                     </View>

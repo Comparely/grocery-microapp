@@ -166,25 +166,40 @@ func main() {
 		c.JSON(http.StatusOK, mappingsData)
 	})
 
+	// router.GET("/place", func(c *gin.Context) {
+	// 	query := c.Query("query")
+
+	// 	client := places.NewClient("AIzaSyDXxEstxNmu1Lr_vqLau0StAoRyUGPZqSg")
+
+	// 	predictions, err := client.GetPlacePredictions(query)
+	// 	if err != nil {
+	// 		log.Println("Autocomplete error:", err)
+	// 		return
+	// 	}
+
+	// 	places := make([]places.Place, 0, len(predictions))
+	// 	for _, p := range predictions {
+	// 		place, err := client.GetPlaceDetails(p.PlaceID)
+	// 		if err != nil {
+	// 			log.Println("Failed to get place details:", err)
+	// 			continue
+	// 		}
+	// 		places = append(places, place)
+	// 	}
+
+	// 	c.JSON(http.StatusOK, places)
+	// })
+
 	router.GET("/place", func(c *gin.Context) {
+		log.Println("hello")
 		query := c.Query("query")
 
-		client := places.NewClient("AIzaSyDXxEstxNmu1Lr_vqLau0StAoRyUGPZqSg")
+		client := places.NewClient("xcSLN1MKCaBkoYNKjvWuCXWzRkE14Pwc7L4j3V2P")
 
-		predictions, err := client.GetPlacePredictions(query)
+		places, err := client.GetPlacePredictionsOla(query)
 		if err != nil {
 			log.Println("Autocomplete error:", err)
 			return
-		}
-
-		places := make([]places.Place, 0, len(predictions))
-		for _, p := range predictions {
-			place, err := client.GetPlaceDetails(p.PlaceID)
-			if err != nil {
-				log.Println("Failed to get place details:", err)
-				continue
-			}
-			places = append(places, place)
 		}
 
 		c.JSON(http.StatusOK, places)

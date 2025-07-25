@@ -141,7 +141,7 @@ const HomeScreen = () => {
     };
 
     const navigateToLocationPicker = () => {
-        //router.push('/location-picker');
+        router.push('/location-picker');
     };
 
     const rotate = wiggleAnim.interpolate({
@@ -162,7 +162,7 @@ const HomeScreen = () => {
                 <TouchableOpacity
                     style={[styles.retryButton, styles.secondaryButton]}
                     onPress={navigateToLocationPicker}>
-                    <Text style={styles.secondaryButtonText}>{'Select Location Manually(In maintenance)'}</Text>
+                    <Text style={styles.secondaryButtonText}>{'Select Location Manually'}</Text>
                 </TouchableOpacity>
             </View>
         );

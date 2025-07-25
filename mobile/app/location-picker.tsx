@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from '@/ui/Text';
+import { useSession } from '@/context/SessionContext';
 
 const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_URL}place`;
 
@@ -31,6 +32,7 @@ const LocationPicker = () => {
     const [loading, setLoading] = useState(false);
     const [searchResults, setSearchResults] = useState<PlaceResult[]>([]);
     const router = useRouter();
+    const { manualLocationUpdate } = useSession();
 
     const fetchCoordinatesFromSearch = async (query: string) => {
         try {
@@ -54,9 +56,10 @@ const LocationPicker = () => {
         }
     };
 
-    const handleSelectLocation = async (address: string) => {
+    const handleSelectLocation = async (location: PlaceResult) => {
         try {
-            await AsyncStorage.setItem('selected_location', address);
+            await AsyncStorage.setItem('selected_location', location.address);
+            manualLocationUpdate(location.lat, location.lng);
             router.back();
         } catch (e) {
             console.error('Failed to save location:', e);
@@ -122,7 +125,7 @@ const LocationPicker = () => {
                         renderItem={({ item }) => (
                             <TouchableOpacity
                                 onPress={() => {
-                                    void handleSelectLocation(item.address);
+                                    void handleSelectLocation(item);
                                 }}
                                 style={styles.resultItem}>
                                 <RNText style={styles.resultText}>{item.address}</RNText>
