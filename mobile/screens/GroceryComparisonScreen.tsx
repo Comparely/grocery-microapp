@@ -116,7 +116,7 @@ export const GroceryComparisonScreen: React.FC = () => {
 
     return (
         <View style={styles.container}>
-            <Navbar />
+            <Navbar title='Comparely' />
             {!isLoading && (
                 <View style={styles.searchContainer}>
                     <View style={styles.searchRow}>

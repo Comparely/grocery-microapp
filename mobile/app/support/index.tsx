@@ -38,9 +38,11 @@ export default function SupportScreen() {
 
     return (
         <>
-            <Head>
-                <title>{'Support - Comparely'}</title>
-            </Head>
+            {Platform.OS === 'web' && (
+                <Head>
+                    <title>{'Support - Comparely'}</title>
+                </Head>
+            )}
             <View style={styles.container}>
                 <Header session={undefined} />
                 <View style={styles.mainContainer}>

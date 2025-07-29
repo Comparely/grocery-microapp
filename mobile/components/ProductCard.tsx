@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    zIndex: 1000,
   },
   fullWidthContainer: {
     width: 300,
@@ -200,13 +201,6 @@ const styles = StyleSheet.create({
   },
   homeCard: {
     width: '30%',
-  },
-  heartIcon: {
-    position: 'absolute',
-    top: 12,
-    right: 12,
-    zIndex: 1,
-    padding: 4,
   },
   imageContainer: {
     alignItems: 'center',

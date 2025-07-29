@@ -4,7 +4,6 @@ import {
     StyleSheet,
     FlatList,
     Dimensions,
-    TouchableOpacity,
     NativeScrollEvent,
     NativeSyntheticEvent,
     LayoutChangeEvent,
@@ -12,7 +11,6 @@ import {
 import { ProductCard } from './ProductCard';
 import { Product } from '@/types/Product';
 import { Session } from '@/types/Session';
-import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/ui/Text';
 
 const { width } = Dimensions.get('window');
@@ -63,9 +61,9 @@ const PriceSection: React.FC<PriceSectionParams> = ({ session, products }) => {
             <Text style={styles.title}>{'Compare Prices'}</Text>
             <Text style={styles.subtitle}>{'Get lowest and fastest delivery across apps'}</Text>
             <View style={styles.listContainer}>
-                <TouchableOpacity style={styles.arrowLeft} onPress={scrollLeft}>
+                {/* <TouchableOpacity style={styles.arrowLeft} onPress={scrollLeft}>
                     <Ionicons name="chevron-back" size={30} color="#004738" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
                 <FlatList
                     ref={flatListRef}
                     data={products}
@@ -81,9 +79,9 @@ const PriceSection: React.FC<PriceSectionParams> = ({ session, products }) => {
                     onScroll={handleScroll}
                     scrollEventThrottle={16}
                 />
-                <TouchableOpacity style={styles.arrowRight} onPress={scrollRight}>
+                {/* <TouchableOpacity style={styles.arrowRight} onPress={scrollRight}>
                     <Ionicons name="chevron-forward" size={30} color="#004738" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
             </View>
         </View>
     );
@@ -116,6 +114,7 @@ const styles = StyleSheet.create({
         position: 'relative',
         flexDirection: 'row',
         alignItems: 'center',
+        zIndex: 1000,
     },
     productList: {
         paddingHorizontal: 15,

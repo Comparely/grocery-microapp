@@ -10,6 +10,8 @@ import {
     ActivityIndicator,
     FlatList,
     Text as RNText,
+    SafeAreaView,
+    StatusBar,
 } from 'react-native';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,6 +19,8 @@ import { useRouter } from 'expo-router';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Text } from '@/ui/Text';
 import { useSession } from '@/context/SessionContext';
+import Navbar from '@/components/Navbar';
+import Head from 'expo-router/head';
 
 const API_BASE_URL = `${process.env.EXPO_PUBLIC_API_URL}place`;
 
@@ -86,63 +90,71 @@ const LocationPicker = () => {
         })();
     }, []);
 
-    return (
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color="#fff" />
-                </TouchableOpacity>
-                <Text style={styles.title}>{'Set Location'}</Text>
-            </View>
+    const selectLocationScreen = (
+        <View style={styles.container}>
+            <Navbar title='Select Location' />
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
 
-            <View style={styles.searchContainer}>
-                <Ionicons name="search" size={20} color="#aaa" />
-                <TextInput
-                    style={styles.input}
-                    value={input}
-                    placeholder="Search Indian location..."
-                    onChangeText={(text) => {
-                        setInput(text);
-                        if (text.length > 3) {
-                            void fetchCoordinatesFromSearch(text);
-                        } else {
-                            setSearchResults([]);
-                        }
-                    }}
-                />
-            </View>
-
-            <View style={styles.emptyContainer}>
-                {loading ? (
-                    <ActivityIndicator size="small" color="#000" style={{ marginBottom: 20 }} />
-                ) : searchResults.length > 0 ? (
-                    <FlatList
-                        style={{ width: '100%' }}
-                        data={searchResults}
-                        keyExtractor={(item, idx) => item.address + idx}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                onPress={() => {
-                                    void handleSelectLocation(item);
-                                }}
-                                style={styles.resultItem}>
-                                <RNText style={styles.resultText}>{item.address}</RNText>
-                            </TouchableOpacity>
-                        )}
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={20} color="#aaa" />
+                    <TextInput
+                        style={styles.input}
+                        value={input}
+                        placeholder="Search Indian location..."
+                        onChangeText={(text) => {
+                            setInput(text);
+                            if (text.length > 3) {
+                                void fetchCoordinatesFromSearch(text);
+                            } else {
+                                setSearchResults([]);
+                            }
+                        }}
                     />
-                ) : (
-                    <Text style={styles.emptyText}>{'Search Location to see results'}</Text>
-                )}
-            </View>
+                </View>
 
-            {location && searchResults.length === 0 && (
-                <Text style={styles.locationPreview}>
-                    {'📍'} {location}
-                </Text>
+                <View style={styles.emptyContainer}>
+                    {loading ? (
+                        <ActivityIndicator size="small" color="#000" style={{ marginBottom: 20 }} />
+                    ) : searchResults.length > 0 ? (
+                        <FlatList
+                            style={{ width: '100%' }}
+                            data={searchResults}
+                            keyExtractor={(item, idx) => item.address + idx}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        void handleSelectLocation(item);
+                                    }}
+                                    style={styles.resultItem}>
+                                    <RNText style={styles.resultText}>{item.address}</RNText>
+                                </TouchableOpacity>
+                            )}
+                        />
+                    ) : (
+                        <Text style={styles.emptyText}>{'Search Location to see results'}</Text>
+                    )}
+                </View>
+
+                {location && searchResults.length === 0 && (
+                    <Text style={styles.locationPreview}>
+                        {'📍'} {location}
+                    </Text>
+                )}
+            </KeyboardAvoidingView>
+        </View>
+    );
+
+    return (
+        <SafeAreaView style={styles.container}>
+            <StatusBar barStyle="light-content" backgroundColor="#004738" />
+            {Platform.OS === 'web' && (
+                <Head>
+                    <title>{'Select Location'}</title>
+                </Head>
             )}
-        </KeyboardAvoidingView>
+            { selectLocationScreen }
+        </SafeAreaView>
     );
 };
 

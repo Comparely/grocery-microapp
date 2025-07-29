@@ -4,7 +4,13 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Text } from '@/ui/Text';
 
-const Navbar: React.FC = () => {
+type NavbarProps = {
+    title: string;
+};
+
+const Navbar: React.FC<NavbarProps> = ({
+    title
+}) => {
     const router = useRouter();
 
     return (
@@ -15,7 +21,7 @@ const Navbar: React.FC = () => {
                 }}>
                 <Ionicons name="arrow-back" size={24} color="#fff" />
             </TouchableOpacity>
-            <Text style={styles.title}>{'Comparely'}</Text>
+            <Text style={styles.title}>{title}</Text>
             <View style={styles.placeholder} /> {/* Balances the layout */}
         </View>
     );

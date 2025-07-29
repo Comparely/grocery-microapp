@@ -1,4 +1,4 @@
-import { SafeAreaView, StatusBar, StyleSheet } from 'react-native';
+import { Platform, SafeAreaView, StatusBar, StyleSheet } from 'react-native';
 import HomeScreen from '@/screens/HomeScreen';
 import '@/global.css';
 import Head from 'expo-router/head';
@@ -8,11 +8,13 @@ const App = () => {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#004738" />
-            <Head>
-                <title>
-                    {'Comparely - Compare Grocery Prices Across Zepto, Blinkit, Instamart'}
-                </title>
-            </Head>
+            {Platform.OS === 'web' && (
+                <Head>
+                    <title>
+                        {'Comparely - Compare Grocery Prices Across Zepto, Blinkit, Instamart'}
+                    </title>
+                </Head>
+            )}
             <HomeScreen />
             {/* <SearchScrapeProduct /> */}
             {/* <FlipkartMinutesScraper /> */}

@@ -203,24 +203,28 @@ const HomeScreen = () => {
                             <View style={styles.socialsContainer}>
                                 <TouchableOpacity
                                     style={styles.socialButton}
+                                    activeOpacity={0.7}
                                     onPress={() => handleSocialMediaRedirect('instagram')}>
                                     <Ionicons name="logo-instagram" size={30} color="#004738" />
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={styles.socialButton}
+                                    activeOpacity={0.7}
                                     onPress={() => handleSocialMediaRedirect('twitter')}>
                                     <Ionicons name="logo-twitter" size={30} color="#004738" />
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={styles.socialButton}
+                                    activeOpacity={0.7}
                                     onPress={() => handleSocialMediaRedirect('linkedin')}>
                                     <Ionicons name="logo-linkedin" size={30} color="#004738" />
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     style={styles.socialButton}
+                                    activeOpacity={0.7}
                                     onPress={() => handleSocialMediaRedirect('youtube')}>
                                     <Ionicons name="logo-youtube" size={30} color="#004738" />
                                 </TouchableOpacity>
@@ -234,7 +238,7 @@ const HomeScreen = () => {
                 {/* <DeliveryTags /> */}
                 <DeliveryBadges />
                 <View style={styles.textCt}>
-                    <Text style={styles.waitText}>{`Maybe you’ll like this....`}</Text>
+                    <Text style={styles.waitText}>{`Maybe you'll like this....`}</Text>
                 </View>
                 {loadingProducts ? (
                     <View style={{ paddingVertical: 20 }}>
@@ -242,7 +246,9 @@ const HomeScreen = () => {
                     </View>
                 ) : (
                     featuredProductsv2.length > 0 && (
-                        <FeaturedProductsSection featuredProducts={featuredProductsv2} />
+                        <View pointerEvents="box-none" style={styles.featuredProductsContainer}>
+                            <FeaturedProductsSection featuredProducts={featuredProductsv2} />
+                        </View>
                     )
                 )}
 
@@ -250,11 +256,22 @@ const HomeScreen = () => {
                 
             </ScrollView>
 
-            <Animated.View style={[styles.floatingWhatsapp, { transform: [{ rotate }] }]}>
-                 <TouchableOpacity onPress={handleWhatsappRedirect}>
-                    <Ionicons name="logo-whatsapp" size={40} color="#fff" />
-                </TouchableOpacity>
-            </Animated.View>
+            {Platform.OS === 'ios' ? (
+                <View style={[styles.floatingWhatsapp, styles.iosFloatingButton]}>
+                    <TouchableOpacity 
+                        onPress={handleWhatsappRedirect}
+                        activeOpacity={0.8}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                        <Ionicons name="logo-whatsapp" size={40} color="#fff" />
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <Animated.View style={[styles.floatingWhatsapp, { transform: [{ rotate }] }]}>
+                    <TouchableOpacity onPress={handleWhatsappRedirect}>
+                        <Ionicons name="logo-whatsapp" size={40} color="#fff" />
+                    </TouchableOpacity>
+                </Animated.View>
+            )}
 
         </View>
     );
@@ -262,7 +279,9 @@ const HomeScreen = () => {
 
 const styles = StyleSheet.create({
     scrollContent: {
-        paddingBottom: 0, // ✅ Removed extra padding at the bottom
+        paddingBottom: 100, // ✅ Removed extra padding at the bottom
+        flexGrow: 1,
+        zIndex: 1000,
     },
     appComingSoonContainer: {
         marginHorizontal: 20,
@@ -452,6 +471,19 @@ const styles = StyleSheet.create({
         backgroundColor: '#25D366',
         borderRadius: 35,
         padding: 6,
+        zIndex: 999,
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3,
+    },
+    iosFloatingButton: {
+        bottom: Platform.OS === 'ios' ? 80 : 40, // Adjust for iOS safe area
+    },
+    featuredProductsContainer: {
+        zIndex: 1,
+        elevation: 1,
     },
     
 });
