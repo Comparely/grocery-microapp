@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -12,9 +13,13 @@ import (
 	"time"
 )
 
-func fetchJSON(url string, method string, headers map[string]string, body string) (map[string]interface{}, error) {
-	client := &http.Client{Timeout: 10 * time.Second}
-	req, err := http.NewRequest(method, url, strings.NewReader(body))
+func fetchJSON(url1 string, method string, headers map[string]string, body string) (map[string]interface{}, error) {
+	proxyURL, _ := url.Parse("http://34.131.214.195:3128")
+	proxy := http.ProxyURL(proxyURL)
+	transport := &http.Transport{Proxy: proxy}
+
+	client := &http.Client{Timeout: 10 * time.Second, Transport: transport}
+	req, err := http.NewRequest(method, url1, strings.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
